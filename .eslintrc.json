@@ -1,0 +1,15 @@
+{
+  "root": true,
+  "ignorePatterns": ["projects/**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "parserOptions": { "project": ["tsconfig.json"] },
+      "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"]
+    },
+    {
+      "files": ["*.html"],
+      "extends": ["plugin:@angular-eslint/template/recommended"]
+    }
+  ]
+}

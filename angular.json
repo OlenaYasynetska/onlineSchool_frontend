@@ -27,11 +27,7 @@
             "assets": [
               { "glob": "**/*", "input": "src/assets", "output": "/assets" }
             ],
-            "styles": [
-              "src/styles/tailwind.css",
-              "src/styles/variables.css",
-              "src/styles/global.css"
-            ],
+            "styles": ["src/styles/style.css"],
             "scripts": []
           },
           "configurations": {
@@ -71,8 +67,8 @@
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "css",
             "assets": [{ "glob": "**/*", "input": "src/assets", "output": "/assets" }],
-            "styles": ["src/styles/tailwind.css", "src/styles/global.css"],
-            "scripts": []
+            "styles": ["src/styles/style.css"],
+             "scripts": []
           }
         },
         "lint": {
@@ -81,5 +77,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "2efb5e34-8d04-4516-9a3a-53831ed2f2fb"
   }
 }

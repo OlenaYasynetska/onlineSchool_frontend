@@ -2,5 +2,5 @@
   --color-primary: #2563eb;
   --color-secondary: #64748b;
   --color-accent: #0ea5e9;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Roboto', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }

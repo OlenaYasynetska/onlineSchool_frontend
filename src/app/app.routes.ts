@@ -1,11 +1,27 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
+  {
+    path: '',
+    pathMatch: 'full',
+    loadComponent: () =>
+      import('./features/landing/pages/landing/landing.component').then(
+        (m) => m.LandingComponent
+      ),
+  },
   {
     path: 'auth',
     loadChildren: () =>
       import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  },
+  {
+    path: 'plans',
+    loadComponent: () =>
+      import('./features/landing/pages/plans/plans-page.component').then(
+        (m) => m.PlansPageComponent
+      ),
   },
   {
     path: '',
@@ -13,10 +29,10 @@ export const routes: Routes = [
       import('./layout/main-layout/main-layout.component').then(
         (m) => m.MainLayoutComponent
       ),
-    canActivate: [authGuard],
     children: [
       {
         path: 'dashboard',
+        canActivate: [authGuard],
         loadChildren: () =>
           import('./features/dashboard/dashboard.routes').then(
             (m) => m.DASHBOARD_ROUTES
@@ -24,6 +40,7 @@ export const routes: Routes = [
       },
       {
         path: 'students',
+        canActivate: [authGuard],
         loadChildren: () =>
           import('./features/students/students.routes').then(
             (m) => m.STUDENTS_ROUTES
@@ -31,6 +48,7 @@ export const routes: Routes = [
       },
       {
         path: 'teachers',
+        canActivate: [authGuard],
         loadChildren: () =>
           import('./features/teachers/teachers.routes').then(
             (m) => m.TEACHERS_ROUTES
@@ -38,6 +56,7 @@ export const routes: Routes = [
       },
       {
         path: 'schools',
+        canActivate: [authGuard],
         loadChildren: () =>
           import('./features/schools/schools.routes').then(
             (m) => m.SCHOOLS_ROUTES
@@ -45,13 +64,34 @@ export const routes: Routes = [
       },
       {
         path: 'analytics',
+        canActivate: [authGuard],
         loadChildren: () =>
           import('./features/analytics/analytics.routes').then(
             (m) => m.ANALYTICS_ROUTES
           ),
       },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'super-admin',
+        canActivate: [authGuard, roleGuard(['SUPER_ADMIN'])],
+        loadChildren: () =>
+          import('./features/super-admin/super-admin.routes').then(
+            (m) => m.SUPER_ADMIN_ROUTES
+          ),
+      },
+      {
+        path: '**',
+        loadComponent: () =>
+          import('./features/errors/pages/not-found/not-found.component').then(
+            (m) => m.NotFoundComponent
+          ),
+      },
     ],
   },
-  { path: '**', redirectTo: 'dashboard' },
+  {
+    path: '**',
+    loadComponent: () =>
+      import('./features/errors/pages/not-found/not-found.component').then(
+        (m) => m.NotFoundComponent
+      ),
+  },
 ];

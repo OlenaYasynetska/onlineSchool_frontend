@@ -1,108 +1,103 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { SchoolAdminDashboardService } from '../../features/school-admin/services/school-admin-dashboard.service';
+
+export type SidebarNavIcon =
+  | 'home'
+  | 'users'
+  | 'user'
+  | 'teacher'
+  | 'graduate'
+  | 'envelope'
+  | 'building';
+
+export type CompactNavItem = {
+  path: string;
+  label: string;
+  exact?: boolean;
+  icon: SidebarNavIcon;
+};
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
-  template: `
-    <aside
-      class="flex w-64 flex-col border-r border-slate-200 bg-slate-50/90 dark:border-gray-700 dark:bg-gray-800"
-    >
-      <nav class="flex-1 space-y-0.5 p-3">
-        @if (isSuperAdminArea()) {
-          <p
-            class="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500"
-          >
-            Platform
-          </p>
-          @for (item of superAdminNav; track item.path) {
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="bg-white font-semibold text-blue-600 shadow-sm ring-1 ring-slate-200/80"
-              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-              class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 transition hover:bg-white/80 dark:text-gray-300"
-            >
-              {{ item.label }}
-            </a>
-          }
-        } @else {
-          @if (auth.currentUser()?.role === 'SUPER_ADMIN') {
-            <a
-              routerLink="/super-admin"
-              routerLinkActive="bg-primary/10 text-primary"
-              class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              Super Admin
-            </a>
-          }
-          <a
-            routerLink="/dashboard"
-            routerLinkActive="bg-primary/10 text-primary"
-            class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Dashboard
-          </a>
-          <a
-            routerLink="/students"
-            routerLinkActive="bg-primary/10 text-primary"
-            class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Учні
-          </a>
-          <a
-            routerLink="/teachers"
-            routerLinkActive="bg-primary/10 text-primary"
-            class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Вчителі
-          </a>
-          <a
-            routerLink="/schools"
-            routerLinkActive="bg-primary/10 text-primary"
-            class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Школи
-          </a>
-          <a
-            routerLink="/analytics"
-            routerLinkActive="bg-primary/10 text-primary"
-            class="block rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          >
-            Аналітика
-          </a>
-        }
-      </nav>
-    </aside>
-  `,
+  templateUrl: './sidebar.component.html',
+  styleUrl: './sidebar.component.css',
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly schoolDashApi = inject(SchoolAdminDashboardService);
 
-  readonly superAdminNav: {
-    path: string;
-    label: string;
-    exact?: boolean;
-  }[] = [
-    { path: '/super-admin', label: 'Dashboard', exact: true },
-    { path: '/super-admin', label: 'Subscribers' },
-    { path: '/schools', label: 'Schools' },
-    { path: '/super-admin', label: 'Admins' },
-    { path: '/super-admin', label: 'Employees' },
-    { path: '/teachers', label: 'Teachers' },
-    { path: '/students', label: 'Students' },
-    { path: '/super-admin', label: 'Groups' },
-    { path: '/super-admin', label: 'Programs' },
-    { path: '/super-admin', label: 'Subjects' },
+  /** Tariff strip (school admin only) */
+  schoolTariffLoading = false;
+  schoolTariffPlan = '—';
+  schoolTariffAccessEnd = '—';
+
+  ngOnInit(): void {
+    const u = this.auth.currentUser();
+    if (u?.role !== 'ADMIN_SCHOOL' || !u.schoolId) {
+      return;
+    }
+    this.schoolTariffLoading = true;
+    this.schoolDashApi.getDashboard(u.schoolId).subscribe({
+      next: (d) => {
+        this.schoolTariffPlan = d.subscription?.planTitle?.trim() || '—';
+        this.schoolTariffAccessEnd =
+          d.subscription?.platformAccessEndDate?.trim() || '—';
+        this.schoolTariffLoading = false;
+      },
+      error: () => {
+        this.schoolTariffLoading = false;
+      },
+    });
+  }
+
+  readonly schoolAdminNav: CompactNavItem[] = [
+    { path: '/school-admin', label: 'Dashboard', exact: true, icon: 'home' },
+    { path: '/school-admin/groups', label: 'Groups', icon: 'users' },
+    { path: '/school-admin/employees', label: 'Employees', icon: 'user' },
+    { path: '/school-admin/teachers', label: 'Teachers', icon: 'teacher' },
+    { path: '/school-admin/students', label: 'Students', icon: 'graduate' },
   ];
 
+  readonly superAdminNav: CompactNavItem[] = [
+    { path: '/super-admin', label: 'Dashboard', exact: true, icon: 'home' },
+    {
+      path: '/super-admin/subscribers',
+      label: 'Subscribers',
+      exact: true,
+      icon: 'envelope',
+    },
+    { path: '/schools', label: 'Schools', icon: 'building' },
+    {
+      path: '/super-admin/administrators',
+      label: 'Admin',
+      exact: true,
+      icon: 'user',
+    },
+  ];
+
+  compactSidebar(): { items: CompactNavItem[]; ariaLabel: string } | null {
+    if (this.auth.currentUser()?.role === 'ADMIN_SCHOOL') {
+      return { items: this.schoolAdminNav, ariaLabel: 'School admin' };
+    }
+    if (this.isSuperAdminArea()) {
+      return { items: this.superAdminNav, ariaLabel: 'Platform' };
+    }
+    return null;
+  }
+
   isSuperAdminArea(): boolean {
+    if (this.auth.currentUser()?.role !== 'SUPER_ADMIN') {
+      return false;
+    }
+    const path = this.router.url.split('?')[0];
     return (
-      this.auth.currentUser()?.role === 'SUPER_ADMIN' &&
-      this.router.url.split('?')[0].startsWith('/super-admin')
+      path.startsWith('/super-admin') || path.startsWith('/schools')
     );
   }
 }

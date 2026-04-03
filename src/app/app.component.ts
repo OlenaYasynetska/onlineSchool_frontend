@@ -31,6 +31,7 @@ export class AppComponent {
     const path = this.router.url.split('?')[0];
     if (
       path.startsWith('/dashboard') ||
+      path.startsWith('/school-admin') ||
       path.startsWith('/students') ||
       path.startsWith('/teachers') ||
       path.startsWith('/schools') ||
@@ -43,8 +44,7 @@ export class AppComponent {
   }
 
   headerStripClass(): string {
-    return this.headerLayout() === 'app'
-      ? 'shrink-0 border-b border-slate-200 bg-white'
-      : 'shrink-0 bg-gradient-to-br from-[#FF7A18] via-[#FFC857] to-[#FFF1B8] bg-fixed';
+    // Той самий градієнт, що на головній (hero / marketing strip).
+    return 'shrink-0 border-b border-white/30 bg-gradient-to-br from-[#FF7A18] via-[#FFC857] to-[#FFF1B8] bg-fixed';
   }
 }

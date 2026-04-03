@@ -1,0 +1,9 @@
+.input-register {
+  @apply block w-full rounded-lg border border-orange-200/90 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm;
+  @apply focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200/70;
+}
+
+.input-payment {
+  @apply block w-full rounded-lg border border-sky-200/90 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm;
+  @apply focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200/70;
+}

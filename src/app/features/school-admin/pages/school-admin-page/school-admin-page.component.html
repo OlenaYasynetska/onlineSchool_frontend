@@ -1,0 +1,420 @@
+<div class="w-full min-w-0 max-w-full">
+  <div
+    class="min-h-0 min-w-0 space-y-8 bg-slate-100/80 px-4 pb-8 pt-6 sm:px-6 lg:px-8"
+  >
+    @if (loading) {
+      <p class="text-sm text-slate-600">Loading school dashboard...</p>
+    }
+    @if (!loading && noSchoolAssigned) {
+      <div
+        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        role="status"
+      >
+        Your account is not linked to a school. Contact support.
+      </div>
+    }
+    @if (!loading && !noSchoolAssigned) {
+    <div
+      class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">
+          Admin Dashboard · {{ adminDisplayName }}
+        </h1>
+        <p class="mt-1 text-sm text-slate-600">
+          Manage students, payments and statistics
+        </p>
+      </div>
+      <span
+        class="inline-flex max-w-[10.5rem] items-center truncate whitespace-nowrap text-xs font-semibold text-slate-900"
+      >
+        Tarif: {{ dash.subscription?.planTitle ?? '—' }}
+      </span>
+    </div>
+
+    <!-- Quick actions (Add school / Add admin / Add employeer excluded on other pages) -->
+    <div
+      class="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-6"
+    >
+      <button
+        type="button"
+        (click)="actionsVm.addGroup()"
+        class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+      >
+        <img
+          src="/assets/icons/about/tabler-icon-text-plus.svg"
+          class="mr-2 inline-block h-6 w-6"
+          alt=""
+          aria-hidden="true"
+        />
+        Add group
+      </button>
+      <button
+        type="button"
+        (click)="actionsVm.addTeacher()"
+        class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+      >
+        <img
+          src="/assets/icons/about/tabler-icon-text-plus.svg"
+          class="mr-2 inline-block h-6 w-6"
+          alt=""
+          aria-hidden="true"
+        />
+        Add teacher
+      </button>
+      <button
+        type="button"
+        (click)="actionsVm.addEmployeer()"
+        class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+      >
+        <img
+          src="/assets/icons/about/tabler-icon-text-plus.svg"
+          class="mr-2 inline-block h-6 w-6"
+          alt=""
+          aria-hidden="true"
+        />
+        Add employeer
+      </button>
+      <button
+        type="button"
+        (click)="actionsVm.addStudent()"
+        class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+      >
+        <img
+          src="/assets/icons/about/tabler-icon-text-plus.svg"
+          class="mr-2 inline-block h-6 w-6"
+          alt=""
+          aria-hidden="true"
+        />
+        Add student
+      </button>
+    </div>
+
+    <!-- Groups -->
+    <section id="school-admin-groups" class="scroll-mt-6 space-y-4">
+      <div
+        class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <h2 class="text-lg font-bold text-slate-900">Groups</h2>
+        <div class="relative w-full max-w-md sm:ml-auto">
+          <input
+            type="search"
+            placeholder="Search groups"
+            (input)="groupsVm.onGroupSearchInput($event)"
+            class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+          />
+        </div>
+      </div>
+      @if (groupsVm.filteredGroups.length > 0) {
+        <div
+          class="grid gap-4 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]"
+        >
+          @for (g of groupsVm.filteredGroups; track g.id) {
+            <article
+              class="flex h-[218px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-violet-200 hover:shadow-md"
+              role="button"
+              tabindex="0"
+              (click)="actionsVm.openEditGroup(g)"
+              (keydown.enter)="actionsVm.openEditGroup(g)"
+            >
+              <div class="flex items-start justify-between gap-2">
+                <h3 class="text-base font-bold text-slate-900">{{ g.name }}</h3>
+                @if (g.active) {
+                  <span
+                    class="shrink-0 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800"
+                  >
+                    Active
+                  </span>
+                } @else {
+                  <span
+                    class="shrink-0 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600"
+                  >
+                    Inactive
+                  </span>
+                }
+              </div>
+              <div class="mt-2 flex flex-1 flex-col">
+                <p class="font-mono text-sm text-violet-700">{{ g.code }}</p>
+                <p
+                  class="mt-2 max-h-[2.5rem] overflow-hidden break-words text-sm text-slate-600 leading-snug"
+                >
+                  {{ g.topicsLabel }}
+                </p>
+                <div
+                  class="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500"
+                >
+                  <div>
+                    <span class="block font-medium text-slate-700"
+                      >Start</span
+                    >
+                    {{ g.startDate }}
+                  </div>
+                  <div>
+                    <span class="block font-medium text-slate-700"
+                      >End</span
+                    >
+                    {{ g.endDate }}
+                  </div>
+                </div>
+              </div>
+              <p class="mt-auto text-sm font-semibold text-slate-800">
+                {{ g.studentsCount }} students
+              </p>
+            </article>
+          }
+        </div>
+      } @else {
+        <div
+          class="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-12 text-center text-sm text-slate-600"
+        >
+          No groups match your search.
+        </div>
+      }
+    </section>
+
+    <!-- Quick stats -->
+    <section id="school-admin-overview" class="scroll-mt-6">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div
+          class="rounded-xl border-2 border-slate-200 bg-white px-4 py-4 shadow-sm"
+        >
+          <p class="text-sm font-semibold text-slate-600">Students</p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">
+            {{ dash.stats.totalStudents }}
+          </p>
+        </div>
+        <div
+          class="rounded-xl border-2 border-slate-200 bg-white px-4 py-4 shadow-sm"
+        >
+          <p class="text-sm font-semibold text-slate-600">Payments</p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">
+            {{ dash.stats.totalPayments }}
+          </p>
+        </div>
+        <div
+          class="rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-4 shadow-sm"
+        >
+          <p class="text-sm font-semibold text-emerald-900">Paid</p>
+          <p class="mt-2 text-2xl font-bold text-emerald-900">
+            {{ dash.stats.paidPayments }}
+          </p>
+        </div>
+        <div
+          class="rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-4 shadow-sm"
+        >
+          <p class="text-sm font-semibold text-amber-900">Total received</p>
+          <p class="mt-2 text-2xl font-bold text-amber-900">
+            {{ dash.stats.totalReceived }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statistics -->
+    <section
+      id="school-admin-statistics"
+      class="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+    >
+      <h2 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+        <span
+          class="inline-block h-2 w-2 rounded-full bg-slate-400"
+          aria-hidden="true"
+        ></span>
+        Statistics
+      </h2>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p class="text-sm font-semibold text-slate-600">Pending payments</p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">
+            {{ pendingPaymentsCount }}
+          </p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p class="text-sm font-semibold text-slate-600">Failed payments</p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">
+            {{ failedPaymentsCount }}
+          </p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p class="text-sm font-semibold text-slate-600">Total students</p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">
+            {{ dash.stats.totalStudents }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Students -->
+    <section
+      id="school-admin-students"
+      class="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+    >
+      <div
+        class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <span
+            class="inline-block h-2 w-2 rounded-full bg-slate-400"
+            aria-hidden="true"
+          ></span>
+          Students
+        </h2>
+        <div class="relative max-w-md flex-1 sm:ml-auto">
+          <input
+            type="search"
+            placeholder="Search student"
+            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+      </div>
+
+      <div class="overflow-x-auto rounded-lg border border-slate-100">
+        <table class="w-full min-w-[700px] text-left text-sm">
+          <thead>
+            <tr
+              class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600"
+            >
+              <th class="px-3 py-3">ID</th>
+              <th class="px-3 py-3">Full name</th>
+              <th class="px-3 py-3">Email</th>
+              <th class="px-3 py-3">Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (dash.students.length > 0) {
+              @for (row of dash.students; track row.id) {
+                <tr class="border-b border-slate-100 hover:bg-slate-50/80">
+                  <td class="px-3 py-3 font-mono text-slate-600">
+                    {{ row.id }}
+                  </td>
+                  <td class="px-3 py-3 font-medium text-slate-900">
+                    {{ row.fullName }}
+                  </td>
+                  <td class="px-3 py-3 text-slate-600">{{ row.email }}</td>
+                  <td class="px-3 py-3 text-slate-600">{{ row.joinedAt }}</td>
+                </tr>
+              }
+            } @else {
+              <tr>
+                <td
+                  colspan="4"
+                  class="px-3 py-10 text-center text-sm text-slate-500"
+                >
+                  No students yet.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Payments -->
+    <section
+      id="school-admin-payments"
+      class="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+    >
+      <div
+        class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <span
+            class="inline-block h-2 w-2 rounded-full bg-slate-400"
+            aria-hidden="true"
+          ></span>
+          Payment history
+        </h2>
+        <div class="relative max-w-md flex-1 sm:ml-auto">
+          <input
+            type="search"
+            placeholder="Search payment"
+            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+      </div>
+
+      <div class="overflow-x-auto rounded-lg border border-slate-100">
+        <table class="w-full min-w-[640px] text-left text-sm">
+          <thead>
+            <tr
+              class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600"
+            >
+              <th class="px-3 py-3">ID</th>
+              <th class="px-3 py-3">Date</th>
+              <th class="px-3 py-3">Amount</th>
+              <th class="px-3 py-3">Currency</th>
+              <th class="px-3 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (dash.payments.length > 0) {
+              @for (row of dash.payments; track row.id) {
+                <tr class="border-b border-slate-100 hover:bg-slate-50/80">
+                  <td class="px-3 py-3 font-mono text-slate-600">
+                    {{ row.id }}
+                  </td>
+                  <td class="px-3 py-3 text-slate-600">{{ row.date }}</td>
+                  <td class="px-3 py-3 font-medium text-slate-900">
+                    {{ row.amount }}
+                  </td>
+                  <td class="px-3 py-3 text-slate-600">
+                    {{ row.currency }}
+                  </td>
+                  <td class="px-3 py-3">
+                    <span [ngClass]="paymentStatusClass(row.status)">
+                      {{ row.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            } @else {
+              <tr>
+                <td
+                  colspan="5"
+                  class="px-3 py-10 text-center text-sm text-slate-500"
+                >
+                  No payments yet.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    @if (actionsVm.addGroupOpen()) {
+      <app-add-group-modal
+        [schoolId]="schoolId"
+        (closeRequested)="actionsVm.closeAddGroupModal()"
+        (createGroup)="actionsVm.onCreateGroup($event)"
+      />
+    }
+
+    @if (actionsVm.addTeacherOpen()) {
+      <app-add-teacher-modal
+        [schoolId]="schoolId"
+        (closeRequested)="actionsVm.closeAddTeacherModal()"
+        (teacherSubmit)="actionsVm.onCreateTeacher($event)"
+      />
+    }
+
+    @if (actionsVm.addGroupSuccessOpen()) {
+      <app-add-group-success-modal
+        [message]="actionsVm.lastCreatedGroupName()"
+        (closeRequested)="actionsVm.closeSuccessModal()"
+        (addAnother)="actionsVm.addAnotherGroup()"
+      />
+    }
+
+    @if (actionsVm.editGroupOpen()) {
+      <app-edit-group-modal
+        [schoolId]="schoolId"
+        [group]="actionsVm.selectedEditGroup()"
+        (closeRequested)="actionsVm.closeEditGroupModal()"
+        (applyGroup)="actionsVm.onEditGroupApply($event)"
+      />
+    }
+    }
+  </div>
+</div>
+

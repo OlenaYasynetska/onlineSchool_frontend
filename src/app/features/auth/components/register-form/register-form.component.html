@@ -1,0 +1,517 @@
+@if (registrationSuccess()) {
+  <div
+    class="relative flex w-full max-w-[580px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-orange-200/40"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="registration-success-title"
+  >
+    <button
+      type="button"
+      class="absolute right-2 top-2 z-20 rounded-full p-2 text-slate-500 transition hover:bg-white/60 hover:text-slate-800"
+      (click)="backToHome()"
+      aria-label="Close"
+    >
+      <span class="block text-2xl leading-none">&times;</span>
+    </button>
+
+    <div
+      class="flex flex-col gap-6 px-5 pb-6 pt-10 sm:flex-row sm:items-center sm:gap-8 sm:px-7 sm:pb-7 sm:pt-11"
+    >
+      <div class="min-w-0 flex-1 space-y-4">
+        <h1
+          id="registration-success-title"
+          class="text-xl font-bold leading-snug text-[#213855] sm:text-2xl"
+        >
+          Registration successful
+        </h1>
+        <p class="text-sm leading-relaxed text-slate-700 sm:text-[15px]">
+          You have successfully registered as the admin of the educational institution
+          <span class="font-semibold text-[#213855]">&lsquo;{{
+            successOrganizationName()
+          }}&rsquo;</span>.
+        </p>
+        <div class="flex flex-col gap-3 pt-2">
+          <button
+            type="button"
+            (click)="backToHome()"
+            class="w-full rounded-lg bg-slate-700 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-slate-800"
+          >
+            Back to home
+          </button>
+          <button
+            type="button"
+            (click)="goToDashboard()"
+            class="w-full rounded-lg bg-[#FF7A18] py-3 text-sm font-semibold text-white shadow-md transition hover:bg-orange-600"
+          >
+            Go to dashboard
+          </button>
+        </div>
+      </div>
+      <div class="flex shrink-0 justify-center sm:w-[min(44%,200px)]">
+        <img
+          src="/assets/images/owl_get_started.png"
+          alt=""
+          class="h-auto w-full max-w-[180px] object-contain drop-shadow-md sm:max-w-[200px]"
+          width="200"
+          height="200"
+        />
+      </div>
+    </div>
+  </div>
+} @else if (showPaymentStep()) {
+  <div
+    class="relative flex w-full max-w-[540px] flex-col overflow-hidden rounded-2xl bg-[#E8EEF5] shadow-2xl shadow-slate-900/20 ring-1 ring-slate-300/40"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="payment-modal-title"
+  >
+    <button
+      type="button"
+      class="absolute right-2 top-2 z-20 rounded-md bg-slate-800 p-1.5 text-white transition hover:bg-slate-900"
+      (click)="closePaymentModal()"
+      aria-label="Close"
+    >
+      <span class="block text-lg leading-none">&times;</span>
+    </button>
+
+    <form
+      [formGroup]="paymentForm"
+      (ngSubmit)="onPaymentSubmit()"
+      class="px-5 pb-6 pt-10 sm:px-7 sm:pb-7 sm:pt-11"
+    >
+      <h1
+        id="payment-modal-title"
+        class="mb-6 text-center text-xl font-bold text-[#1a2f4a] sm:text-2xl"
+      >
+        Payment successful
+      </h1>
+
+      <div class="mb-5 space-y-4 rounded-xl bg-[#D6E8FA]/90 p-4 ring-1 ring-sky-200/60">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-first"
+              >First name</label
+            >
+            <input
+              id="pay-first"
+              formControlName="firstName"
+              class="input-payment"
+              autocomplete="given-name"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-last"
+              >Last name</label
+            >
+            <input
+              id="pay-last"
+              formControlName="lastName"
+              class="input-payment"
+              autocomplete="family-name"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-email"
+            >Email address</label
+          >
+          <input
+            id="pay-email"
+            type="email"
+            formControlName="email"
+            class="input-payment"
+            autocomplete="email"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-country"
+            >Country / Region</label
+          >
+          <div class="relative">
+            <select
+              id="pay-country"
+              formControlName="countryRegion"
+              class="input-payment appearance-none pr-10"
+            >
+              @for (c of countryOptions; track c.value) {
+                <option [value]="c.value">{{ c.label }}</option>
+              }
+            </select>
+            <span
+              class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+              >⌄</span
+            >
+          </div>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-city"
+            >City / Town</label
+          >
+          <input id="pay-city" formControlName="city" class="input-payment" />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-phone"
+            >Phone number</label
+          >
+          <input
+            id="pay-phone"
+            type="tel"
+            formControlName="phone"
+            class="input-payment"
+            autocomplete="tel"
+          />
+        </div>
+      </div>
+
+      <div class="space-y-4 rounded-xl bg-[#D6E8FA]/90 p-4 ring-1 ring-sky-200/60">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="text-sm font-semibold text-[#1a2f4a]">Pay with</span>
+          <span class="text-xs font-medium text-slate-600"
+            >PayPal &middot; Mastercard &middot; Visa</span
+          >
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-method"
+            >Payment method</label
+          >
+          <div class="relative">
+            <select
+              id="pay-method"
+              formControlName="paymentMethod"
+              class="input-payment appearance-none pr-10"
+            >
+              <option value="card">Credit card or debit card</option>
+              <option value="paypal">PayPal</option>
+            </select>
+            <span
+              class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+              >⌄</span
+            >
+          </div>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-card"
+            >Card number</label
+          >
+          <input
+            id="pay-card"
+            formControlName="cardNumber"
+            class="input-payment"
+            inputmode="numeric"
+            autocomplete="cc-number"
+            placeholder="Card number"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-mm">MM</label>
+            <div class="relative">
+              <select
+                id="pay-mm"
+                formControlName="expMonth"
+                class="input-payment appearance-none pr-8"
+              >
+                <option value="" disabled>MM</option>
+                @for (m of monthNumbers; track m) {
+                  <option [value]="m">{{ m }}</option>
+                }
+              </select>
+              <span
+                class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500"
+                >⌄</span
+              >
+            </div>
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-yy">YY</label>
+            <div class="relative">
+              <select
+                id="pay-yy"
+                formControlName="expYear"
+                class="input-payment appearance-none pr-8"
+              >
+                <option value="" disabled>YY</option>
+                @for (y of yearNumbers; track y) {
+                  <option [value]="y">{{ y }}</option>
+                }
+              </select>
+              <span
+                class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500"
+                >⌄</span
+              >
+            </div>
+          </div>
+          <div class="col-span-2 sm:col-span-1">
+            <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-cvv"
+              >CVV</label
+            >
+            <input
+              id="pay-cvv"
+              formControlName="cvv"
+              class="input-payment"
+              inputmode="numeric"
+              autocomplete="cc-csc"
+              maxlength="4"
+            />
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <span class="text-xs font-medium text-orange-600">Your card is safe</span>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="paymentForm.invalid || paymentLoading()"
+        class="mt-6 w-full rounded-xl bg-slate-800 py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {{ paymentLoading() ? 'Please wait…' : 'Pay Now' }}
+      </button>
+    </form>
+  </div>
+} @else {
+  <div
+    class="relative flex w-full max-w-[520px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-orange-200/40"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      type="button"
+      class="absolute right-2 top-2 z-20 rounded-full p-2 text-slate-500 transition hover:bg-white/60 hover:text-slate-800"
+      (click)="closeRequested.emit()"
+      aria-label="Close"
+    >
+      <span class="block text-2xl leading-none">&times;</span>
+    </button>
+
+    <div class="px-5 pb-4 pt-10 sm:px-7 sm:pb-5 sm:pt-11">
+      <h1
+        id="register-title"
+        class="mb-6 text-center text-xl font-bold leading-snug text-[#213855] sm:text-2xl"
+      >
+        Admin &amp; school registration
+      </h1>
+
+      <form
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()"
+        class="space-y-4"
+        novalidate
+      >
+      <div>
+        <input
+          id="fullName"
+          type="text"
+          formControlName="fullName"
+          autocomplete="name"
+          placeholder="User full name"
+          class="input-register"
+          aria-label="User full name"
+        />
+      </div>
+
+      <div>
+        <input
+          id="reg-email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          placeholder="Email (name@example.com)"
+          class="input-register"
+          [class.ring-2]="emailFieldShowError()"
+          [class.ring-red-500]="emailFieldShowError()"
+          [class.border-red-500]="emailFieldShowError()"
+          aria-label="Email"
+          [attr.aria-invalid]="emailFieldShowError() ? true : null"
+        />
+        @if (
+          form.controls.email.invalid &&
+          (form.controls.email.dirty || form.controls.email.touched)
+        ) {
+          <p class="mt-1 text-xs text-red-600">
+            Enter a valid email address — the second field must look like
+            <span class="font-mono">name&#64;domain.com</span>
+          </p>
+        }
+      </div>
+
+      <div>
+        <div class="relative">
+          <input
+            id="reg-password"
+            [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="new-password"
+            placeholder="New password"
+            class="input-register pr-16"
+            aria-label="New password"
+          />
+          <button
+            type="button"
+            class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-xs font-medium text-slate-500 hover:bg-white/80 hover:text-slate-800"
+            (click)="passwordVisible.set(!passwordVisible())"
+            [attr.aria-pressed]="passwordVisible()"
+            aria-label="Toggle password visibility"
+          >
+            {{ passwordVisible() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <input
+          id="phone"
+          type="tel"
+          formControlName="phone"
+          autocomplete="tel"
+          placeholder="Phone number"
+          class="input-register"
+          aria-label="Phone number"
+        />
+      </div>
+
+      <div>
+        <input
+          id="dob"
+          type="date"
+          formControlName="dateOfBirth"
+          class="input-register"
+          aria-label="Date of birth"
+        />
+      </div>
+
+      <div>
+        <input
+          id="org"
+          type="text"
+          formControlName="organizationName"
+          autocomplete="organization"
+          placeholder="Organization name"
+          class="input-register"
+          aria-label="Organization name"
+        />
+      </div>
+
+      <div>
+        <div class="relative">
+          <select
+            id="plan"
+            formControlName="plan"
+            class="input-register appearance-none pr-10"
+            aria-label="Plan"
+          >
+            <option value="" disabled>Plan</option>
+            @for (p of planOptions; track p.value) {
+              <option [value]="p.value">{{ p.label }}</option>
+            }
+          </select>
+          <span
+            class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+            >⌄</span
+          >
+        </div>
+      </div>
+
+      <div>
+        <div class="relative">
+          <select
+            id="period"
+            formControlName="paymentPeriod"
+            class="input-register appearance-none pr-10"
+            aria-label="Payment period"
+          >
+            <option value="" disabled>Payment period</option>
+            @for (p of paymentOptions; track p.value) {
+              <option [value]="p.value">{{ p.label }}</option>
+            }
+          </select>
+          <span
+            class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+            >⌄</span
+          >
+        </div>
+      </div>
+
+      <div>
+        <input
+          id="address"
+          type="text"
+          formControlName="address"
+          autocomplete="street-address"
+          placeholder="Organization address"
+          class="input-register"
+          aria-label="Organization address"
+        />
+      </div>
+
+      <div>
+        <input
+          id="country"
+          type="text"
+          formControlName="country"
+          autocomplete="country-name"
+          placeholder="Country"
+          class="input-register"
+          aria-label="Country"
+        />
+      </div>
+
+      <label
+        class="flex cursor-pointer items-start gap-2 pt-1 text-xs leading-snug text-[#415873]"
+      >
+        <input
+          type="checkbox"
+          formControlName="acceptTerms"
+          class="mt-0.5 h-4 w-4 shrink-0 rounded border-orange-300/80 text-slate-800 focus:ring-orange-400"
+        />
+        <span
+          >I accept the
+          <a
+            href="#"
+            class="font-medium text-[#213855] underline hover:text-slate-900"
+            (click)="$event.preventDefault()"
+            >Terms of Service</a
+          >
+          and
+          <a
+            href="#"
+            class="font-medium text-[#213855] underline hover:text-slate-900"
+            (click)="$event.preventDefault()"
+            >Privacy Policy</a
+          ></span
+        >
+      </label>
+
+      <button
+        type="submit"
+        [disabled]="loading()"
+        class="mt-2 w-full rounded-lg bg-slate-700 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {{ loading() ? 'Please wait…' : 'Confirm' }}
+      </button>
+
+      @if (submitAttempted() && form.invalid) {
+        <p class="mt-2 text-center text-xs text-red-600">
+          Please check the form: some required fields are invalid.
+        </p>
+      }
+
+      @if (submitErrorMessage()) {
+        <p class="mt-2 text-center text-xs text-red-600">
+          {{ submitErrorMessage() }}
+        </p>
+      }
+    </form>
+
+      <p class="relative z-10 mt-5 text-center text-sm text-slate-600">
+        Already have an account?
+        <a
+          routerLink="/auth/login"
+          class="font-semibold text-orange-700 underline decoration-orange-300/80 hover:text-orange-800"
+          >Log in</a
+        >
+      </p>
+    </div>
+  </div>
+}

@@ -13,13 +13,18 @@ import type { FooterVariant } from '../footer/footer.component';
     class: 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
   },
   template: `
-    <div class="flex min-h-0 flex-1 overflow-hidden">
+    <div class="flex min-h-0 w-full min-w-0 flex-1 overflow-hidden">
       <app-sidebar *ngIf="shouldShowSidebar()" />
       <main
-        class="flex min-h-0 min-w-0 flex-1 flex-col"
+        class="flex min-h-0 w-full min-w-0 flex-1 flex-col"
         [class.overflow-y-auto]="shouldShowSidebar()"
         [class.overflow-hidden]="!shouldShowSidebar()"
-        [class.p-6]="shouldShowSidebar()"
+        [class.pl-0]="shouldShowSidebar()"
+        [class.pr-3]="shouldShowSidebar()"
+        [class.sm:pr-6]="shouldShowSidebar()"
+        [class.lg:pr-8]="shouldShowSidebar()"
+        [class.py-3]="shouldShowSidebar()"
+        [class.sm:py-4]="shouldShowSidebar()"
       >
         <router-outlet />
       </main>
@@ -42,6 +47,7 @@ export class MainLayoutComponent {
     const url = this.router.url;
     return (
       url.startsWith('/dashboard') ||
+      url.startsWith('/school-admin') ||
       url.startsWith('/students') ||
       url.startsWith('/teachers') ||
       url.startsWith('/schools') ||

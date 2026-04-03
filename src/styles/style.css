@@ -1,0 +1,8 @@
+@import './fonts.css';
+@import './variables.css';
+@import './global.css';
+@import './common.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

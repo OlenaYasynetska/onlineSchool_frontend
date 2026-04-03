@@ -1,0 +1,74 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import type {
+  OrganizationRow,
+  PlanOverviewCard,
+  SchoolAdminContactRow,
+  SchoolCard,
+  SuperAdminDashboardResponse,
+} from '../models/super-admin-dashboard.model';
+
+@Injectable({ providedIn: 'root' })
+export class SuperAdminDashboardService {
+  constructor(private readonly http: HttpClient) {}
+
+  getSchoolAdmins(): Observable<SchoolAdminContactRow[]> {
+    return this.http.get<SchoolAdminContactRow[]>(
+      `${environment.apiUrl}/super-admin/school-admins`
+    );
+  }
+
+  getDashboard(): Observable<SuperAdminDashboardResponse> {
+    return this.http
+      .get<SuperAdminDashboardResponse>(`${environment.apiUrl}/super-admin/dashboard`)
+      .pipe(
+        map((data) => ({
+          ...data,
+          schools: this.resolveSchools(data),
+          planOverview: data.planOverview.map((item) => ({
+            ...item,
+            accentClass: this.planAccent(item),
+          })),
+        }))
+      );
+  }
+
+  /**
+   * Якщо бекенд не повернув `schools` (старий API) або масив порожній — будуємо
+   * картки з тих самих організацій, що й таблиця Organizations.
+   */
+  private resolveSchools(data: SuperAdminDashboardResponse): SchoolCard[] {
+    const fromApi = data.schools ?? [];
+    if (fromApi.length > 0) {
+      return fromApi;
+    }
+    const orgs = data.organizations ?? [];
+    return orgs.map((org, i) => ({
+      id: org.id,
+      title: `School ${i + 1}`,
+      displayName: org.name,
+      address: this.addressForCard(org),
+      plan: org.plan,
+      studentCount: 0,
+    }));
+  }
+
+  private addressForCard(org: OrganizationRow): string {
+    const raw = org.address?.trim();
+    return raw && raw.length > 0 ? raw : '—';
+  }
+
+  private planAccent(item: PlanOverviewCard): string {
+    switch (item.id) {
+      case 'pro':
+        return 'border-amber-500 bg-amber-50 text-amber-900';
+      case 'standard':
+        return 'border-blue-500 bg-blue-50 text-blue-900';
+      default:
+        return 'border-slate-400 bg-slate-100 text-slate-800';
+    }
+  }
+}
+

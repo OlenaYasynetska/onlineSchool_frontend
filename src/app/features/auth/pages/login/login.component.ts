@@ -149,7 +149,20 @@ export class LoginComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.loading.set(false);
-          void this.router.navigate(['/dashboard']);
+          const role = this.auth.currentUser()?.role;
+          switch (role) {
+            case 'ADMIN_SCHOOL':
+              void this.router.navigate(['/school-admin']);
+              break;
+            case 'TEACHER':
+              void this.router.navigate(['/teachers']);
+              break;
+            case 'STUDENT':
+              void this.router.navigate(['/students']);
+              break;
+            default:
+              void this.router.navigate(['/dashboard']);
+          }
         },
         error: (err) => {
           console.error(err);

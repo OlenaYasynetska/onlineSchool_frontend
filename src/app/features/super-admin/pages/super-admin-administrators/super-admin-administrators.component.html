@@ -1,0 +1,196 @@
+<div class="w-full min-w-0 max-w-full">
+  <div
+    class="min-h-0 min-w-0 space-y-6 bg-slate-100/80 px-4 pb-8 pt-6 sm:px-6 lg:px-8"
+  >
+    <div
+      class="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <h1 class="flex items-center gap-2 text-2xl font-bold text-slate-900">
+        <svg
+          class="h-7 w-7 text-slate-600"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+          />
+        </svg>
+        Administrators
+      </h1>
+      <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm transition hover:bg-amber-600"
+          aria-label="View options"
+        >
+          <svg
+            class="h-5 w-5"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
+            />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50"
+          aria-label="Filter"
+        >
+          <svg
+            class="h-5 w-5"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z"
+            />
+          </svg>
+        </button>
+        <div class="relative min-w-[min(100%,240px)] flex-1 sm:max-w-sm">
+          <input
+            type="search"
+            placeholder="Search admin"
+            class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          />
+          <span
+            class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          >
+            <svg
+              class="h-4 w-4"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+              />
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    @if (loading) {
+      <p class="text-sm text-slate-600">Loading…</p>
+    } @else {
+      <section
+        class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      >
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[900px] text-left text-sm">
+            <thead>
+              <tr
+                class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600"
+              >
+                <th class="w-14 px-4 py-3 text-center">ID</th>
+                <th class="px-4 py-3">Full name</th>
+                <th class="px-4 py-3">School</th>
+                <th class="px-4 py-3">Email</th>
+                <th class="px-4 py-3">Login</th>
+                <th class="px-4 py-3">Reg. date</th>
+                <th class="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (rows.length > 0) {
+                @for (row of rows; track row.userId; let i = $index) {
+                  <tr class="border-b border-slate-100 hover:bg-slate-50/80">
+                    <td class="px-4 py-3 text-center text-slate-600">
+                      {{ i + 1 }}
+                    </td>
+                    <td class="px-4 py-3 font-medium text-slate-900">
+                      {{ row.fullName }}
+                    </td>
+                    <td class="px-4 py-3 text-slate-700">{{ row.schoolName }}</td>
+                    <td class="px-4 py-3 text-slate-600">{{ row.email }}</td>
+                    <td class="px-4 py-3 text-slate-600">{{ row.login }}</td>
+                    <td class="px-4 py-3 text-slate-600">{{ row.registeredAt }}</td>
+                    <td class="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        class="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm transition hover:bg-amber-600"
+                        aria-label="Edit"
+                      >
+                        <svg
+                          class="h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-white shadow-sm transition hover:bg-slate-800"
+                        aria-label="Delete"
+                      >
+                        <svg
+                          class="h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                          />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                }
+              } @else {
+                <tr>
+                  <td
+                    colspan="7"
+                    class="px-4 py-12 text-center text-sm text-slate-500"
+                  >
+                    No school administrators yet.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div
+          class="border-t border-slate-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-600"
+        >
+          Total: {{ rows.length }} administrators
+        </div>
+      </section>
+    }
+  </div>
+</div>

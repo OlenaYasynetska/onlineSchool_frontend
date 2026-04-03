@@ -1,0 +1,22 @@
+.school-admin-nav-link {
+  color: rgb(100 116 139);
+}
+
+.school-admin-nav-link:hover {
+  color: rgb(51 65 85);
+  background-color: rgb(255 255 255 / 0.65);
+}
+
+.school-admin-nav-active {
+  background-color: rgb(255 255 255);
+  color: rgb(3 105 161);
+  box-shadow:
+    0 1px 3px 0 rgb(0 0 0 / 0.06),
+    0 1px 2px -1px rgb(0 0 0 / 0.06);
+  border: 1px solid rgb(226 232 240 / 0.95);
+}
+
+.school-admin-nav-active:hover {
+  background-color: rgb(255 255 255);
+  color: rgb(3 105 161);
+}

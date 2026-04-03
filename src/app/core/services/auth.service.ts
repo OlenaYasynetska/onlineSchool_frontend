@@ -51,6 +51,12 @@ export class AuthService {
   }
 
   /**
+   * В backend auth-контроллеры мапятся на `/auth/*` без префикса `/api`,
+   * а остальные контроллеры (students/super-admin/...) используют `/api/*`.
+   */
+  private readonly authBaseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
+
+  /**
    * Перевірка захардкоджених облікових даних суперадміна (без запиту на бекенд).
    * Повертає true, якщо сесію створено.
    */
@@ -81,7 +87,7 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, credentials)
+      .post<LoginResponse>(`${this.authBaseUrl}/auth/login`, credentials)
       .pipe(
         tap((res) => {
           const authUser: AuthUser = {
@@ -96,8 +102,22 @@ export class AuthService {
       );
   }
 
-  register(body: RegisterRequest): Observable<unknown> {
-    return this.http.post(`${environment.apiUrl}/auth/register`, body);
+  register(body: RegisterRequest): Observable<LoginResponse> {
+    return this.http
+      .post<LoginResponse>(`${this.authBaseUrl}/auth/register`, body)
+      .pipe(
+        tap((res) => {
+          // После регистрации сразу создаём сессию (чтобы кнопка в модалке/дашборд работали без повторного логина)
+          const authUser: AuthUser = {
+            ...res.user,
+            accessToken: res.accessToken,
+            refreshToken: res.refreshToken,
+            expiresAt: Date.now() + res.expiresIn * 1000,
+          };
+          this.currentUserSignal.set(authUser);
+          this.persistSession(authUser);
+        })
+      );
   }
 
   logout(): void {

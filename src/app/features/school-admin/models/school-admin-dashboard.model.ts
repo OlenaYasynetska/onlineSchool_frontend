@@ -1,0 +1,66 @@
+export interface StudentRow {
+  id: string;
+  fullName: string;
+  email: string;
+  joinedAt: string;
+}
+
+export interface PaymentHistoryRow {
+  id: string;
+  date: string;
+  amount: string;
+  currency: string;
+  status: 'Paid' | 'Pending payment' | 'Failed';
+}
+
+export interface SchoolDashboardStats {
+  totalStudents: number;
+  totalPayments: number;
+  paidPayments: number;
+  totalReceived: string;
+}
+
+/** Предмет школи (`school_subjects`). */
+export interface SchoolSubject {
+  id: string;
+  title: string;
+}
+
+/** Викладач школи (`teachers` + ім'я з `users`). */
+export interface SchoolTeacher {
+  id: string;
+  displayName: string;
+}
+
+export interface SchoolGroupCard {
+  id: string;
+  name: string;
+  code: string;
+  /** Якщо група прив'язана до предмета з БД */
+  subjectId?: string | null;
+  /** Якщо група прив'язана до викладача з БД */
+  teacherId?: string | null;
+  topicsLabel: string;
+  startDate: string;
+  endDate: string;
+  studentsCount: number;
+  active: boolean;
+}
+
+export interface SchoolSubscriptionInfo {
+  /** Назва тарифу з БД (subscription_plans.title) */
+  planTitle: string;
+  /** Кінець періоду доступу: дата наступного платежу / доступу (dd.MM.yyyy) */
+  platformAccessEndDate: string;
+}
+
+export interface SchoolAdminDashboardResponse {
+  stats: SchoolDashboardStats;
+  students: StudentRow[];
+  payments: PaymentHistoryRow[];
+  /** З бекенду `/school-admin/dashboard`; якщо немає — сайдбар покаже «—». */
+  subscription?: SchoolSubscriptionInfo;
+  /** Групи з таблиці `school_groups` */
+  groups?: SchoolGroupCard[];
+}
+

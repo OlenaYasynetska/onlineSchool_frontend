@@ -63,6 +63,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'school-admin',
+        canActivate: [authGuard, roleGuard(['ADMIN_SCHOOL'])],
+        loadChildren: () =>
+          import('./features/school-admin/school-admin.routes').then(
+            (m) => m.SCHOOL_ADMIN_ROUTES
+          ),
+      },
+      {
         path: 'analytics',
         canActivate: [authGuard],
         loadChildren: () =>

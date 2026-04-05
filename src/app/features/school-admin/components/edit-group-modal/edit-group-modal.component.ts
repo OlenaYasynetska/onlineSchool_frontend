@@ -173,6 +173,40 @@ type EditGroupPayload = AddGroupPayload;
 
             <label
               class="text-right text-sm font-normal leading-snug text-slate-700"
+              for="edit-group-teacher"
+              >Teacher:</label
+            >
+            <div class="flex min-w-0 flex-col gap-2">
+              <select
+                id="edit-group-teacher"
+                name="teacherId"
+                [(ngModel)]="form.teacherId"
+                [disabled]="teachersLoading"
+                class="min-w-0 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100 disabled:opacity-60"
+              >
+                <option value="">
+                  {{ teachersLoading ? 'Loading…' : '— No teacher —' }}
+                </option>
+                @for (t of teachers; track t.id) {
+                  <option [value]="t.id">{{ t.displayName }}</option>
+                }
+              </select>
+              @if (teachersLoadError) {
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                  <span class="text-red-600">{{ teachersLoadError }}</span>
+                  <button
+                    type="button"
+                    class="font-semibold text-violet-700 underline hover:text-violet-900"
+                    (click)="loadTeachers()"
+                  >
+                    Retry
+                  </button>
+                </div>
+              }
+            </div>
+
+            <label
+              class="text-right text-sm font-normal leading-snug text-slate-700"
               for="edit-start-date"
               >Start date:</label
             >
@@ -200,20 +234,25 @@ type EditGroupPayload = AddGroupPayload;
             />
           </div>
 
-          <div class="mt-10 flex items-center justify-center gap-4 pt-2">
+          <p class="mt-8 text-center text-xs leading-relaxed text-slate-500">
+            <strong class="text-slate-600">Save</strong> sends changes to the server.
+            <strong class="text-slate-600">Revert</strong> restores the form to how it was when
+            you opened this dialog (nothing is saved).
+          </p>
+          <div class="mt-3 flex items-center justify-center gap-4 pt-2">
             <button
               type="button"
               class="w-[128px] rounded-lg bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white shadow-none transition hover:bg-slate-800"
-              (click)="reset()"
+              (click)="revert()"
             >
-              Reset
+              Revert
             </button>
             <button
               type="button"
               class="w-[128px] rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-none transition hover:bg-orange-600"
               (click)="apply()"
             >
-              Apply
+              Save
             </button>
           </div>
         </form>
@@ -262,7 +301,18 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     active: true,
   };
 
-  private originalPayload: EditGroupPayload | null = null;
+  /** Snapshot of the form when the dialog opened (revert target). Not API-shaped — avoids losing `topicsLabel` when a catalog subject is selected. */
+  private formSnapshotWhenOpened: {
+    name: string;
+    code: string;
+    subjectId: string;
+    teacherId: string;
+    topicsLabel: string;
+    startYmd: string;
+    endYmd: string;
+    studentsCount: number;
+    active: boolean;
+  } | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (this.schoolId && (changes['schoolId'] || changes['group'])) {
@@ -280,6 +330,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     this.form.name = g.name ?? '';
     this.form.code = g.code ?? '';
     this.form.subjectId = g.subjectId ?? '';
+    this.form.teacherId = g.teacherId ?? '';
     this.form.topicsLabel = g.topicsLabel ?? '';
     this.form.startYmd = startYmd;
     this.form.endYmd = endYmd;
@@ -288,7 +339,17 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     this.showAddCoursePanel = false;
     this.newSubjectTitle = '';
 
-    this.originalPayload = this.formToPayload();
+    this.formSnapshotWhenOpened = {
+      name: this.form.name,
+      code: this.form.code,
+      subjectId: this.form.subjectId,
+      teacherId: this.form.teacherId,
+      topicsLabel: this.form.topicsLabel,
+      startYmd: this.form.startYmd,
+      endYmd: this.form.endYmd,
+      studentsCount: this.form.studentsCount,
+      active: this.form.active,
+    };
   }
 
   loadSubjects(): void {
@@ -388,19 +449,21 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     this.closeRequested.emit();
   }
 
-  reset(): void {
-    if (!this.originalPayload) {
+  /** Restores the form to values when you opened this dialog (does not call the server). */
+  revert(): void {
+    const s = this.formSnapshotWhenOpened;
+    if (!s) {
       return;
     }
-    const p = this.originalPayload;
-    this.form.name = p.name;
-    this.form.code = p.code;
-    this.form.subjectId = p.subjectId ?? '';
-    this.form.topicsLabel = p.topicsLabel;
-    this.form.startYmd = this.ddMmYyyyToYmd(p.startDate);
-    this.form.endYmd = this.ddMmYyyyToYmd(p.endDate);
-    this.form.studentsCount = p.studentsCount;
-    this.form.active = p.active;
+    this.form.name = s.name;
+    this.form.code = s.code;
+    this.form.subjectId = s.subjectId;
+    this.form.teacherId = s.teacherId;
+    this.form.topicsLabel = s.topicsLabel;
+    this.form.startYmd = s.startYmd;
+    this.form.endYmd = s.endYmd;
+    this.form.studentsCount = s.studentsCount;
+    this.form.active = s.active;
     this.showAddCoursePanel = false;
     this.newSubjectTitle = '';
   }

@@ -2,6 +2,7 @@ import type { SchoolAdminDashboardResponse } from '../models/school-admin-dashbo
 
 /** Початковий стан до завантаження GET /school-admin/dashboard (без мок-даних). */
 export const SCHOOL_ADMIN_DASHBOARD_INITIAL: SchoolAdminDashboardResponse = {
+  schoolId: '',
   stats: {
     totalStudents: 0,
     totalPayments: 0,

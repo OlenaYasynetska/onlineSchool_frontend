@@ -175,6 +175,40 @@ export type AddGroupPayload = {
             }
           </div>
 
+          <div>
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="group-teacher"
+              >Teacher (optional)</label
+            >
+            <select
+              id="group-teacher"
+              name="teacherId"
+              [(ngModel)]="form.teacherId"
+              [disabled]="teachersLoading"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100 disabled:opacity-60"
+            >
+              <option value="">
+                {{ teachersLoading ? 'Loading teachers…' : '— No teacher —' }}
+              </option>
+              @for (t of teachers; track t.id) {
+                <option [value]="t.id">{{ t.displayName }}</option>
+              }
+            </select>
+            @if (teachersLoadError) {
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <p class="text-xs text-red-600">{{ teachersLoadError }}</p>
+                <button
+                  type="button"
+                  class="text-xs font-semibold text-violet-700 underline hover:text-violet-900"
+                  (click)="loadTeachers()"
+                >
+                  Retry
+                </button>
+              </div>
+            }
+          </div>
+
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label

@@ -31,6 +31,7 @@ export class AppComponent {
     const path = this.router.url.split('?')[0];
     if (
       path.startsWith('/dashboard') ||
+      path.startsWith('/teacher') ||
       path.startsWith('/school-admin') ||
       path.startsWith('/students') ||
       path.startsWith('/teachers') ||

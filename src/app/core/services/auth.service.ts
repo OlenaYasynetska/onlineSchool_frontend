@@ -3,10 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import {
-  SUPER_ADMIN_EMAIL,
-  SUPER_ADMIN_PASSWORD,
-} from '../config/super-admin.credentials';
 import type { AuthUser, User } from '../models';
 
 export interface LoginRequest {
@@ -61,17 +57,23 @@ export class AuthService {
    * Повертає true, якщо сесію створено.
    */
   loginAsSuperAdminIfValid(identifier: string, password: string): boolean {
+    if (!environment.enableLocalSuperAdminLogin) {
+      return false;
+    }
     const email = identifier.trim().toLowerCase();
+    const expectedEmail = environment.superAdminEmail.trim().toLowerCase();
     if (
-      email !== SUPER_ADMIN_EMAIL.toLowerCase() ||
-      password !== SUPER_ADMIN_PASSWORD
+      !expectedEmail ||
+      !environment.superAdminPassword ||
+      email !== expectedEmail ||
+      password !== environment.superAdminPassword
     ) {
       return false;
     }
     const now = new Date().toISOString();
     const authUser: AuthUser = {
       id: 'local-super-admin',
-      email: SUPER_ADMIN_EMAIL,
+      email: environment.superAdminEmail,
       firstName: 'Super',
       lastName: 'Admin',
       role: 'SUPER_ADMIN',
@@ -98,6 +100,7 @@ export class AuthService {
           };
           this.currentUserSignal.set(authUser);
           this.persistSession(authUser);
+          this.persistSchoolIdSession(authUser);
         })
       );
   }
@@ -116,6 +119,7 @@ export class AuthService {
           };
           this.currentUserSignal.set(authUser);
           this.persistSession(authUser);
+          this.persistSchoolIdSession(authUser);
         })
       );
   }
@@ -123,6 +127,9 @@ export class AuthService {
   logout(): void {
     this.currentUserSignal.set(null);
     localStorage.removeItem('auth_user');
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('school_admin_active_school_id');
+    }
     this.router.navigate(['/auth/login']);
   }
 
@@ -134,6 +141,17 @@ export class AuthService {
     localStorage.setItem('auth_user', JSON.stringify(user));
   }
 
+  /** Дублюємо schoolId у sessionStorage для кабінету адміна школи (модалки / fallback). */
+  private persistSchoolIdSession(user: AuthUser): void {
+    if (typeof sessionStorage === 'undefined') return;
+    const raw = user.schoolId;
+    if (raw == null) return;
+    const s = String(raw).trim();
+    if (s) {
+      sessionStorage.setItem('school_admin_active_school_id', s);
+    }
+  }
+
   private restoreSession(): void {
     try {
       const stored = localStorage.getItem('auth_user');
@@ -141,6 +159,7 @@ export class AuthService {
       const user = JSON.parse(stored) as AuthUser;
       if (user.expiresAt && user.expiresAt > Date.now()) {
         this.currentUserSignal.set(user);
+        this.persistSchoolIdSession(user);
       } else {
         localStorage.removeItem('auth_user');
       }

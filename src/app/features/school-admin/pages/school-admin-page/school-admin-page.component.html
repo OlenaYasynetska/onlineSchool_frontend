@@ -14,6 +14,7 @@
       </div>
     }
     @if (!loading && !noSchoolAssigned) {
+    <div id="school-admin-top" class="scroll-mt-6 space-y-8">
     <div
       class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
     >
@@ -89,6 +90,7 @@
         Add student
       </button>
     </div>
+    </div>
 
     <!-- Groups -->
     <section id="school-admin-groups" class="scroll-mt-6 space-y-4">
@@ -101,8 +103,21 @@
             type="search"
             placeholder="Search groups"
             (input)="groupsVm.onGroupSearchInput($event)"
-            class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
           />
+          <span
+            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+            aria-hidden="true"
+          >
+            <img
+              src="/assets/icons/about/loupe.svg"
+              alt=""
+              width="16"
+              height="16"
+              class="h-4 w-4 shrink-0 object-contain"
+              aria-hidden="true"
+            />
+          </span>
         </div>
       </div>
       @if (groupsVm.filteredGroups.length > 0) {
@@ -111,7 +126,7 @@
         >
           @for (g of groupsVm.filteredGroups; track g.id) {
             <article
-              class="flex h-[218px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-violet-200 hover:shadow-md"
+              class="flex min-h-[218px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-violet-200 hover:shadow-md"
               role="button"
               tabindex="0"
               (click)="actionsVm.openEditGroup(g)"
@@ -140,6 +155,12 @@
                 >
                   {{ g.topicsLabel }}
                 </p>
+                @if (g.teacherDisplayName) {
+                  <p class="mt-2 text-sm font-medium text-slate-800">
+                    <span class="font-normal text-slate-500">Teacher:</span>
+                    {{ g.teacherDisplayName }}
+                  </p>
+                }
                 <div
                   class="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500"
                 >
@@ -168,6 +189,124 @@
           class="rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-12 text-center text-sm text-slate-600"
         >
           No groups match your search.
+        </div>
+      }
+    </section>
+
+    <!-- Teachers (GET /school-admin/teachers); оформлення як блок Students -->
+    <section
+      id="school-admin-teachers"
+      class="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+    >
+      <div
+        class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+          <img
+            src="/assets/icons/sidebar/book-open.svg"
+            alt=""
+            width="24"
+            height="24"
+            class="h-6 w-6 shrink-0 object-contain"
+            aria-hidden="true"
+          />
+          Teachers
+        </h2>
+        <div class="relative max-w-md flex-1 sm:ml-auto">
+          <input
+            type="search"
+            placeholder="Search teacher"
+            [disabled]="teachers.length === 0"
+            (input)="onTeacherSearchInput($event)"
+            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+          />
+          <span
+            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+            aria-hidden="true"
+          >
+            <img
+              src="/assets/icons/about/loupe.svg"
+              alt=""
+              width="16"
+              height="16"
+              class="h-4 w-4 shrink-0 object-contain"
+              aria-hidden="true"
+            />
+          </span>
+        </div>
+      </div>
+
+      @if (teachers.length === 0) {
+        <p class="text-sm text-slate-600">
+          No teachers yet. Use &ldquo;Add teacher&rdquo; above.
+        </p>
+      } @else {
+        <div class="overflow-x-auto rounded-lg border border-slate-100">
+          <table class="w-full min-w-[880px] text-left text-sm">
+            <thead>
+              <tr
+                class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600"
+              >
+                <th class="px-3 py-3">#</th>
+                <th class="px-3 py-3">Full name</th>
+                <th class="px-3 py-3">Email</th>
+                <th class="px-3 py-3">Tel.</th>
+                <th class="px-3 py-3">Subjects</th>
+                <th class="px-3 py-3">Groups</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (filteredTeachers().length > 0) {
+                @for (t of filteredTeachers(); track t.id; let i = $index) {
+                  <tr class="border-b border-slate-100 hover:bg-slate-50/80">
+                    <td class="px-3 py-3 font-semibold text-slate-900">
+                      {{ i + 1 }}
+                    </td>
+                    <td class="px-3 py-3 font-medium text-slate-900">
+                      {{ t.displayName }}
+                    </td>
+                    <td class="px-3 py-3 text-slate-600">
+                      @if (t.email) {
+                        {{ t.email }}
+                      } @else {
+                        <span class="text-slate-400">—</span>
+                      }
+                    </td>
+                    <td class="px-3 py-3 text-slate-600">
+                      @if (t.phone) {
+                        {{ t.phone }}
+                      } @else {
+                        <span class="text-slate-400">—</span>
+                      }
+                    </td>
+                    <td class="px-3 py-3 text-slate-600">
+                      @if (t.subjectTitles.length) {
+                        {{ t.subjectTitles.join(', ') }}
+                      } @else {
+                        <span class="text-slate-400">—</span>
+                      }
+                    </td>
+                    <td class="px-3 py-3 text-slate-600">
+                      @if (t.groupNames.length) {
+                        {{ t.groupNames.join(', ') }}
+                      } @else {
+                        <span class="text-slate-400">—</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              } @else {
+                <tr>
+                  <td
+                    colspan="6"
+                    class="px-3 py-10 text-center text-sm text-slate-500"
+                  >
+                    No teachers match your search.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       }
     </section>
@@ -253,18 +392,35 @@
         class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
       >
         <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
-          <span
-            class="inline-block h-2 w-2 rounded-full bg-slate-400"
+          <img
+            src="/assets/icons/sidebar/graduation-cap.svg"
+            alt=""
+            width="24"
+            height="24"
+            class="h-6 w-6 shrink-0 object-contain"
             aria-hidden="true"
-          ></span>
+          />
           Students
         </h2>
         <div class="relative max-w-md flex-1 sm:ml-auto">
           <input
             type="search"
             placeholder="Search student"
-            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
+          <span
+            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+            aria-hidden="true"
+          >
+            <img
+              src="/assets/icons/about/loupe.svg"
+              alt=""
+              width="16"
+              height="16"
+              class="h-4 w-4 shrink-0 object-contain"
+              aria-hidden="true"
+            />
+          </span>
         </div>
       </div>
 
@@ -274,30 +430,38 @@
             <tr
               class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600"
             >
-              <th class="px-3 py-3">ID</th>
+              <th class="px-3 py-3">#</th>
               <th class="px-3 py-3">Full name</th>
               <th class="px-3 py-3">Email</th>
+              <th class="px-3 py-3">Groups</th>
               <th class="px-3 py-3">Joined</th>
             </tr>
           </thead>
           <tbody>
             @if (dash.students.length > 0) {
-              @for (row of dash.students; track row.id) {
+              @for (row of sortedStudents(); track row.id; let i = $index) {
                 <tr class="border-b border-slate-100 hover:bg-slate-50/80">
-                  <td class="px-3 py-3 font-mono text-slate-600">
-                    {{ row.id }}
+                  <td class="px-3 py-3 font-semibold text-slate-900">
+                    {{ i + 1 }}
                   </td>
                   <td class="px-3 py-3 font-medium text-slate-900">
                     {{ row.fullName }}
                   </td>
                   <td class="px-3 py-3 text-slate-600">{{ row.email }}</td>
+                  <td class="px-3 py-3 text-slate-600">
+                    @if (row.groupNames?.length) {
+                      {{ row.groupNames!.join(', ') }}
+                    } @else {
+                      <span class="text-slate-400">—</span>
+                    }
+                  </td>
                   <td class="px-3 py-3 text-slate-600">{{ row.joinedAt }}</td>
                 </tr>
               }
             } @else {
               <tr>
                 <td
-                  colspan="4"
+                  colspan="5"
                   class="px-3 py-10 text-center text-sm text-slate-500"
                 >
                   No students yet.
@@ -307,6 +471,17 @@
           </tbody>
         </table>
       </div>
+    </section>
+
+    <!-- Employees (staff); список з API можна додати пізніше -->
+    <section
+      id="school-admin-employees"
+      class="scroll-mt-6 rounded-2xl border border-dashed border-slate-200 bg-white/80 p-4 shadow-sm sm:p-6"
+    >
+      <h2 class="text-lg font-bold text-slate-900">Employees</h2>
+      <p class="mt-2 text-sm text-slate-600">
+        School staff and administrators will appear here once the employee list is connected to the API.
+      </p>
     </section>
 
     <!-- Payments -->
@@ -328,8 +503,21 @@
           <input
             type="search"
             placeholder="Search payment"
-            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
+          <span
+            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+            aria-hidden="true"
+          >
+            <img
+              src="/assets/icons/about/loupe.svg"
+              alt=""
+              width="16"
+              height="16"
+              class="h-4 w-4 shrink-0 object-contain"
+              aria-hidden="true"
+            />
+          </span>
         </div>
       </div>
 
@@ -395,6 +583,15 @@
         [schoolId]="schoolId"
         (closeRequested)="actionsVm.closeAddTeacherModal()"
         (teacherSubmit)="actionsVm.onCreateTeacher($event)"
+      />
+    }
+
+    @if (actionsVm.addStudentOpen()) {
+      <app-add-student-modal
+        [schoolId]="schoolId"
+        [groups]="dash.groups ?? []"
+        (closeRequested)="actionsVm.closeAddStudentModal()"
+        (studentSubmit)="actionsVm.onCreateStudent($event)"
       />
     }
 

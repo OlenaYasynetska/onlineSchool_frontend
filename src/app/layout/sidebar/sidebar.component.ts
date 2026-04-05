@@ -11,13 +11,17 @@ export type SidebarNavIcon =
   | 'teacher'
   | 'graduate'
   | 'envelope'
-  | 'building';
+  | 'building'
+  | 'clipboard'
+  | 'lineChart';
 
 export type CompactNavItem = {
   path: string;
   label: string;
   exact?: boolean;
   icon: SidebarNavIcon;
+  /** HTML id секції на сторінці school-admin (fragment у URL + scroll). */
+  fragment?: string;
 };
 
 @Component({
@@ -56,12 +60,72 @@ export class SidebarComponent implements OnInit {
     });
   }
 
+  readonly teacherNav: CompactNavItem[] = [
+    {
+      path: '/teacher',
+      label: 'Dashboard',
+      exact: true,
+      icon: 'home',
+      fragment: 'teacher-dashboard-top',
+    },
+    {
+      path: '/teacher/groups',
+      label: 'Groups',
+      icon: 'users',
+      fragment: 'teacher-my-groups',
+    },
+    {
+      path: '/teacher/students',
+      label: 'Students',
+      icon: 'graduate',
+      fragment: 'teacher-students',
+    },
+    {
+      path: '/teacher/activity',
+      label: 'My activity',
+      icon: 'clipboard',
+      fragment: 'teacher-activity',
+    },
+    {
+      path: '/teacher/group-stats',
+      label: 'Group stats',
+      icon: 'lineChart',
+      fragment: 'teacher-group-stats',
+    },
+  ];
+
   readonly schoolAdminNav: CompactNavItem[] = [
-    { path: '/school-admin', label: 'Dashboard', exact: true, icon: 'home' },
-    { path: '/school-admin/groups', label: 'Groups', icon: 'users' },
-    { path: '/school-admin/employees', label: 'Employees', icon: 'user' },
-    { path: '/school-admin/teachers', label: 'Teachers', icon: 'teacher' },
-    { path: '/school-admin/students', label: 'Students', icon: 'graduate' },
+    {
+      path: '/school-admin',
+      label: 'Dashboard',
+      exact: true,
+      icon: 'home',
+      fragment: 'school-admin-top',
+    },
+    {
+      path: '/school-admin/groups',
+      label: 'Groups',
+      icon: 'users',
+      fragment: 'school-admin-groups',
+    },
+    {
+      path: '/school-admin/employees',
+      label: 'Employees',
+      icon: 'user',
+      fragment: 'school-admin-employees',
+    },
+    {
+      path: '/school-admin/teachers',
+      label: 'Teachers',
+      icon: 'teacher',
+      fragment: 'school-admin-teachers',
+    },
+    {
+      path: '/school-admin/students',
+      label: 'Students',
+      icon: 'graduate',
+      fragment: 'school-admin-students',
+    },
   ];
 
   readonly superAdminNav: CompactNavItem[] = [
@@ -82,6 +146,9 @@ export class SidebarComponent implements OnInit {
   ];
 
   compactSidebar(): { items: CompactNavItem[]; ariaLabel: string } | null {
+    if (this.auth.currentUser()?.role === 'TEACHER') {
+      return { items: this.teacherNav, ariaLabel: 'Teacher' };
+    }
     if (this.auth.currentUser()?.role === 'ADMIN_SCHOOL') {
       return { items: this.schoolAdminNav, ariaLabel: 'School admin' };
     }

@@ -9,21 +9,18 @@ import {
   Output,
 } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
+import type { SchoolGroupCard } from '../../models/school-admin-dashboard.model';
 import { normalizeSchoolId } from '../../utils/school-id.util';
 
-export type AddTeacherPayload = {
+export type AddStudentPayload = {
+  fullName: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  /** Кожен елемент — окремий рядок у таблиці `teacher_subjects`. */
-  subjects?: string[];
-  /** Опційно; зберігається в `users.phone`. */
-  phone?: string;
+  /** Після створення — зарахувати до існуючої групи (опційно). */
+  groupId?: string;
 };
 
 @Component({
-  selector: 'app-add-teacher-modal',
+  selector: 'app-add-student-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
@@ -31,7 +28,7 @@ export type AddTeacherPayload = {
       class="fixed inset-0 z-[100] isolate flex items-center justify-center overflow-hidden bg-slate-900/50 p-3 sm:p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="add-teacher-title"
+      aria-labelledby="add-student-title"
       (click)="$event.stopPropagation()"
     >
       <div
@@ -41,14 +38,14 @@ export type AddTeacherPayload = {
         <div class="mb-4 flex items-start justify-between gap-3">
           <div class="min-w-0">
             <h1
-              id="add-teacher-title"
+              id="add-student-title"
               class="text-xl font-bold leading-snug text-slate-900 sm:text-2xl"
             >
-              Add teacher
+              Add student
             </h1>
             <p class="mt-1 text-sm text-slate-600">
-              Create an account for a teacher at your school. They can sign in with this email and
-              password.
+              Register a student for your school. They appear in the students list; login can be
+              added later if your flow uses accounts.
             </p>
           </div>
           <button
@@ -62,20 +59,20 @@ export type AddTeacherPayload = {
         </div>
 
         <form
-          #teacherForm="ngForm"
+          #studentForm="ngForm"
           novalidate
-          (ngSubmit)="submit(teacherForm)"
+          (ngSubmit)="submit(studentForm)"
           class="space-y-4"
         >
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
                 class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                for="teacher-first-name"
+                for="student-first-name"
                 >First name</label
               >
               <input
-                id="teacher-first-name"
+                id="student-first-name"
                 name="firstName"
                 type="text"
                 [(ngModel)]="form.firstName"
@@ -107,11 +104,11 @@ export type AddTeacherPayload = {
             <div>
               <label
                 class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-                for="teacher-last-name"
+                for="student-last-name"
                 >Last name</label
               >
               <input
-                id="teacher-last-name"
+                id="student-last-name"
                 name="lastName"
                 type="text"
                 [(ngModel)]="form.lastName"
@@ -145,11 +142,11 @@ export type AddTeacherPayload = {
           <div>
             <label
               class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-              for="teacher-email"
+              for="student-email"
               >Email</label
             >
             <input
-              id="teacher-email"
+              id="student-email"
               name="email"
               type="email"
               [(ngModel)]="form.email"
@@ -176,115 +173,36 @@ export type AddTeacherPayload = {
             }
           </div>
 
-          <div>
-            <label
-              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-              for="teacher-phone"
-              >Phone (optional)</label
-            >
-            <input
-              id="teacher-phone"
-              name="phone"
-              type="tel"
-              [(ngModel)]="form.phone"
-              maxlength="32"
-              autocomplete="tel"
-              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
-            />
-            <p class="mt-1 text-xs text-slate-500">Max 32 characters.</p>
-          </div>
-
-          <div>
-            <label
-              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-              for="teacher-password"
-              >Password</label
-            >
-            <input
-              id="teacher-password"
-              name="password"
-              type="password"
-              [(ngModel)]="form.password"
-              required
-              minlength="8"
-              maxlength="128"
-              autocomplete="new-password"
-              #passwordModel="ngModel"
-              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-100"
-              [class.border-slate-200]="!(passwordModel.invalid && passwordModel.touched)"
-              [class.border-red-500]="passwordModel.invalid && passwordModel.touched"
-              [class.focus:border-violet-400]="!(passwordModel.invalid && passwordModel.touched)"
-            />
-            <p class="mt-1 text-xs text-slate-500">8–128 characters.</p>
-            @if (passwordModel.invalid && passwordModel.touched) {
-              <p class="mt-1 text-xs text-red-600">
-                @if (passwordModel.errors?.['required']) {
-                  Enter a password.
-                } @else if (passwordModel.errors?.['minlength']) {
-                  Password must be at least 8 characters.
-                } @else if (passwordModel.errors?.['maxlength']) {
-                  Password is too long (max 128).
+          @if (groups.length > 0) {
+            <div>
+              <label
+                class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                for="student-group"
+                >Add to group (optional)</label
+              >
+              <select
+                id="student-group"
+                name="groupId"
+                [(ngModel)]="selectedGroupId"
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              >
+                <option value="">— Not now —</option>
+                @for (g of groups; track g.id) {
+                  <option [value]="g.id">{{ g.name }} ({{ g.code }})</option>
                 }
+              </select>
+              <p class="mt-1 text-xs text-slate-500">
+                Student is created first; you can assign them to an existing course group here.
               </p>
-            }
-          </div>
-
-          <div>
-            <label
-              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-              for="teacher-subject"
-              >Subject (optional)</label
-            >
-            <div class="flex flex-col gap-2">
-              @for (line of subjectLines; track $index) {
-                <div class="flex items-center gap-2">
-                  <input
-                    [attr.id]="$index === 0 ? 'teacher-subject' : 'teacher-subject-' + $index"
-                    [name]="'subject_' + $index"
-                    type="text"
-                    [(ngModel)]="subjectLines[$index]"
-                    maxlength="255"
-                    [attr.placeholder]="$index === 0 ? 'e.g. Mathematics' : 'Another subject'"
-                    class="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
-                  />
-                  @if ($index > 0) {
-                    <button
-                      type="button"
-                      class="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                      (click)="removeSubjectLine($index)"
-                      [attr.aria-label]="'Remove subject ' + ($index + 1)"
-                    >
-                      ×
-                    </button>
-                  } @else {
-                    <span class="w-9 shrink-0" aria-hidden="true"></span>
-                  }
-                </div>
-              }
-              <div class="flex justify-start">
-                <button
-                  type="button"
-                  class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-violet-300 bg-violet-50 text-lg font-semibold leading-none text-violet-700 shadow-sm transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-40"
-                  (click)="addSubjectLine()"
-                  [disabled]="subjectLines.length >= maxSubjectLines"
-                  aria-label="Add another subject field"
-                >
-                  +
-                </button>
-              </div>
             </div>
-            <p class="mt-1 text-xs text-slate-500">
-              Each line is saved as a separate row (max {{ maxTotalSubjectChars }} characters per
-              subject).
-            </p>
-          </div>
+          }
 
           <div class="flex flex-wrap gap-2 pt-2">
             <button
               type="submit"
               class="inline-flex items-center rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
             >
-              Add teacher
+              Add student
             </button>
             <button
               type="button"
@@ -299,50 +217,27 @@ export type AddTeacherPayload = {
     </div>
   `,
 })
-export class AddTeacherModalComponent implements OnInit, OnDestroy {
+export class AddStudentModalComponent implements OnInit, OnDestroy {
   @Input() schoolId = '';
+  @Input() groups: SchoolGroupCard[] = [];
   @Output() closeRequested = new EventEmitter<void>();
-  /** Не називати `createTeacher` — конфлікт імені з DOM-подією submit. */
-  @Output() teacherSubmit = new EventEmitter<AddTeacherPayload>();
+  @Output() studentSubmit = new EventEmitter<AddStudentPayload>();
 
-  /** Латиниця, кирилиця, пробіли, дефіс, апостроф. */
   readonly namePattern = "^[a-zA-Zа-яА-ЯіІїЇєЄґҐёЁ\\s\\-']{2,100}$";
-
   readonly emailPattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$';
-
-  /** Окремі рядки предметів; у БД зберігаються як один рядок через кому. */
-  subjectLines: string[] = [''];
-
-  readonly maxSubjectLines = 12;
-  readonly maxTotalSubjectChars = 255;
 
   readonly form: {
     firstName: string;
     lastName: string;
     email: string;
-    phone: string;
-    password: string;
   } = {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
-    password: '',
   };
 
-  addSubjectLine(): void {
-    if (this.subjectLines.length >= this.maxSubjectLines) {
-      return;
-    }
-    this.subjectLines = [...this.subjectLines, ''];
-  }
-
-  removeSubjectLine(index: number): void {
-    if (index <= 0 || this.subjectLines.length <= 1) {
-      return;
-    }
-    this.subjectLines = this.subjectLines.filter((_, i) => i !== index);
-  }
+  /** Порожній рядок = не зараховувати до групи зараз. */
+  selectedGroupId = '';
 
   ngOnInit(): void {
     document.documentElement.style.overflow = 'hidden';
@@ -362,7 +257,7 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
   submit(form: NgForm): void {
     if (!normalizeSchoolId(this.schoolId)) {
       window.alert(
-        'School is not linked to your account (missing school id). You cannot add a teacher.'
+        'School is not linked to your account (missing school id). You cannot add a student.'
       );
       return;
     }
@@ -376,24 +271,12 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
       form.control.markAllAsTouched();
       return;
     }
-    const p = this.form.password ?? '';
-    const parts = this.subjectLines.map((s) => s.trim()).filter((s) => s.length > 0);
-    for (const s of parts) {
-      if (s.length > this.maxTotalSubjectChars) {
-        form.control.markAllAsTouched();
-        window.alert(`Each subject must be at most ${this.maxTotalSubjectChars} characters.`);
-        return;
-      }
-    }
-    const phoneTrim = (this.form.phone ?? '').trim();
-    const payload: AddTeacherPayload = {
-      firstName: first,
-      lastName: last,
+    const fullName = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+    const gid = this.selectedGroupId?.trim();
+    this.studentSubmit.emit({
+      fullName,
       email: this.form.email.trim().toLowerCase(),
-      password: p,
-      subjects: parts.length > 0 ? parts : undefined,
-      ...(phoneTrim ? { phone: phoneTrim } : {}),
-    };
-    this.teacherSubmit.emit(payload);
+      ...(gid ? { groupId: gid } : {}),
+    });
   }
 }

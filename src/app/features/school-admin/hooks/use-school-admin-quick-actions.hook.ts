@@ -1,16 +1,92 @@
 import { inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import type { SchoolAdminDashboardResponse, SchoolGroupCard } from '../models/school-admin-dashboard.model';
+import type {
+  SchoolAdminDashboardResponse,
+  SchoolGroupCard,
+} from '../models/school-admin-dashboard.model';
 import type { AddGroupPayload } from '../components/add-group-modal/add-group-modal.component';
+import type { AddStudentPayload } from '../components/add-student-modal/add-student-modal.component';
 import type { AddTeacherPayload } from '../components/add-teacher-modal/add-teacher-modal.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { SchoolAdminDashboardService } from '../services/school-admin-dashboard.service';
+import {
+  normalizeSchoolId,
+  SESSION_STORAGE_SCHOOL_ID_KEY,
+} from '../utils/school-id.util';
+
+function resolveSchoolIdForActions(
+  auth: AuthService,
+  dash: SchoolAdminDashboardResponse
+): string {
+  return (
+    normalizeSchoolId(auth.currentUser()?.schoolId) ||
+    normalizeSchoolId(dash.schoolId) ||
+    (typeof sessionStorage !== 'undefined'
+      ? normalizeSchoolId(sessionStorage.getItem(SESSION_STORAGE_SCHOOL_ID_KEY))
+      : '')
+  );
+}
+
+function httpErrorMessage(err: unknown): string {
+  if (err && typeof err === 'object') {
+    const e = err as {
+      error?: unknown;
+      message?: string;
+      status?: number;
+    };
+    if (typeof e.error === 'object' && e.error !== null && 'message' in e.error) {
+      const m = (e.error as { message?: string }).message;
+      if (typeof m === 'string' && m.trim()) {
+        return m;
+      }
+    }
+    if (typeof e.error === 'string' && e.error.trim()) {
+      return e.error;
+    }
+    if (typeof e.message === 'string' && e.message.trim()) {
+      return e.message;
+    }
+  }
+  return 'Unknown error';
+}
+
+/** Після POST /students одразу показати рядок у таблиці, навіть якщо GET dashboard згодом впаде. */
+function mergeCreatedStudentIntoDash(
+  dash: SchoolAdminDashboardResponse,
+  created: {
+    id: string;
+    fullName: string;
+    email: string;
+    createdAt: string;
+  }
+): void {
+  const joinedAt =
+    typeof created.createdAt === 'string' && created.createdAt.length >= 10
+      ? created.createdAt.slice(0, 10)
+      : new Date().toISOString().slice(0, 10);
+  const rest = dash.students ?? [];
+  const without = rest.filter((s) => s.id !== created.id);
+  dash.students = [...without, {
+    id: created.id,
+    fullName: created.fullName,
+    email: created.email,
+    joinedAt,
+    groupNames: [],
+  }].sort((a, b) => a.joinedAt.localeCompare(b.joinedAt));
+  dash.stats = {
+    ...dash.stats,
+    totalStudents: dash.students.length,
+  };
+}
 
 /**
  * Логика кнопок "Add ..." в кабинете админа школы.
  * Здесь же — состояние модалок (пока только Add group реализован).
  */
-export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
+export function useSchoolAdminQuickActions(
+  dash: SchoolAdminDashboardResponse,
+  onTeachersChanged?: () => void
+) {
   const router = inject(Router);
   const auth = inject(AuthService);
   const dashApi = inject(SchoolAdminDashboardService);
@@ -23,11 +99,13 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
   const selectedEditGroup = signal<SchoolGroupCard | null>(null);
 
   const addTeacherOpen = signal(false);
+  const addStudentOpen = signal(false);
 
   function addGroup(): void {
     editGroupOpen.set(false);
     selectedEditGroup.set(null);
     addTeacherOpen.set(false);
+    addStudentOpen.set(false);
     addGroupOpen.set(true);
   }
 
@@ -36,6 +114,7 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
     addGroupSuccessOpen.set(false);
     editGroupOpen.set(false);
     selectedEditGroup.set(null);
+    addStudentOpen.set(false);
     addTeacherOpen.set(true);
   }
 
@@ -44,8 +123,11 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
   }
 
   function onCreateTeacher(payload: AddTeacherPayload): void {
-    const schoolId = auth.currentUser()?.schoolId;
+    const schoolId = resolveSchoolIdForActions(auth, dash);
     if (!schoolId) {
+      window.alert(
+        'School id is missing. Reload the page or log in again.'
+      );
       console.error('No schoolId for current admin.');
       return;
     }
@@ -53,6 +135,7 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
     dashApi.createTeacher(schoolId, payload).subscribe({
       next: () => {
         addTeacherOpen.set(false);
+        onTeachersChanged?.();
       },
       error: (err) => {
         console.error(err);
@@ -71,7 +154,70 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
   }
 
   function addStudent(): void {
-    /* placeholder */
+    addGroupOpen.set(false);
+    addGroupSuccessOpen.set(false);
+    editGroupOpen.set(false);
+    selectedEditGroup.set(null);
+    addTeacherOpen.set(false);
+    addStudentOpen.set(true);
+  }
+
+  function closeAddStudentModal(): void {
+    addStudentOpen.set(false);
+  }
+
+  function onCreateStudent(payload: AddStudentPayload): void {
+    const schoolId = resolveSchoolIdForActions(auth, dash);
+    if (!schoolId) {
+      window.alert(
+        'Your account has no school linked (schoolId is missing). You cannot add students.'
+      );
+      console.error('No schoolId for current admin.');
+      return;
+    }
+
+    const reloadDash = (): void => {
+      dashApi.getDashboard(schoolId).subscribe({
+        next: (data) => {
+          Object.assign(dash, data);
+          addStudentOpen.set(false);
+        },
+        error: (err) => {
+          console.error(err);
+          window.alert(
+            `Student was saved, but refreshing the dashboard failed: ${httpErrorMessage(err)}`
+          );
+          addStudentOpen.set(false);
+        },
+      });
+    };
+
+    dashApi.createStudent(schoolId, payload).subscribe({
+      next: (created) => {
+        mergeCreatedStudentIntoDash(dash, created);
+        const groupId = payload.groupId?.trim();
+        if (groupId) {
+          dashApi
+            .enrollStudentInGroup(schoolId, groupId, created.id)
+            .subscribe({
+              next: () => reloadDash(),
+              error: (err) => {
+                console.error(err);
+                window.alert(
+                  `Student was created, but enrolling in group failed: ${httpErrorMessage(err)}`
+                );
+                reloadDash();
+              },
+            });
+        } else {
+          reloadDash();
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        window.alert(`Create student failed: ${httpErrorMessage(err)}`);
+      },
+    });
   }
 
   function closeAddGroupModal(): void {
@@ -83,8 +229,11 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
   }
 
   function onCreateGroup(payload: AddGroupPayload): void {
-    const schoolId = auth.currentUser()?.schoolId;
+    const schoolId = resolveSchoolIdForActions(auth, dash);
     if (!schoolId) {
+      window.alert(
+        'School id is missing. Reload the page or log in again.'
+      );
       console.error('No schoolId for current admin.');
       return;
     }
@@ -123,6 +272,8 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
   function openEditGroup(group: SchoolGroupCard): void {
     addGroupOpen.set(false);
     addGroupSuccessOpen.set(false);
+    addStudentOpen.set(false);
+    addTeacherOpen.set(false);
     selectedEditGroup.set(group);
     editGroupOpen.set(true);
   }
@@ -134,8 +285,11 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
 
   function onEditGroupApply(payload: AddGroupPayload): void {
     // Используем тот же endpoint, что и для Create: backend делает upsert.
-    const schoolId = auth.currentUser()?.schoolId;
+    const schoolId = resolveSchoolIdForActions(auth, dash);
     if (!schoolId) {
+      window.alert(
+        'School id is missing. Reload the page or log in again.'
+      );
       console.error('No schoolId for current admin.');
       return;
     }
@@ -188,6 +342,10 @@ export function useSchoolAdminQuickActions(dash: SchoolAdminDashboardResponse) {
     addTeacherOpen,
     closeAddTeacherModal,
     onCreateTeacher,
+
+    addStudentOpen,
+    closeAddStudentModal,
+    onCreateStudent,
 
     addGroupOpen,
     addGroupSuccessOpen,

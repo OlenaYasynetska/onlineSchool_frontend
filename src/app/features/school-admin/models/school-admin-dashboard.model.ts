@@ -1,8 +1,11 @@
 export interface StudentRow {
+  /** UUID у БД; у таблиці показуємо порядковий № окремо. */
   id: string;
   fullName: string;
   email: string;
   joinedAt: string;
+  /** Групи / курси, до яких зараховано студента після додавання. */
+  groupNames?: string[];
 }
 
 export interface PaymentHistoryRow {
@@ -30,6 +33,10 @@ export interface SchoolSubject {
 export interface SchoolTeacher {
   id: string;
   displayName: string;
+  email: string;
+  phone: string | null;
+  subjectTitles: string[];
+  groupNames: string[];
 }
 
 export interface SchoolGroupCard {
@@ -40,6 +47,8 @@ export interface SchoolGroupCard {
   subjectId?: string | null;
   /** Якщо група прив'язана до викладача з БД */
   teacherId?: string | null;
+  /** ПІБ викладача з users (якщо є teacher_id). */
+  teacherDisplayName?: string | null;
   topicsLabel: string;
   startDate: string;
   endDate: string;
@@ -55,6 +64,8 @@ export interface SchoolSubscriptionInfo {
 }
 
 export interface SchoolAdminDashboardResponse {
+  /** З `GET /school-admin/dashboard` — той самий `schoolId`, що в query. */
+  schoolId?: string;
   stats: SchoolDashboardStats;
   students: StudentRow[];
   payments: PaymentHistoryRow[];

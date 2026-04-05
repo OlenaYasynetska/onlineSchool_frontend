@@ -47,6 +47,7 @@ export class MainLayoutComponent {
     const url = this.router.url;
     return (
       url.startsWith('/dashboard') ||
+      url.startsWith('/teacher') ||
       url.startsWith('/school-admin') ||
       url.startsWith('/students') ||
       url.startsWith('/teachers') ||

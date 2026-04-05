@@ -15,6 +15,10 @@ import { normalizeSchoolId } from '../../utils/school-id.util';
 export type AddStudentPayload = {
   fullName: string;
   email: string;
+  /** Порожньо — бекенд згенерує пароль. */
+  password: string | null;
+  /** Надіслати лист з посиланням на вхід і паролем. */
+  sendInviteEmail: boolean;
   /** Після створення — зарахувати до існуючої групи (опційно). */
   groupId?: string;
 };
@@ -44,8 +48,8 @@ export type AddStudentPayload = {
               Add student
             </h1>
             <p class="mt-1 text-sm text-slate-600">
-              Register a student for your school. They appear in the students list; login can be
-              added later if your flow uses accounts.
+              Creates a login account (student role). Optionally send an invitation email with the
+              login link and password.
             </p>
           </div>
           <button
@@ -173,6 +177,43 @@ export type AddStudentPayload = {
             }
           </div>
 
+          <div>
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="student-password"
+              >Password</label
+            >
+            <input
+              id="student-password"
+              name="password"
+              type="password"
+              [(ngModel)]="form.password"
+              autocomplete="new-password"
+              maxlength="128"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              placeholder="Leave empty to generate"
+            />
+            <p class="mt-1 text-xs text-slate-500">
+              At least 8 characters, or leave empty so the system generates one.
+            </p>
+          </div>
+
+          <div class="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5">
+            <input
+              id="student-send-invite"
+              name="sendInvite"
+              type="checkbox"
+              [(ngModel)]="form.sendInviteEmail"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+            />
+            <label for="student-send-invite" class="cursor-pointer text-sm text-slate-700">
+              <span class="font-medium text-slate-900">Send invitation email</span>
+              <span class="block text-xs text-slate-500">
+                Email includes login page link and password (configure SMTP on the server to send).
+              </span>
+            </label>
+          </div>
+
           @if (groups.length > 0) {
             <div>
               <label
@@ -230,10 +271,14 @@ export class AddStudentModalComponent implements OnInit, OnDestroy {
     firstName: string;
     lastName: string;
     email: string;
+    password: string;
+    sendInviteEmail: boolean;
   } = {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
+    sendInviteEmail: true,
   };
 
   /** Порожній рядок = не зараховувати до групи зараз. */
@@ -272,10 +317,19 @@ export class AddStudentModalComponent implements OnInit, OnDestroy {
       return;
     }
     const fullName = `${first} ${last}`.replace(/\s+/g, ' ').trim();
+    const pw = this.form.password.trim();
+    if (pw.length > 0 && pw.length < 8) {
+      window.alert(
+        'Password must be at least 8 characters, or leave the field empty to generate one.'
+      );
+      return;
+    }
     const gid = this.selectedGroupId?.trim();
     this.studentSubmit.emit({
       fullName,
       email: this.form.email.trim().toLowerCase(),
+      password: pw.length > 0 ? pw : null,
+      sendInviteEmail: this.form.sendInviteEmail,
       ...(gid ? { groupId: gid } : {}),
     });
   }

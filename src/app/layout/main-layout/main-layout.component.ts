@@ -48,6 +48,7 @@ export class MainLayoutComponent {
     return (
       url.startsWith('/dashboard') ||
       url.startsWith('/teacher') ||
+      url.startsWith('/student') ||
       url.startsWith('/school-admin') ||
       url.startsWith('/students') ||
       url.startsWith('/teachers') ||

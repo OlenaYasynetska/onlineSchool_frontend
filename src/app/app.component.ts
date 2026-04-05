@@ -32,6 +32,7 @@ export class AppComponent {
     if (
       path.startsWith('/dashboard') ||
       path.startsWith('/teacher') ||
+      path.startsWith('/student') ||
       path.startsWith('/school-admin') ||
       path.startsWith('/students') ||
       path.startsWith('/teachers') ||

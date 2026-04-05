@@ -14,6 +14,7 @@
       </div>
     }
     @if (!loading && !noSchoolAssigned) {
+    @if (cabinetSegment() === '') {
     <div id="school-admin-top" class="scroll-mt-6 space-y-8">
     <div
       class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
@@ -91,7 +92,35 @@
       </button>
     </div>
     </div>
+    }
 
+    @if (cabinetSegment() === 'groups') {
+      <div
+        class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Groups</h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Manage groups for your school
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="actionsVm.addGroup()"
+          class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+        >
+          <img
+            src="/assets/icons/about/tabler-icon-text-plus.svg"
+            class="mr-2 inline-block h-6 w-6"
+            alt=""
+            aria-hidden="true"
+          />
+          Add group
+        </button>
+      </div>
+    }
+
+    @if (cabinetSegment() === '' || cabinetSegment() === 'groups') {
     <!-- Groups -->
     <section id="school-admin-groups" class="scroll-mt-6 space-y-4">
       <div
@@ -192,7 +221,35 @@
         </div>
       }
     </section>
+    }
 
+    @if (cabinetSegment() === 'teachers') {
+      <div
+        class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Teachers</h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Manage teachers for your school
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="actionsVm.addTeacher()"
+          class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+        >
+          <img
+            src="/assets/icons/about/tabler-icon-text-plus.svg"
+            class="mr-2 inline-block h-6 w-6"
+            alt=""
+            aria-hidden="true"
+          />
+          Add teacher
+        </button>
+      </div>
+    }
+
+    @if (cabinetSegment() === '' || cabinetSegment() === 'teachers') {
     <!-- Teachers (GET /school-admin/teachers); оформлення як блок Students -->
     <section
       id="school-admin-teachers"
@@ -310,7 +367,9 @@
         </div>
       }
     </section>
+    }
 
+    @if (cabinetSegment() === '') {
     <!-- Quick stats -->
     <section id="school-admin-overview" class="scroll-mt-6">
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -382,7 +441,35 @@
         </div>
       </div>
     </section>
+    }
 
+    @if (cabinetSegment() === 'students') {
+      <div
+        class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Students</h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Manage students at your school
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="actionsVm.addStudent()"
+          class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+        >
+          <img
+            src="/assets/icons/about/tabler-icon-text-plus.svg"
+            class="mr-2 inline-block h-6 w-6"
+            alt=""
+            aria-hidden="true"
+          />
+          Add student
+        </button>
+      </div>
+    }
+
+    @if (cabinetSegment() === '' || cabinetSegment() === 'students') {
     <!-- Students -->
     <section
       id="school-admin-students"
@@ -472,7 +559,18 @@
         </table>
       </div>
     </section>
+    }
 
+    @if (cabinetSegment() === 'employees') {
+      <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">Employees</h1>
+        <p class="mt-1 text-sm text-slate-600">
+          School staff and administrators
+        </p>
+      </div>
+    }
+
+    @if (cabinetSegment() === '' || cabinetSegment() === 'employees') {
     <!-- Employees (staff); список з API можна додати пізніше -->
     <section
       id="school-admin-employees"
@@ -483,7 +581,9 @@
         School staff and administrators will appear here once the employee list is connected to the API.
       </p>
     </section>
+    }
 
+    @if (cabinetSegment() === '') {
     <!-- Payments -->
     <section
       id="school-admin-payments"
@@ -569,6 +669,7 @@
         </table>
       </div>
     </section>
+    }
 
     @if (actionsVm.addGroupOpen()) {
       <app-add-group-modal

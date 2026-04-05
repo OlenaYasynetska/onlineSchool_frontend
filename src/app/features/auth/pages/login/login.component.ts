@@ -50,19 +50,22 @@ import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5" novalidate>
           <div>
             <label
-              for="role-identifier"
+              for="login-email"
               class="mb-1.5 block text-sm font-medium text-slate-600"
-              >Role identifier</label
+              >Email</label
             >
             <input
-              id="role-identifier"
-              type="text"
+              id="login-email"
+              type="email"
               formControlName="roleIdentifier"
               autocomplete="username"
-              placeholder=""
+              placeholder="e.g. name@gmail.com"
               class="block w-full rounded-xl border-0 bg-[#EBF2FA] px-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C5D9ED]"
-              aria-label="Role identifier"
+              aria-label="Email"
             />
+            <p class="mt-1.5 text-xs text-slate-500">
+              Sign in with your account email (not the word "Student").
+            </p>
           </div>
           <div>
             <label
@@ -78,6 +81,9 @@ import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop
               class="block w-full rounded-xl border-0 bg-[#EBF2FA] px-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C5D9ED]"
               aria-label="Password"
             />
+            <p class="mt-1.5 text-xs text-slate-500">
+              Use the password from the invitation email or set by your school admin.
+            </p>
           </div>
 
           <button
@@ -158,7 +164,7 @@ export class LoginComponent implements OnInit, OnDestroy {
               void this.router.navigate(['/teacher']);
               break;
             case 'STUDENT':
-              void this.router.navigate(['/students']);
+              void this.router.navigate(['/student']);
               break;
             default:
               void this.router.navigate(['/dashboard']);

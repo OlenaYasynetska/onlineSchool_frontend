@@ -1,58 +1,41 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
-import type { SchoolGroupCard } from '../../../school-admin/models/school-admin-dashboard.model';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { catchError, filter } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
+import type {
+  SchoolGroupCard,
+  StudentRow,
+} from '../../../school-admin/models/school-admin-dashboard.model';
 import { AuthService } from '../../../../core/services/auth.service';
-import { TeacherDashboardService } from '../../services/teacher-dashboard.service';
-
-export interface TeacherActivityRow {
-  date: string;
-  studentName: string;
-  change: number;
-  reason: string;
-}
+import {
+  TeacherDashboardService,
+  type TeacherActivityEntry,
+} from '../../services/teacher-dashboard.service';
 
 @Component({
   selector: 'app-teacher-dashboard-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './teacher-dashboard-page.component.html',
 })
 export class TeacherDashboardPageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly api = inject(TeacherDashboardService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
+
+  /** Перший сегмент після `/teacher` — `''` = огляд. */
+  readonly cabinetSegment = signal<string>('');
 
   loading = true;
   /** Немає рядка teachers для цього user id */
   noTeacherProfile = false;
   groups: SchoolGroupCard[] = [];
+  students: StudentRow[] = [];
+  activity: TeacherActivityEntry[] = [];
   groupSearchQuery = '';
-
-  /** Демо-дані журналу (поки немає API). */
-  readonly demoActivity: TeacherActivityRow[] = [
-    {
-      date: '15.01.2026',
-      studentName: 'Oleg Boiko',
-      change: 1,
-      reason: 'Class participation',
-    },
-    {
-      date: '14.01.2026',
-      studentName: 'Maria Kovalenko',
-      change: -1,
-      reason: 'Missing assignment',
-    },
-    {
-      date: '12.01.2026',
-      studentName: 'Anna Shevchenko',
-      change: 1,
-      reason: 'Extra credit',
-    },
-  ];
+  studentSearchQuery = '';
 
   /** Демо-точки для лінійного графіка (два ряди). */
   readonly chartDemo = {
@@ -67,11 +50,17 @@ export class TeacherDashboardPageComponent implements OnInit {
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntilDestroyed()
       )
-      .subscribe(() => {
-        const path = this.router.url.split('?')[0].split('#')[0];
-        if (!path.startsWith('/teacher')) return;
-        this.scheduleScrollToRouteSection();
-      });
+      .subscribe(() => this.updateCabinetSegment());
+  }
+
+  private updateCabinetSegment(): void {
+    const url = this.router.url.split('?')[0].split('#')[0];
+    if (!url.startsWith('/teacher')) {
+      this.cabinetSegment.set('');
+      return;
+    }
+    const rest = url.slice('/teacher'.length).replace(/^\//, '');
+    this.cabinetSegment.set((rest.split('/')[0] ?? '').trim());
   }
 
   get teacherDisplayName(): string {
@@ -82,21 +71,33 @@ export class TeacherDashboardPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.updateCabinetSegment();
     const u = this.auth.currentUser();
     if (!u?.id) {
       this.loading = false;
       return;
     }
-    this.api.listMyGroups(u.id).subscribe({
-      next: (list) => {
-        this.groups = list;
+    forkJoin({
+      groups: this.api.listMyGroups(u.id),
+      students: this.api.listMyStudents(u.id).pipe(
+        catchError(() => of<StudentRow[]>([]))
+      ),
+      activity: this.api.listMyActivity(u.id).pipe(
+        catchError(() => of<TeacherActivityEntry[]>([]))
+      ),
+    }).subscribe({
+      next: ({ groups, students, activity }) => {
+        this.groups = groups;
+        this.students = students;
+        this.activity = activity;
         this.loading = false;
         this.noTeacherProfile = false;
-        this.scheduleScrollToRouteSection();
       },
       error: (err: { status?: number }) => {
         this.loading = false;
         this.groups = [];
+        this.students = [];
+        this.activity = [];
         if (err?.status === 404) {
           this.noTeacherProfile = true;
         }
@@ -125,29 +126,24 @@ export class TeacherDashboardPageComponent implements OnInit {
     });
   }
 
-  private routeSectionAnchorId(): string | null {
-    const seg = this.route.snapshot.url[0]?.path ?? '';
-    const map: Record<string, string> = {
-      '': 'teacher-dashboard-top',
-      groups: 'teacher-my-groups',
-      students: 'teacher-students',
-      activity: 'teacher-activity',
-      'group-stats': 'teacher-group-stats',
-    };
-    return map[seg] ?? null;
+  onStudentSearchInput(event: Event): void {
+    const el = event.target as HTMLInputElement;
+    this.studentSearchQuery = el.value ?? '';
   }
 
-  private scheduleScrollToRouteSection(): void {
-    if (this.loading || this.noTeacherProfile) return;
-    const id = this.routeSectionAnchorId();
-    if (!id || typeof document === 'undefined') return;
-    const scroll = () =>
-      document.getElementById(id)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    queueMicrotask(scroll);
-    setTimeout(scroll, 120);
+  filteredStudents(): StudentRow[] {
+    const q = this.studentSearchQuery.trim().toLowerCase();
+    if (!q) return this.students;
+    return this.students.filter((s) => {
+      const hay = [
+        s.fullName,
+        s.email,
+        (s.groupNames ?? []).join(' '),
+      ]
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    });
   }
 
   /** Координати для SVG polyline (0–100 по X та Y). */

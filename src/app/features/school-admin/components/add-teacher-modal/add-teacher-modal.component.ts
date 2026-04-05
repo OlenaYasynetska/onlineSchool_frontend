@@ -15,7 +15,9 @@ export type AddTeacherPayload = {
   email: string;
   firstName: string;
   lastName: string;
-  password: string;
+  /** Порожньо — бекенд згенерує пароль. */
+  password: string | null;
+  sendInviteEmail: boolean;
   /** Кожен елемент — окремий рядок у таблиці `teacher_subjects`. */
   subjects?: string[];
   /** Опційно; зберігається в `users.phone`. */
@@ -47,8 +49,8 @@ export type AddTeacherPayload = {
               Add teacher
             </h1>
             <p class="mt-1 text-sm text-slate-600">
-              Create an account for a teacher at your school. They can sign in with this email and
-              password.
+              Creates a login account (teacher role). Optionally send an invitation email with the
+              login link and password.
             </p>
           </div>
           <button
@@ -179,6 +181,43 @@ export type AddTeacherPayload = {
           <div>
             <label
               class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="teacher-password"
+              >Password</label
+            >
+            <input
+              id="teacher-password"
+              name="password"
+              type="password"
+              [(ngModel)]="form.password"
+              maxlength="128"
+              autocomplete="new-password"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              placeholder="Leave empty to generate"
+            />
+            <p class="mt-1 text-xs text-slate-500">
+              At least 8 characters, or leave empty so the system generates one.
+            </p>
+          </div>
+
+          <div class="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2.5">
+            <input
+              id="teacher-send-invite"
+              name="sendInvite"
+              type="checkbox"
+              [(ngModel)]="form.sendInviteEmail"
+              class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+            />
+            <label for="teacher-send-invite" class="cursor-pointer text-sm text-slate-700">
+              <span class="font-medium text-slate-900">Send invitation email</span>
+              <span class="block text-xs text-slate-500">
+                Email includes login page link and password (configure SMTP on the server to send).
+              </span>
+            </label>
+          </div>
+
+          <div>
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
               for="teacher-phone"
               >Phone (optional)</label
             >
@@ -192,41 +231,6 @@ export type AddTeacherPayload = {
               class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
             />
             <p class="mt-1 text-xs text-slate-500">Max 32 characters.</p>
-          </div>
-
-          <div>
-            <label
-              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
-              for="teacher-password"
-              >Password</label
-            >
-            <input
-              id="teacher-password"
-              name="password"
-              type="password"
-              [(ngModel)]="form.password"
-              required
-              minlength="8"
-              maxlength="128"
-              autocomplete="new-password"
-              #passwordModel="ngModel"
-              class="w-full rounded-lg border bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-100"
-              [class.border-slate-200]="!(passwordModel.invalid && passwordModel.touched)"
-              [class.border-red-500]="passwordModel.invalid && passwordModel.touched"
-              [class.focus:border-violet-400]="!(passwordModel.invalid && passwordModel.touched)"
-            />
-            <p class="mt-1 text-xs text-slate-500">8–128 characters.</p>
-            @if (passwordModel.invalid && passwordModel.touched) {
-              <p class="mt-1 text-xs text-red-600">
-                @if (passwordModel.errors?.['required']) {
-                  Enter a password.
-                } @else if (passwordModel.errors?.['minlength']) {
-                  Password must be at least 8 characters.
-                } @else if (passwordModel.errors?.['maxlength']) {
-                  Password is too long (max 128).
-                }
-              </p>
-            }
           </div>
 
           <div>
@@ -322,12 +326,14 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
     email: string;
     phone: string;
     password: string;
+    sendInviteEmail: boolean;
   } = {
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     password: '',
+    sendInviteEmail: true,
   };
 
   addSubjectLine(): void {
@@ -390,7 +396,8 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
       firstName: first,
       lastName: last,
       email: this.form.email.trim().toLowerCase(),
-      password: p,
+      password: p.length > 0 ? p : null,
+      sendInviteEmail: this.form.sendInviteEmail,
       subjects: parts.length > 0 ? parts : undefined,
       ...(phoneTrim ? { phone: phoneTrim } : {}),
     };

@@ -76,6 +76,7 @@ export class SchoolAdminDashboardService {
         password: payload.password,
         subjects: payload.subjects ?? null,
         phone: payload.phone?.trim() ? payload.phone.trim() : null,
+        sendInviteEmail: payload.sendInviteEmail,
       }
     );
   }
@@ -90,6 +91,7 @@ export class SchoolAdminDashboardService {
     email: string;
     schoolId: string;
     createdAt: string;
+    inviteEmailSent: boolean;
   }> {
     return this.http.post<{
       id: string;
@@ -97,10 +99,13 @@ export class SchoolAdminDashboardService {
       email: string;
       schoolId: string;
       createdAt: string;
+      inviteEmailSent: boolean;
     }>(`${environment.apiUrl}/students`, {
       fullName: payload.fullName,
       email: payload.email,
       schoolId,
+      password: payload.password,
+      sendInviteEmail: payload.sendInviteEmail,
     });
   }
 

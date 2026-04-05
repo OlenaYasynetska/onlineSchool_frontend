@@ -1,0 +1,350 @@
+<div class="w-full min-w-0 max-w-full">
+  <div
+    class="min-h-0 min-w-0 space-y-8 bg-sky-50/90 px-4 pb-10 pt-6 sm:px-6 lg:px-8"
+  >
+    <!-- Огляд: заголовок + три картки -->
+    @if (
+      cabinetSegment() === '' ||
+      cabinetSegment() === 'groups' ||
+      cabinetSegment() === 'schedule'
+    ) {
+      <div id="student-top" class="scroll-mt-6 space-y-6">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+            Student Dashboard — {{ displayName }}
+          </h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Your stars, group progress, and activity (demo layout — connect API when ready).
+          </p>
+        </div>
+
+        <div
+          class="grid min-w-0 gap-4 lg:grid-cols-3 lg:items-stretch"
+        >
+          <!-- Профіль + зірки -->
+          <div
+            class="flex min-h-[260px] flex-col items-center justify-center gap-3 rounded-2xl border border-sky-100 bg-white px-5 py-6 text-center shadow-sm"
+          >
+            <img
+              src="/assets/images/owl_pro.png"
+              alt=""
+              class="max-h-[150px] w-auto max-w-full object-contain"
+              width="220"
+              height="220"
+            />
+            <p
+              class="text-4xl font-bold tracking-tight text-slate-900"
+              aria-label="Total stars"
+            >
+              {{ totalStars }}
+            </p>
+            <p class="text-base font-semibold text-slate-800">stars</p>
+          </div>
+
+          <!-- Прогрес тижня / місяця -->
+          <div
+            class="flex min-h-[260px] flex-col justify-center gap-4 rounded-2xl border border-sky-100 bg-white px-5 py-6 shadow-sm"
+          >
+            <p class="text-sm font-semibold text-slate-900">Progress</p>
+            <div class="flex flex-col gap-3">
+              <div
+                class="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 px-4 py-3"
+              >
+                <span class="text-sm font-medium text-slate-700"
+                  >Current week</span
+                >
+                <span
+                  class="rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-800"
+                  >+{{ weekGain }}</span
+                >
+              </div>
+              <div
+                class="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 px-4 py-3"
+              >
+                <span class="text-sm font-medium text-slate-700"
+                  >This month</span
+                >
+                <span
+                  class="rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-800"
+                  >+{{ monthGain }}</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Інфо про групу -->
+          <div
+            class="flex min-h-[260px] flex-col rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <h2 class="text-base font-bold leading-snug text-slate-900">
+                Group 1 · 281024-wdm
+              </h2>
+              <span
+                class="shrink-0 rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
+              >
+                New
+              </span>
+            </div>
+            <div class="mt-4 space-y-2 text-sm text-slate-700">
+              <p>
+                <span class="font-semibold text-slate-900">School:</span>
+                Code Horizon
+              </p>
+              <p>
+                <span class="font-semibold text-slate-900">Course:</span>
+                HTML, CSS, JavaScript
+              </p>
+              <p>
+                <span class="font-semibold text-slate-900">Study period:</span>
+                01.09.2025 – 30.06.2026
+              </p>
+            </div>
+            <p class="mt-auto pt-4 text-sm italic text-sky-700">
+              Keep going — every star counts!
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Статистика групи: лідери + графік -->
+    @if (cabinetSegment() === '' || cabinetSegment() === 'group-stats') {
+      <section
+        id="student-group-stats"
+        class="scroll-mt-6 space-y-6"
+      >
+        @if (cabinetSegment() === 'group-stats') {
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">Group statistics</h1>
+            <p class="mt-1 text-sm text-slate-600">
+              Class leaderboard and stars over time
+            </p>
+          </div>
+        }
+
+        <div class="grid min-w-0 gap-6 xl:grid-cols-2 xl:items-start">
+          <!-- Class leaders -->
+          <div
+            class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-lg font-bold text-slate-900">Class leaders</h2>
+              <button
+                type="button"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-violet-700 transition hover:bg-violet-50"
+              >
+                View all
+              </button>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[280px] text-left text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-600">
+                    <th class="pb-2 pr-4 font-semibold">Student</th>
+                    <th class="pb-2 font-semibold">Stars</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of leaders; track row.name) {
+                    <tr
+                      class="border-b border-slate-100 last:border-0"
+                    >
+                      <td class="py-2.5 pr-4 text-slate-800">
+                        {{ row.name }}
+                      </td>
+                      <td class="py-2.5 font-semibold tabular-nums text-slate-900">
+                        {{ row.stars }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Графік -->
+          <div
+            class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+          >
+            <h2 class="text-lg font-bold text-slate-900">
+              Group statistics
+            </h2>
+            <p class="mt-1 text-xs text-slate-500">
+              Stars accumulated over time (demo)
+            </p>
+            <div class="mt-4 flex flex-col gap-4 lg:flex-row">
+              <ul
+                class="flex shrink-0 flex-col gap-2 text-xs text-slate-700 lg:w-36"
+                aria-label="Legend"
+              >
+                @for (leg of chartLegend; track leg.name; let i = $index) {
+                  <li class="flex items-center gap-2">
+                    <span
+                      class="h-2.5 w-2.5 shrink-0 rounded-full"
+                      [style.background-color]="leg.color"
+                    ></span>
+                    <span class="truncate">{{ leg.name }}</span>
+                  </li>
+                }
+              </ul>
+              <div class="min-w-0 flex-1">
+                <svg
+                  class="h-48 w-full text-slate-300"
+                  viewBox="0 0 376 160"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-hidden="true"
+                >
+                  <!-- сітка -->
+                  @for (g of [0, 1, 2, 3, 4]; track g) {
+                    <line
+                      [attr.x1]="8"
+                      [attr.y1]="32 + g * 28"
+                      [attr.x2]="368"
+                      [attr.y2]="32 + g * 28"
+                      stroke="currentColor"
+                      stroke-width="1"
+                      stroke-dasharray="4 4"
+                    />
+                  }
+                  @for (series of chartSeries; track $index; let si = $index) {
+                    <path
+                      fill="none"
+                      [attr.stroke]="chartLegend[si].color"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      [attr.d]="chartPath(series)"
+                    />
+                  }
+                </svg>
+                <div
+                  class="mt-2 flex justify-between px-1 text-[10px] font-medium text-slate-500"
+                >
+                  @for (m of chartMonths; track m) {
+                    <span>{{ m }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- Журнал зірок -->
+    @if (cabinetSegment() === '') {
+      <section
+        class="scroll-mt-6 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+      >
+        <h2 class="text-lg font-bold text-slate-900">Stars reward log</h2>
+        <p class="mt-1 text-sm text-slate-600">
+          History of changes from teachers
+        </p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[520px] text-left text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-slate-600">
+                <th class="pb-2 pr-3 font-semibold">Date</th>
+                <th class="pb-2 pr-3 font-semibold">Teacher</th>
+                <th class="pb-2 pr-3 font-semibold">Subject</th>
+                <th class="pb-2 pr-3 font-semibold">Change</th>
+                <th class="pb-2 font-semibold">Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of rewardLog; track r.date + r.reason) {
+                <tr class="border-b border-slate-100 last:border-0">
+                  <td class="py-2.5 pr-3 text-slate-800">{{ r.date }}</td>
+                  <td class="py-2.5 pr-3 text-slate-800">{{ r.teacher }}</td>
+                  <td class="py-2.5 pr-3 text-slate-800">{{ r.subject }}</td>
+                  <td
+                    class="py-2.5 pr-3 font-semibold tabular-nums"
+                    [class.text-emerald-600]="r.change > 0"
+                    [class.text-rose-600]="r.change < 0"
+                  >
+                    {{ r.change > 0 ? '+' : '' }}{{ r.change }}
+                  </td>
+                  <td class="py-2.5 text-slate-700">{{ r.reason }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <div class="mt-4 flex justify-center">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Show more
+          </button>
+        </div>
+      </section>
+    }
+
+    <!-- Предмети -->
+    @if (cabinetSegment() === '') {
+      <section
+        class="scroll-mt-6 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+      >
+        <h2 class="text-lg font-bold text-slate-900">My subjects</h2>
+        <p class="mt-1 text-sm text-slate-600">
+          Stars total per subject
+        </p>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[480px] text-left text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 text-slate-600">
+                <th class="pb-2 pr-3 font-semibold">ID</th>
+                <th class="pb-2 pr-3 font-semibold">Subject</th>
+                <th class="pb-2 pr-3 font-semibold">Teacher</th>
+                <th class="pb-2 pr-3 font-semibold">Stars total</th>
+                <th class="pb-2 font-semibold">Course</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of subjects; track s.id) {
+                <tr class="border-b border-slate-100 last:border-0">
+                  <td class="py-2.5 pr-3 font-mono text-xs text-slate-600">
+                    {{ s.id }}
+                  </td>
+                  <td class="py-2.5 pr-3 text-slate-800">{{ s.subject }}</td>
+                  <td class="py-2.5 pr-3 text-slate-800">{{ s.teacher }}</td>
+                  <td class="py-2.5 pr-3 font-semibold tabular-nums text-slate-900">
+                    {{ s.starsTotal }}
+                  </td>
+                  <td class="py-2.5 text-slate-700">{{ s.course }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <!-- Резервні секції для старих маршрутів /student/groups та /schedule -->
+    @if (cabinetSegment() === 'groups') {
+      <section
+        id="student-groups"
+        class="scroll-mt-6 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+      >
+        <h2 class="text-lg font-bold text-slate-900">My groups</h2>
+        <p class="mt-2 text-sm text-slate-600">
+          Your enrollments will appear here when connected to the API.
+        </p>
+      </section>
+    }
+
+    @if (cabinetSegment() === 'schedule') {
+      <section
+        id="student-schedule"
+        class="scroll-mt-6 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+      >
+        <h2 class="text-lg font-bold text-slate-900">Schedule</h2>
+        <p class="mt-2 text-sm text-slate-600">
+          Your class schedule will appear here.
+        </p>
+      </section>
+    }
+  </div>
+</div>

@@ -1,7 +1,7 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import type {
   PaymentHistoryRow,
@@ -41,7 +41,9 @@ export class SchoolAdminPageComponent implements OnInit {
   private readonly dashApi = inject(SchoolAdminDashboardService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
+
+  /** Перший сегмент після `/school-admin` — `''` означає головний огляд. */
+  readonly cabinetSegment = signal<string>('');
 
   readonly dash: SchoolAdminDashboardResponse = useSchoolAdminDashboard();
   readonly groupsVm = useSchoolAdminGroups(this.dash);
@@ -65,11 +67,17 @@ export class SchoolAdminPageComponent implements OnInit {
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         takeUntilDestroyed()
       )
-      .subscribe(() => {
-        const path = this.router.url.split('?')[0].split('#')[0];
-        if (!path.startsWith('/school-admin')) return;
-        this.scheduleScrollToRouteSection();
-      });
+      .subscribe(() => this.updateCabinetSegment());
+  }
+
+  private updateCabinetSegment(): void {
+    const url = this.router.url.split('?')[0].split('#')[0];
+    if (!url.startsWith('/school-admin')) {
+      this.cabinetSegment.set('');
+      return;
+    }
+    const rest = url.slice('/school-admin'.length).replace(/^\//, '');
+    this.cabinetSegment.set((rest.split('/')[0] ?? '').trim());
   }
 
   get adminDisplayName(): string {
@@ -112,6 +120,7 @@ export class SchoolAdminPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.updateCabinetSegment();
     const fromAuth = normalizeSchoolId(this.auth.currentUser()?.schoolId);
     const fromSession =
       typeof sessionStorage !== 'undefined'
@@ -150,12 +159,10 @@ export class SchoolAdminPageComponent implements OnInit {
           }
         }
         this.loading = false;
-        this.scheduleScrollToRouteSection();
       },
       error: (err) => {
         console.error(err);
         this.loading = false;
-        this.scheduleScrollToRouteSection();
       },
     });
   }
@@ -176,32 +183,6 @@ export class SchoolAdminPageComponent implements OnInit {
         this.teachers = [];
       },
     });
-  }
-
-  /** Якір секції за поточним дочірнім шляхом `/school-admin/...`. */
-  private routeSectionAnchorId(): string | null {
-    const seg = this.route.snapshot.url[0]?.path ?? '';
-    const map: Record<string, string> = {
-      '': 'school-admin-top',
-      groups: 'school-admin-groups',
-      employees: 'school-admin-employees',
-      teachers: 'school-admin-teachers',
-      students: 'school-admin-students',
-    };
-    return map[seg] ?? null;
-  }
-
-  private scheduleScrollToRouteSection(): void {
-    if (this.loading || this.noSchoolAssigned) return;
-    const id = this.routeSectionAnchorId();
-    if (!id || typeof document === 'undefined') return;
-    const scroll = () =>
-      document.getElementById(id)?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    queueMicrotask(scroll);
-    setTimeout(scroll, 120);
   }
 
   get pendingPaymentsCount(): number {

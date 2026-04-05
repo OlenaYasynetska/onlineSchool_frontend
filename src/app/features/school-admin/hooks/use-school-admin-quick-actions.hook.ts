@@ -133,7 +133,16 @@ export function useSchoolAdminQuickActions(
     }
 
     dashApi.createTeacher(schoolId, payload).subscribe({
-      next: () => {
+      next: (created) => {
+        if (created.inviteEmailSent) {
+          window.alert(
+            'Invitation email has been sent to the teacher with login instructions.'
+          );
+        } else if (payload.sendInviteEmail) {
+          window.alert(
+            'Teacher account created. Email was not sent (configure SMTP on the server, or check logs).'
+          );
+        }
         addTeacherOpen.set(false);
         onTeachersChanged?.();
       },
@@ -195,6 +204,15 @@ export function useSchoolAdminQuickActions(
     dashApi.createStudent(schoolId, payload).subscribe({
       next: (created) => {
         mergeCreatedStudentIntoDash(dash, created);
+        if (created.inviteEmailSent) {
+          window.alert(
+            'Invitation email has been sent to the student with login instructions.'
+          );
+        } else if (payload.sendInviteEmail) {
+          window.alert(
+            'Student account created. Email was not sent (configure SMTP on the server, or check logs).'
+          );
+        }
         const groupId = payload.groupId?.trim();
         if (groupId) {
           dashApi

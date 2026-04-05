@@ -1,0 +1,204 @@
+<div class="w-full min-w-0 max-w-full">
+  <div
+    class="min-h-0 min-w-0 space-y-8 bg-sky-50/90 px-4 pb-10 pt-6 sm:px-6 lg:px-8"
+  >
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+        Submit homework
+      </h1>
+      <p class="mt-1 text-sm text-slate-600">
+        Choose a teacher, enter the subject, add a message, and attach your file.
+      </p>
+    </div>
+
+    @if (loading) {
+      <p class="text-sm text-slate-600">Loading…</p>
+    }
+
+    @if (!loading && loadError) {
+      <div
+        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        role="alert"
+      >
+        {{ loadError }}
+      </div>
+    }
+
+    @if (!loading && !loadError) {
+      <div
+        class="mx-auto w-full max-w-lg rounded-2xl border border-slate-200/80 bg-white p-6 shadow-lg shadow-slate-200/60"
+      >
+        <h2 class="text-lg font-bold text-slate-900">Send homework</h2>
+        <p class="mt-1 text-xs text-slate-500">
+          PDF, Word, images, or other formats your teacher accepts.
+        </p>
+
+        <form class="mt-5 space-y-4" (ngSubmit)="submit()">
+          <div>
+            <label
+              for="hw-teacher"
+              class="mb-1 block text-sm font-medium text-slate-700"
+              >Teacher</label
+            >
+            <select
+              id="hw-teacher"
+              name="teacherId"
+              [(ngModel)]="teacherId"
+              required
+              class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            >
+              <option value="" disabled>Select teacher</option>
+              @for (t of teachers; track t.id) {
+                <option [value]="t.id">{{ t.displayName }}</option>
+              }
+            </select>
+          </div>
+
+          @if (groups.length > 0) {
+            <div>
+              <label
+                for="hw-group"
+                class="mb-1 block text-sm font-medium text-slate-700"
+                >Group (optional)</label
+              >
+              <select
+                id="hw-group"
+                name="groupId"
+                [(ngModel)]="groupId"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              >
+                <option value="">—</option>
+                @for (g of groups; track g.id) {
+                  <option [value]="g.id">{{ g.name }} ({{ g.code }})</option>
+                }
+              </select>
+            </div>
+          }
+
+          <div>
+            <label
+              for="hw-subject"
+              class="mb-1 block text-sm font-medium text-slate-700"
+              >Subject</label
+            >
+            <input
+              id="hw-subject"
+              name="subjectTitle"
+              type="text"
+              [(ngModel)]="subjectTitle"
+              required
+              placeholder="Enter subject"
+              autocomplete="off"
+              class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            />
+          </div>
+
+          <div>
+            <label
+              for="hw-message"
+              class="mb-1 block text-sm font-medium text-slate-700"
+              >Message (optional)</label
+            >
+            <textarea
+              id="hw-message"
+              name="messageText"
+              [(ngModel)]="messageText"
+              rows="4"
+              placeholder="Enter message"
+              class="w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            ></textarea>
+          </div>
+
+          <div>
+            <label
+              for="hw-file"
+              class="mb-1 block text-sm font-medium text-slate-700"
+              >File</label
+            >
+            <input
+              id="hw-file"
+              name="file"
+              type="file"
+              (change)="onFileChange($event)"
+              class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:font-medium file:text-slate-800 hover:file:bg-slate-200"
+            />
+            @if (selectedFile) {
+              <p class="mt-1 text-xs text-slate-500">{{ selectedFile.name }}</p>
+            }
+          </div>
+
+          @if (submitError) {
+            <p class="text-sm text-rose-600" role="alert">{{ submitError }}</p>
+          }
+
+          <button
+            type="submit"
+            [disabled]="submitting"
+            class="w-full rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {{ submitting ? 'Sending…' : 'Send' }}
+          </button>
+        </form>
+      </div>
+
+      <section
+        class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
+      >
+        <h2 class="text-lg font-bold text-slate-900">My submissions</h2>
+        <p class="mt-1 text-sm text-slate-600">
+          Status and grade after your teacher reviews the work.
+        </p>
+        @if (submissions.length === 0) {
+          <p class="mt-4 text-sm text-slate-600">No submissions yet.</p>
+        } @else {
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[640px] text-left text-sm">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-600">
+                  <th class="pb-2 pr-3 font-semibold">Subject</th>
+                  <th class="pb-2 pr-3 font-semibold">File</th>
+                  <th class="pb-2 pr-3 font-semibold">Group</th>
+                  <th class="pb-2 pr-3 font-semibold">Status</th>
+                  <th class="pb-2 pr-3 font-semibold">Stars</th>
+                  <th class="pb-2 pr-3 font-semibold">Feedback</th>
+                  <th class="pb-2 font-semibold">Submitted</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of submissions; track s.id) {
+                  <tr class="border-b border-slate-100 last:border-0">
+                    <td class="py-2.5 pr-3 text-slate-800">{{ s.subjectTitle }}</td>
+                    <td class="py-2.5 pr-3 text-slate-700">{{ s.fileName }}</td>
+                    <td class="py-2.5 pr-3 text-slate-600">
+                      {{ s.groupName ?? '—' }}
+                    </td>
+                    <td class="py-2.5 pr-3">
+                      <span
+                        class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                        [class.bg-amber-100]="s.status === 'submitted'"
+                        [class.text-amber-900]="s.status === 'submitted'"
+                        [class.bg-emerald-100]="s.status === 'graded'"
+                        [class.text-emerald-900]="s.status === 'graded'"
+                      >
+                        {{ s.status }}
+                      </span>
+                    </td>
+                    <td class="py-2.5 pr-3 font-semibold tabular-nums text-slate-900">
+                      {{ s.stars != null ? s.stars : '—' }}
+                    </td>
+                    <td class="max-w-[200px] py-2.5 pr-3 text-slate-600">
+                      {{ s.teacherFeedback ?? '—' }}
+                    </td>
+                    <td class="py-2.5 text-slate-600 whitespace-nowrap">
+                      {{ formatWhen(s.submittedAt) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </div>
+</div>

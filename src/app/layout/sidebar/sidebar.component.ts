@@ -81,6 +81,12 @@ export class SidebarComponent implements OnInit {
       fragment: 'teacher-students',
     },
     {
+      path: '/teacher/homework',
+      label: 'Homework',
+      icon: 'envelope',
+      fragment: 'teacher-homework',
+    },
+    {
       path: '/teacher/activity',
       label: 'My activity',
       icon: 'clipboard',
@@ -145,9 +151,35 @@ export class SidebarComponent implements OnInit {
     },
   ];
 
+  /** Кабінет учня: огляд і статистика групи (як у макету дашборду). */
+  readonly studentNav: CompactNavItem[] = [
+    {
+      path: '/student',
+      label: 'Dashboard',
+      exact: true,
+      icon: 'home',
+      fragment: 'student-top',
+    },
+    {
+      path: '/student/homework',
+      label: 'Homework',
+      icon: 'envelope',
+      fragment: 'student-homework',
+    },
+    {
+      path: '/student/group-stats',
+      label: 'Group stats',
+      icon: 'lineChart',
+      fragment: 'student-group-stats',
+    },
+  ];
+
   compactSidebar(): { items: CompactNavItem[]; ariaLabel: string } | null {
     if (this.auth.currentUser()?.role === 'TEACHER') {
       return { items: this.teacherNav, ariaLabel: 'Teacher' };
+    }
+    if (this.auth.currentUser()?.role === 'STUDENT') {
+      return { items: this.studentNav, ariaLabel: 'Student' };
     }
     if (this.auth.currentUser()?.role === 'ADMIN_SCHOOL') {
       return { items: this.schoolAdminNav, ariaLabel: 'School admin' };
@@ -156,6 +188,11 @@ export class SidebarComponent implements OnInit {
       return { items: this.superAdminNav, ariaLabel: 'Platform' };
     }
     return null;
+  }
+
+  /** Вертикальний сайдбар (іконка над підписом) — лише адмін школи. */
+  isSchoolAdminLayout(): boolean {
+    return this.auth.currentUser()?.role === 'ADMIN_SCHOOL';
   }
 
   isSuperAdminArea(): boolean {

@@ -37,6 +37,8 @@ export interface SchoolTeacher {
   phone: string | null;
   subjectTitles: string[];
   groupNames: string[];
+  /** Після POST створення викладача. */
+  inviteEmailSent?: boolean;
 }
 
 export interface SchoolGroupCard {
@@ -53,6 +55,8 @@ export interface SchoolGroupCard {
   startDate: string;
   endDate: string;
   studentsCount: number;
+  /** Сумарні зірки за ДЗ усіх учнів групи. */
+  homeworkStarsTotal: number;
   active: boolean;
 }
 

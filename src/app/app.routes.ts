@@ -71,6 +71,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'student',
+        canActivate: [authGuard, roleGuard(['STUDENT'])],
+        loadChildren: () =>
+          import('./features/student-dashboard/student.routes').then(
+            (m) => m.STUDENT_DASHBOARD_ROUTES
+          ),
+      },
+      {
         path: 'school-admin',
         canActivate: [authGuard, roleGuard(['ADMIN_SCHOOL'])],
         loadChildren: () =>

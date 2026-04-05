@@ -1,0 +1,213 @@
+<div class="w-full min-w-0 max-w-full">
+  <div
+    class="min-h-0 min-w-0 space-y-8 bg-slate-100/80 px-4 pb-10 pt-6 sm:px-6 lg:px-8"
+  >
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Homework inbox</h1>
+      <p class="mt-1 text-sm text-slate-600">
+        Download submissions, then assign 1–3 stars and optional feedback.
+      </p>
+    </div>
+
+    @if (loading) {
+      <p class="text-sm text-slate-600">Loading…</p>
+    }
+
+    @if (!loading && noProfile) {
+      <div
+        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        role="status"
+      >
+        No teacher profile is linked to this account.
+      </div>
+    }
+
+    @if (!loading && !noProfile) {
+      <section
+        class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <h2 class="text-lg font-bold text-slate-900">Pending review</h2>
+        @if (pending.length === 0) {
+          <p class="mt-3 text-sm text-slate-600">Nothing to review.</p>
+        } @else {
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[720px] text-left text-sm">
+              <thead>
+                <tr
+                  class="border-b border-slate-200 text-xs font-semibold uppercase text-slate-600"
+                >
+                  <th class="pb-2 pr-3">Student</th>
+                  <th class="pb-2 pr-3">Subject</th>
+                  <th class="pb-2 pr-3">Group</th>
+                  <th class="pb-2 pr-3">File</th>
+                  <th class="pb-2 pr-3">Message</th>
+                  <th class="pb-2 pr-3">Submitted</th>
+                  <th class="pb-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of pending; track s.id) {
+                  <tr class="border-b border-slate-100 last:border-0">
+                    <td class="py-3 pr-3 font-medium text-slate-900">
+                      {{ s.studentName }}
+                    </td>
+                    <td class="py-3 pr-3 text-slate-800">{{ s.subjectTitle }}</td>
+                    <td class="py-3 pr-3 text-slate-600">
+                      {{ s.groupName ?? '—' }}
+                    </td>
+                    <td class="py-3 pr-3 text-slate-700">{{ s.fileName }}</td>
+                    <td class="max-w-[220px] py-3 pr-3 text-slate-600">
+                      {{ s.messageText?.trim() ? s.messageText : '—' }}
+                    </td>
+                    <td class="py-3 pr-3 whitespace-nowrap text-slate-600">
+                      {{ formatWhen(s.submittedAt) }}
+                    </td>
+                    <td class="py-3">
+                      <div class="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          (click)="download(s)"
+                          class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-50"
+                        >
+                          Download
+                        </button>
+                        <button
+                          type="button"
+                          (click)="openGrade(s)"
+                          class="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
+                        >
+                          Grade
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+
+      <section
+        class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      >
+        <h2 class="text-lg font-bold text-slate-900">Graded</h2>
+        @if (graded.length === 0) {
+          <p class="mt-3 text-sm text-slate-600">No graded items yet.</p>
+        } @else {
+          <div class="mt-4 overflow-x-auto">
+            <table class="w-full min-w-[640px] text-left text-sm">
+              <thead>
+                <tr
+                  class="border-b border-slate-200 text-xs font-semibold uppercase text-slate-600"
+                >
+                  <th class="pb-2 pr-3">Student</th>
+                  <th class="pb-2 pr-3">Subject</th>
+                  <th class="pb-2 pr-3">Stars</th>
+                  <th class="pb-2 pr-3">Feedback</th>
+                  <th class="pb-2">Graded</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of graded; track s.id) {
+                  <tr class="border-b border-slate-100 last:border-0">
+                    <td class="py-2.5 pr-3 font-medium text-slate-900">
+                      {{ s.studentName }}
+                    </td>
+                    <td class="py-2.5 pr-3">{{ s.subjectTitle }}</td>
+                    <td class="py-2.5 pr-3 font-semibold tabular-nums">
+                      {{ s.stars ?? '—' }}
+                    </td>
+                    <td class="max-w-[280px] py-2.5 pr-3 text-slate-600">
+                      {{ s.teacherFeedback ?? '—' }}
+                    </td>
+                    <td class="py-2.5 whitespace-nowrap text-slate-600">
+                      {{ formatWhen(s.gradedAt) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </section>
+    }
+  </div>
+
+  @if (gradingId) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="grade-dialog-title"
+    >
+      <div
+        class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+      >
+        <h2 id="grade-dialog-title" class="text-lg font-bold text-slate-900">
+          Grade homework
+        </h2>
+        <p class="mt-1 text-xs text-slate-500">1 = weak, 3 = excellent</p>
+
+        <div class="mt-4">
+          <p class="mb-2 text-sm font-medium text-slate-700">Stars</p>
+          <div class="flex gap-2">
+            @for (n of starChoices; track n) {
+              <button
+                type="button"
+                (click)="gradeStars = n"
+                class="min-w-[3rem] rounded-xl border px-3 py-2 text-sm font-semibold transition"
+                [class.border-slate-700]="gradeStars === n"
+                [class.bg-slate-700]="gradeStars === n"
+                [class.text-white]="gradeStars === n"
+                [class.border-slate-200]="gradeStars !== n"
+                [class.bg-white]="gradeStars !== n"
+                [class.text-slate-800]="gradeStars !== n"
+              >
+                {{ n }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label
+            for="grade-feedback"
+            class="mb-1 block text-sm font-medium text-slate-700"
+            >Feedback (optional)</label
+          >
+          <textarea
+            id="grade-feedback"
+            [(ngModel)]="gradeFeedback"
+            rows="3"
+            class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            placeholder="Short comment for the student"
+          ></textarea>
+        </div>
+
+        @if (gradeError) {
+          <p class="mt-2 text-sm text-rose-600">{{ gradeError }}</p>
+        }
+
+        <div class="mt-6 flex justify-end gap-2">
+          <button
+            type="button"
+            (click)="closeGrade()"
+            [disabled]="gradingBusy"
+            class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            (click)="submitGrade()"
+            [disabled]="gradingBusy"
+            class="rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+          >
+            {{ gradingBusy ? 'Saving…' : 'Save grade' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

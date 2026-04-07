@@ -3,9 +3,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { NgApexchartsModule } from 'ng-apexcharts';
+import type {
+  ApexAxisChartSeries,
+  ApexChart,
+  ApexGrid,
+  ApexLegend,
+  ApexStroke,
+  ApexTooltip,
+  ApexXAxis,
+  ApexYAxis,
+} from 'ng-apexcharts';
 import { AuthService } from '../../../../core/services/auth.service';
 
-export type StudentLeaderRow = { name: string; stars: number };
 export type StudentRewardRow = {
   date: string;
   teacher: string;
@@ -24,7 +34,7 @@ export type StudentSubjectRow = {
 @Component({
   selector: 'app-student-dashboard-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgApexchartsModule],
   templateUrl: './student-dashboard-page.component.html',
 })
 export class StudentDashboardPageComponent implements OnInit {
@@ -40,14 +50,6 @@ export class StudentDashboardPageComponent implements OnInit {
   readonly monthGain = 0;
 
   /** Демо-дані для таблиць і графіка; заміняться відповідями бекенду. */
-  readonly leaders: StudentLeaderRow[] = [
-    { name: 'Alex M.', stars: 154 },
-    { name: 'Maria K.', stars: 142 },
-    { name: 'Jordan P.', stars: 138 },
-    { name: 'Sam T.', stars: 128 },
-    { name: 'Chris L.', stars: 121 },
-  ];
-
   readonly rewardLog: StudentRewardRow[] = [
     {
       date: '02.04.2026',
@@ -86,6 +88,7 @@ export class StudentDashboardPageComponent implements OnInit {
     },
   ];
 
+  /** Предмети учня (демо); з них же будуються графік і таблиця «зірки за предметом». */
   readonly subjects: StudentSubjectRow[] = [
     {
       id: 'S-101',
@@ -110,23 +113,81 @@ export class StudentDashboardPageComponent implements OnInit {
     },
   ];
 
-  /** Легенда та точки для SVG-графіка (демо). */
-  readonly chartLegend = [
-    { name: 'Alex M.', color: '#2563eb' },
-    { name: 'Maria K.', color: '#16a34a' },
-    { name: 'You', color: '#d97706' },
-    { name: 'Jordan P.', color: '#9333ea' },
-  ];
-
   readonly chartMonths = ['Apr', 'May', 'Jun', 'Jul', 'Aug'];
 
-  /** Демо-криві для SVG (5 місяців). */
-  readonly chartSeries: number[][] = [
+  /** Демо: накопичення зірок у часі — по одному ряду на предмет (як у `subjects`). */
+  readonly chartSeriesBySubject: number[][] = [
     [22, 45, 52, 68, 82],
     [18, 38, 48, 58, 70],
     [12, 28, 35, 42, 52],
-    [20, 42, 50, 62, 75],
   ];
+
+  private readonly subjectLineColors = ['#2563eb', '#16a34a', '#d97706', '#9333ea'];
+
+  readonly groupStatsSeries: ApexAxisChartSeries = this.subjects.map((s, i) => ({
+    name: s.subject,
+    data: this.chartSeriesBySubject[i] ?? [],
+  }));
+
+  readonly groupStatsColors: string[] = this.subjects.map(
+    (_, i) => this.subjectLineColors[i % this.subjectLineColors.length]
+  );
+
+  readonly groupStatsChart: ApexChart = {
+    type: 'line',
+    height: 300,
+    toolbar: { show: false },
+    zoom: { enabled: false },
+    fontFamily:
+      'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
+    animations: { enabled: true, easing: 'easeinout', speed: 450 },
+  };
+
+  readonly groupStatsStroke: ApexStroke = {
+    curve: 'smooth',
+    width: 2.5,
+  };
+
+  readonly groupStatsXaxis: ApexXAxis = {
+    categories: this.chartMonths,
+    labels: {
+      style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
+  };
+
+  readonly groupStatsYaxis: ApexYAxis = {
+    min: 0,
+    max: 100,
+    tickAmount: 5,
+    labels: {
+      style: { colors: '#64748b', fontSize: '11px' },
+    },
+  };
+
+  readonly groupStatsLegend: ApexLegend = {
+    position: 'top',
+    horizontalAlign: 'left',
+    offsetY: 0,
+    fontSize: '12px',
+    fontWeight: 500,
+    labels: { colors: '#334155' },
+    markers: { strokeWidth: 0 },
+  };
+
+  readonly groupStatsGrid: ApexGrid = {
+    borderColor: '#e2e8f0',
+    strokeDashArray: 4,
+    padding: { top: 8, right: 0, bottom: 0, left: 12 },
+    xaxis: { lines: { show: false } },
+  };
+
+  readonly groupStatsTooltip: ApexTooltip = {
+    theme: 'light',
+    shared: true,
+    intersect: false,
+  };
 
   constructor() {
     this.router.events
@@ -185,20 +246,8 @@ export class StudentDashboardPageComponent implements OnInit {
     setTimeout(scroll, 120);
   }
 
-  /** Прості Y-значення для ліній (0–100) по місяцях. */
-  chartPath(values: number[]): string {
-    const w = 360;
-    const h = 140;
-    const pad = 8;
-    const n = values.length;
-    if (n < 2) return '';
-    const min = 0;
-    const max = 100;
-    const x = (i: number) => pad + (i / (n - 1)) * (w - pad * 2);
-    const y = (v: number) =>
-      pad + (1 - (v - min) / (max - min)) * (h - pad * 2);
-    return values
-      .map((v, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`)
-      .join(' ');
+  /** Предмети за спаданням зірок (для картки поруч із графіком). */
+  subjectsByStars(): StudentSubjectRow[] {
+    return [...this.subjects].sort((a, b) => b.starsTotal - a.starsTotal);
   }
 }

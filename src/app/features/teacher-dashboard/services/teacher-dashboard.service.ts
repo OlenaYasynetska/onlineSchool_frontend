@@ -6,6 +6,7 @@ import type {
   SchoolGroupCard,
   StudentRow,
 } from '../../school-admin/models/school-admin-dashboard.model';
+import type { TeacherGroupStats } from '../models/teacher-group-stats.model';
 
 export interface TeacherActivityEntry {
   date: string;
@@ -36,6 +37,13 @@ export class TeacherDashboardService {
   listMyActivity(userId: string): Observable<TeacherActivityEntry[]> {
     return this.http.get<TeacherActivityEntry[]>(
       `${environment.apiUrl}/teacher/activity?userId=${encodeURIComponent(userId)}`
+    );
+  }
+
+  /** Групи вчителя: предмети + зірки по учнях (homework portal). */
+  listGroupStats(userId: string): Observable<TeacherGroupStats[]> {
+    return this.http.get<TeacherGroupStats[]>(
+      `${environment.apiUrl}/teacher/group-stats?userId=${encodeURIComponent(userId)}`
     );
   }
 }

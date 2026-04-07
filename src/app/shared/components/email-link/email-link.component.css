@@ -1,0 +1,38 @@
+/* Селектор app-email-link — без ViewEncapsulation, інакше preflight/таблиці перебивають колір посилання */
+app-email-link {
+  display: inline;
+  pointer-events: auto;
+}
+
+app-email-link a.email-link {
+  color: #2563eb !important;
+  text-decoration: none !important;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+app-email-link a.email-link:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+}
+
+app-email-link a.email-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+app-email-link .email-link--empty {
+  color: #94a3b8;
+}
+
+.dark app-email-link a.email-link {
+  color: #60a5fa !important;
+}
+
+.dark app-email-link a.email-link:hover {
+  color: #93c5fd !important;
+}

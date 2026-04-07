@@ -112,7 +112,7 @@
                       {{ row.fullName }}
                     </td>
                     <td class="px-4 py-3 text-slate-700">{{ row.schoolName }}</td>
-                    <td class="px-4 py-3 text-slate-600">{{ row.email }}</td>
+                    <td class="px-4 py-3"><app-email-link [email]="row.email" /></td>
                     <td class="px-4 py-3 text-slate-600">{{ row.login }}</td>
                     <td class="px-4 py-3 text-slate-600">{{ row.registeredAt }}</td>
                     <td class="px-4 py-3 text-right">

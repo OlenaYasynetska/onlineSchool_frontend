@@ -162,8 +162,8 @@ export class SidebarComponent implements OnInit {
     },
     {
       path: '/student/homework',
-      label: 'Homework',
-      icon: 'envelope',
+      label: 'Submit homework',
+      icon: 'clipboard',
       fragment: 'student-homework',
     },
     {

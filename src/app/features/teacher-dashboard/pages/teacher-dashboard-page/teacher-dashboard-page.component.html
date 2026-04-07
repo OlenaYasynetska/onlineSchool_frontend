@@ -239,7 +239,7 @@
                       <td class="px-3 py-3 font-medium text-slate-900">
                         {{ row.fullName }}
                       </td>
-                      <td class="px-3 py-3 text-slate-600">{{ row.email }}</td>
+                      <td class="px-3 py-3"><app-email-link [email]="row.email" /></td>
                       <td class="px-3 py-3 text-slate-600">
                         @if (row.groupNames?.length) {
                           {{ row.groupNames!.join(', ') }}
@@ -352,17 +352,8 @@
       </section>
       }
 
-      @if (cabinetSegment() === 'group-stats') {
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-slate-900">Group trends</h1>
-          <p class="mt-1 text-sm text-slate-600">
-            Teaching metrics over time
-          </p>
-        </div>
-      }
-
-      @if (cabinetSegment() === '' || cabinetSegment() === 'group-stats') {
-      <!-- Group stats chart -->
+      @if (cabinetSegment() === '') {
+      <!-- Group trends (demo) — детальна статистика по групах: /teacher/group-stats -->
       <section
         id="teacher-group-stats"
         class="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
@@ -378,58 +369,86 @@
           />
           Group trends
         </h2>
-        <p class="mb-4 text-xs text-slate-500">
-          Demo chart; replace with live metrics when analytics API is available.
+        <p class="mb-3 text-xs text-slate-500">
+          Demo chart (ApexCharts). Pick a period — one point per month. Live metrics:
+          <a
+            routerLink="/teacher/group-stats"
+            class="font-medium text-violet-700 underline hover:text-violet-900"
+            >Group statistics</a
+          >.
         </p>
         <div
-          class="rounded-xl border border-slate-100 bg-slate-50/50 p-4"
+          class="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 sm:flex-row sm:flex-wrap sm:items-end"
         >
-          <div class="mb-4 flex flex-wrap items-center justify-center gap-6 text-xs font-medium">
-            <span class="inline-flex items-center gap-2 text-slate-700">
-              <span class="h-0.5 w-6 rounded bg-blue-500"></span>
-              Group A (demo)
-            </span>
-            <span class="inline-flex items-center gap-2 text-slate-700">
-              <span class="h-0.5 w-6 rounded bg-emerald-500"></span>
-              Group B (demo)
-            </span>
-          </div>
-          <svg
-            class="h-56 w-full"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
+          <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-600">
+            From
+            <input
+              type="date"
+              class="w-full min-w-[10.5rem] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              [ngModel]="trendDateFrom()"
+              (ngModelChange)="trendDateFrom.set($event)"
+            />
+          </label>
+          <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-600">
+            To
+            <input
+              type="date"
+              class="w-full min-w-[10.5rem] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              [ngModel]="trendDateTo()"
+              (ngModelChange)="trendDateTo.set($event)"
+            />
+          </label>
+          <button
+            type="button"
+            (click)="applyTrendRange()"
+            class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900"
           >
-            <line
-              x1="0"
-              y1="100"
-              x2="100"
-              y2="100"
-              stroke="#e2e8f0"
-              stroke-width="0.5"
-            />
-            <polyline
-              [attr.points]="chartLinePoints(chartDemo.seriesA)"
-              fill="none"
-              stroke="#3b82f6"
-              stroke-width="1.2"
-              vector-effect="non-scaling-stroke"
-            />
-            <polyline
-              [attr.points]="chartLinePoints(chartDemo.seriesB)"
-              fill="none"
-              stroke="#22c55e"
-              stroke-width="1.2"
-              vector-effect="non-scaling-stroke"
-            />
-          </svg>
-          <div
-            class="mt-2 flex justify-between text-[10px] font-medium text-slate-500 sm:text-xs"
-          >
-            @for (m of chartDemo.labels; track m) {
-              <span>{{ m }}</span>
-            }
+            Apply
+          </button>
+          <div class="flex flex-wrap gap-2 sm:ml-auto">
+            <button
+              type="button"
+              (click)="presetTrendMonths(3)"
+              class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Last 3 mo
+            </button>
+            <button
+              type="button"
+              (click)="presetTrendMonths(6)"
+              class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Last 6 mo
+            </button>
+            <button
+              type="button"
+              (click)="presetTrendMonths(12)"
+              class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
+            >
+              Last 12 mo
+            </button>
           </div>
+        </div>
+        @if (trendRangeError()) {
+          <p class="mb-3 text-sm text-rose-600" role="alert">
+            {{ trendRangeError() }}
+          </p>
+        }
+        <div
+          class="rounded-xl border border-slate-100 bg-slate-50/50 p-2 sm:p-4"
+        >
+          <apx-chart
+            [series]="groupTrendSeries()"
+            [chart]="groupTrendChart()"
+            [colors]="groupTrendColors"
+            [fill]="groupTrendFill"
+            [stroke]="groupTrendStroke"
+            [xaxis]="groupTrendXaxis()"
+            [yaxis]="groupTrendYaxis"
+            [legend]="groupTrendLegend"
+            [grid]="groupTrendGrid"
+            [tooltip]="groupTrendTooltip"
+          ></apx-chart>
         </div>
       </section>
       }

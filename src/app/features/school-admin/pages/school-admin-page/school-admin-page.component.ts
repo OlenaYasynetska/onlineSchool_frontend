@@ -18,17 +18,20 @@ import {
   normalizeSchoolId,
   SESSION_STORAGE_SCHOOL_ID_KEY,
 } from '../../utils/school-id.util';
+import { syncGroupCountsInDashboard } from '../../utils/group-student-count.util';
 import { AddGroupModalComponent } from '../../components/add-group-modal/add-group-modal.component';
 import { AddGroupSuccessModalComponent } from '../../components/add-group-success-modal/add-group-success-modal.component';
 import { EditGroupModalComponent } from '../../components/edit-group-modal/edit-group-modal.component';
 import { AddTeacherModalComponent } from '../../components/add-teacher-modal/add-teacher-modal.component';
 import { AddStudentModalComponent } from '../../components/add-student-modal/add-student-modal.component';
+import { EmailLinkComponent } from '../../../../shared/components/email-link/email-link.component';
 
 @Component({
   selector: 'app-school-admin-page',
   standalone: true,
   imports: [
     CommonModule,
+    EmailLinkComponent,
     AddGroupModalComponent,
     AddGroupSuccessModalComponent,
     EditGroupModalComponent,
@@ -151,6 +154,7 @@ export class SchoolAdminPageComponent implements OnInit {
     this.dashApi.getDashboard(id).subscribe({
       next: (data) => {
         Object.assign(this.dash, data);
+        syncGroupCountsInDashboard(this.dash);
         const echoed = normalizeSchoolId(data.schoolId);
         if (echoed) {
           this.schoolId = echoed;

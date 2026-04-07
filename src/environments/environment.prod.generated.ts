@@ -5,6 +5,6 @@ export const environment: AppEnvironment = {
   production: true,
   apiUrl: "/api",
   enableLocalSuperAdminLogin: false,
-  superAdminEmail: "superadmin@education.local",
-  superAdminPassword: "SuperAdmin!ChangeMe",
+  superAdminEmail: "",
+  superAdminPassword: "",
 };

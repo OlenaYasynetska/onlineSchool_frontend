@@ -7,16 +7,18 @@ import type {
   SchoolGroupCard,
   StudentRow,
 } from '../../../school-admin/models/school-admin-dashboard.model';
+import { countStudentsInGroupForRoster } from '../../../school-admin/utils/group-student-count.util';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   TeacherDashboardService,
   type TeacherActivityEntry,
 } from '../../services/teacher-dashboard.service';
+import { EmailLinkComponent } from '../../../../shared/components/email-link/email-link.component';
 
 @Component({
   selector: 'app-teacher-group-detail-page',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, EmailLinkComponent],
   templateUrl: './teacher-group-detail-page.component.html',
 })
 export class TeacherGroupDetailPageComponent implements OnInit {
@@ -63,7 +65,8 @@ export class TeacherGroupDetailPageComponent implements OnInit {
             this.notFound = true;
             this.group = null;
           } else {
-            this.group = g;
+            const cnt = countStudentsInGroupForRoster(g.name, students);
+            this.group = { ...g, studentsCount: cnt };
             this.notFound = false;
           }
           this.students = students;

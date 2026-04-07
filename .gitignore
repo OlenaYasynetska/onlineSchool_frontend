@@ -3,6 +3,11 @@ node_modules/
 dist/
 
 .env
+.env.local
+.env.*.local
+
+# Генерується перед npm run build — не комітити (секрети з Vercel / локального .env)
+src/environments/environment.prod.generated.ts
 
 .idea/
 .vscode/

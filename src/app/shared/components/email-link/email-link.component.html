@@ -1,0 +1,7 @@
+@if (trimmed()) {
+  <a class="email-link" [href]="mailHref()" (click)="onMailClick($event)">{{
+    trimmed()
+  }}</a>
+} @else {
+  <span class="email-link--empty">{{ emptyLabel() }}</span>
+}

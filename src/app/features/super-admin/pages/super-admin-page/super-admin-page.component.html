@@ -180,6 +180,7 @@
             <th class="px-3 py-3">Next billing</th>
             <th class="px-3 py-3">Registration</th>
             <th class="px-3 py-3">Total ($)</th>
+            <th class="px-3 py-3 text-center">Students</th>
             <th class="px-3 py-3 text-right">Actions</th>
           </tr>
         </thead>
@@ -196,6 +197,9 @@
                 <td class="px-3 py-3 text-slate-600">{{ row.nextBilling }}</td>
                 <td class="px-3 py-3 text-slate-600">{{ row.registered }}</td>
                 <td class="px-3 py-3 font-medium">{{ row.totalReceived }}</td>
+                <td class="px-3 py-3 text-center text-slate-700">
+                  {{ row.studentCount ?? 0 }}
+                </td>
                 <td class="px-3 py-3 text-right">
                   <a
                     [routerLink]="['/super-admin/organizations', row.id, 'edit']"
@@ -216,7 +220,7 @@
             }
           } @else {
             <tr>
-              <td colspan="8" class="px-3 py-10 text-center text-sm text-slate-500">
+              <td colspan="9" class="px-3 py-10 text-center text-sm text-slate-500">
                 No organizations yet. Add your first school in the database.
               </td>
             </tr>

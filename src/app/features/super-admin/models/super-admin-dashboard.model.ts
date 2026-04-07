@@ -16,6 +16,8 @@ export interface OrganizationRow {
   totalReceived: string;
   /** Адреса з організації (рядок або кілька рядків через \n) */
   address?: string;
+  /** З GET /super-admin/dashboard — кількість учнів школи з БД */
+  studentCount?: number;
 }
 
 export interface PaymentHistoryRow {

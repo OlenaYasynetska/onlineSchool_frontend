@@ -36,14 +36,26 @@ export class SuperAdminDashboardService {
   }
 
   /**
-   * Якщо бекенд не повернув `schools` (старий API) або масив порожній — будуємо
-   * картки з тих самих організацій, що й таблиця Organizations.
+   * Картки шкіл + узгодження studentCount з `organizations` (той самий підрахунок з БД).
+   * Якщо `schools` порожній — будуємо картки з organizations.
    */
   private resolveSchools(data: SuperAdminDashboardResponse): SchoolCard[] {
+    const countByOrgId = new Map<string, number>();
+    for (const o of data.organizations ?? []) {
+      const n = o.studentCount;
+      countByOrgId.set(o.id, typeof n === 'number' && !Number.isNaN(n) ? n : 0);
+    }
+
     const fromApi = data.schools ?? [];
     if (fromApi.length > 0) {
-      return fromApi;
+      return fromApi.map((s) => ({
+        ...s,
+        studentCount: countByOrgId.has(s.id)
+          ? (countByOrgId.get(s.id) as number)
+          : Number(s.studentCount ?? 0),
+      }));
     }
+
     const orgs = data.organizations ?? [];
     return orgs.map((org, i) => ({
       id: org.id,
@@ -51,7 +63,7 @@ export class SuperAdminDashboardService {
       displayName: org.name,
       address: this.addressForCard(org),
       plan: org.plan,
-      studentCount: 0,
+      studentCount: countByOrgId.get(org.id) ?? org.studentCount ?? 0,
     }));
   }
 

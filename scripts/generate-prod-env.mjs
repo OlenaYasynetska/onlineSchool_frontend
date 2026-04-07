@@ -5,8 +5,7 @@
  * Змінні:
  *   NG_APP_API_URL              — базовий URL API (production: зазвичай '/api')
  *   ENABLE_LOCAL_SUPER_ADMIN  — 'true' щоб увімкнути локальний вхід суперадміна без бекенду (за замовчуванням false)
- *   SUPER_ADMIN_EMAIL         — якщо локальний вхід увімкнено
- *   SUPER_ADMIN_PASSWORD
+ *   SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD — обовʼязкові, якщо ENABLE_LOCAL_SUPER_ADMIN=true (інакше збірка завершиться з помилкою)
  *
  * Прямий виклик ng build без npm не виконає цей скрипт — використовуйте npm run build.
  */
@@ -49,10 +48,19 @@ const enableLocal =
     .toLowerCase()
     .trim() === 'true';
 
-const superAdminEmail =
-  process.env.SUPER_ADMIN_EMAIL ?? 'superadmin@education.local';
-const superAdminPassword =
-  process.env.SUPER_ADMIN_PASSWORD ?? 'SuperAdmin!ChangeMe';
+let superAdminEmail = '';
+let superAdminPassword = '';
+
+if (enableLocal) {
+  superAdminEmail = (process.env.SUPER_ADMIN_EMAIL ?? '').trim();
+  superAdminPassword = (process.env.SUPER_ADMIN_PASSWORD ?? '').trim();
+  if (!superAdminEmail || !superAdminPassword) {
+    console.error(
+      'ENABLE_LOCAL_SUPER_ADMIN=true потребує непорожніх SUPER_ADMIN_EMAIL і SUPER_ADMIN_PASSWORD (наприклад у .env або в змінних Vercel).'
+    );
+    process.exit(1);
+  }
+}
 
 const out = `/* Автогенерація: scripts/generate-prod-env.mjs — не редагувати вручну */
 import type { AppEnvironment } from './environment.types';

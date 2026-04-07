@@ -13,6 +13,7 @@ import {
   normalizeSchoolId,
   SESSION_STORAGE_SCHOOL_ID_KEY,
 } from '../utils/school-id.util';
+import { syncGroupCountsInDashboard } from '../utils/group-student-count.util';
 
 function resolveSchoolIdForActions(
   auth: AuthService,
@@ -189,6 +190,7 @@ export function useSchoolAdminQuickActions(
       dashApi.getDashboard(schoolId).subscribe({
         next: (data) => {
           Object.assign(dash, data);
+          syncGroupCountsInDashboard(dash);
           addStudentOpen.set(false);
         },
         error: (err) => {
@@ -322,6 +324,7 @@ export function useSchoolAdminQuickActions(
           list.push(created);
         }
         dash.groups = [...list];
+        syncGroupCountsInDashboard(dash);
         closeEditGroupModal();
       },
       error: (err) => {

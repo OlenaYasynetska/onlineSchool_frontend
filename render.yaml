@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: online-school-frontend
+    env: static
+    rootDir: .
+    buildCommand: npm install --legacy-peer-deps && npm run build
+    staticPublishPath: dist/education-frontend/browser
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

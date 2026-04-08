@@ -132,8 +132,8 @@ export class TeacherGroupStatsPageComponent implements OnInit {
 
   private buildXaxisForGroup(g: TeacherGroupStats): ApexXAxis {
     const categories =
-      g.chartMonthLabels?.length > 0
-        ? g.chartMonthLabels
+      (g.chartMonthLabels?.length ?? 0) > 0
+        ? g.chartMonthLabels!
         : this.chartMonthsFallback;
     return {
       categories,

@@ -24,7 +24,6 @@ export function createApexLineChart(chartId: string): ApexChart {
     fontFamily: FONT,
     animations: {
       enabled: true,
-      easing: 'easeinout',
       speed: 450,
       animateGradually: { enabled: true, delay: 150 },
       dynamicAnimation: { enabled: true, speed: 350 },

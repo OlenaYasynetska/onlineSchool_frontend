@@ -4,7 +4,9 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type {
   HomeworkSubmission,
+  StudentDashboardContextDto,
   StudentGroupOption,
+  StudentMyStarsDto,
   TeacherOptionShort,
 } from '../models/student-homework.model';
 
@@ -34,13 +36,25 @@ export class StudentHomeworkService {
     );
   }
 
+  myStars(userId: string): Observable<StudentMyStarsDto> {
+    return this.http.get<StudentMyStarsDto>(
+      `${this.base()}/my-stars?userId=${encodeURIComponent(userId)}`
+    );
+  }
+
+  dashboardContext(userId: string): Observable<StudentDashboardContextDto> {
+    return this.http.get<StudentDashboardContextDto>(
+      `${this.base()}/dashboard-context?userId=${encodeURIComponent(userId)}`
+    );
+  }
+
   submit(params: {
     userId: string;
     teacherId: string;
     groupId?: string;
     subjectTitle: string;
     messageText?: string;
-    file: File;
+    file?: File;
   }): Observable<HomeworkSubmission> {
     const fd = new FormData();
     fd.append('userId', params.userId);
@@ -52,7 +66,17 @@ export class StudentHomeworkService {
     if (params.messageText?.trim()) {
       fd.append('messageText', params.messageText.trim());
     }
-    fd.append('file', params.file, params.file.name);
+    if (params.file) {
+      fd.append('file', params.file, params.file.name);
+    } else {
+      // Always send a non-empty "file" part: empty blobs may be dropped or rejected; backend
+      // recognizes __no_hw_attachment__.txt as «no real file».
+      fd.append(
+        'file',
+        new Blob([new Uint8Array([0])]),
+        '__no_hw_attachment__.txt',
+      );
+    }
     return this.http.post<HomeworkSubmission>(`${this.base()}/submit`, fd);
   }
 }

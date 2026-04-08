@@ -20,14 +20,19 @@ import { EmailLinkComponent } from '../../../../shared/components/email-link/ema
 import type {
   ApexAxisChartSeries,
   ApexChart,
-  ApexFill,
-  ApexGrid,
-  ApexLegend,
-  ApexStroke,
-  ApexTooltip,
+  ApexPlotOptions,
   ApexXAxis,
   ApexYAxis,
 } from 'ng-apexcharts';
+import {
+  APEX_LINE_GRID,
+  APEX_LINE_LEGEND,
+  APEX_LINE_PLOT_OPTIONS,
+  APEX_LINE_STROKE,
+  APEX_LINE_TOOLTIP,
+  APEX_LINE_YAXIS_DEFAULT,
+  createApexLineChart,
+} from '../../../../shared/charts/apex-line-chart-student-style';
 
 @Component({
   selector: 'app-teacher-dashboard-page',
@@ -66,36 +71,14 @@ export class TeacherDashboardPageComponent implements OnInit {
     { name: 'Group B (demo)', data: this.trendDataB() },
   ]);
 
-  readonly groupTrendChart = computed<ApexChart>(() => {
-    const n = this.trendLabels().length;
-    const h = Math.min(480, Math.max(220, 160 + Math.min(n, 24) * 14));
-    return {
-      type: 'area',
-      id: 'teacher-dashboard-group-trends',
-      height: h,
-      stacked: false,
-      toolbar: { show: false },
-      zoom: { enabled: false },
-      fontFamily:
-        'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-      animations: { enabled: true, easing: 'easeinout', speed: 500 },
-    };
-  });
+  /** Той самий `ApexChart`, що й у учня (`shared/charts/apex-line-chart-student-style`). */
+  readonly groupTrendChartConfig: ApexChart = createApexLineChart(
+    'teacher-dashboard-group-trends'
+  );
 
-  readonly groupTrendStroke: ApexStroke = {
-    curve: 'smooth',
-    width: 2.5,
-  };
+  readonly groupTrendStroke = APEX_LINE_STROKE;
 
-  readonly groupTrendFill: ApexFill = {
-    type: 'gradient',
-    gradient: {
-      shadeIntensity: 1,
-      opacityFrom: 0.45,
-      opacityTo: 0.06,
-      stops: [0, 92, 100],
-    },
-  };
+  readonly groupTrendPlotOptions: ApexPlotOptions = APEX_LINE_PLOT_OPTIONS;
 
   readonly groupTrendXaxis = computed<ApexXAxis>(() => ({
     categories: this.trendLabels(),
@@ -108,35 +91,16 @@ export class TeacherDashboardPageComponent implements OnInit {
     axisTicks: { show: false },
   }));
 
-  readonly groupTrendYaxis: ApexYAxis = {
-    labels: {
-      style: { colors: '#64748b', fontSize: '11px' },
-    },
-  };
+  readonly groupTrendYaxis: ApexYAxis = APEX_LINE_YAXIS_DEFAULT;
 
-  readonly groupTrendLegend: ApexLegend = {
-    position: 'top',
-    horizontalAlign: 'center',
-    fontSize: '12px',
-    fontWeight: 500,
-    labels: { colors: '#334155' },
-    markers: { strokeWidth: 0 },
-  };
+  readonly groupTrendLegend = APEX_LINE_LEGEND;
 
-  readonly groupTrendGrid: ApexGrid = {
-    borderColor: '#e2e8f0',
-    strokeDashArray: 4,
-    padding: { top: 8, right: 12, bottom: 0, left: 12 },
-    xaxis: { lines: { show: false } },
-  };
+  readonly groupTrendGrid = APEX_LINE_GRID;
 
-  readonly groupTrendTooltip: ApexTooltip = {
-    theme: 'light',
-    shared: true,
-    intersect: false,
-  };
+  readonly groupTrendTooltip = APEX_LINE_TOOLTIP;
 
-  readonly groupTrendColors: string[] = ['#3b82f6', '#22c55e'];
+  /** Як у student-dashboard (лінії предметів). */
+  readonly groupTrendColors: string[] = ['#2563eb', '#16a34a'];
 
   constructor() {
     this.router.events
@@ -314,17 +278,37 @@ export class TeacherDashboardPageComponent implements OnInit {
     return labels;
   }
 
-  /** Детерміновані «тренди» для демо (замініть відповіддю API). */
+  /**
+   * Демо-ряди з «хвилястою» формою як у учня (не лінійний 20→95),
+   * інакше smooth-line виглядає майже прямою.
+   */
   private buildDemoSeriesPair(n: number): [number[], number[]] {
     if (n <= 0) return [[], []];
-    if (n === 1) return [[52], [48]];
-    const a: number[] = [];
-    const b: number[] = [];
-    for (let i = 0; i < n; i++) {
-      const t = i / (n - 1);
-      a.push(Math.round(20 + t * 75));
-      b.push(Math.round(15 + t * 73));
+    const baseA = [22, 45, 52, 68, 82];
+    const baseB = [18, 38, 48, 58, 70];
+    return [this.resampleDemoSeries(baseA, n), this.resampleDemoSeries(baseB, n)];
+  }
+
+  private resampleDemoSeries(template: number[], len: number): number[] {
+    if (len <= 0) return [];
+    if (len === 1) {
+      return [Math.round(template[template.length - 1])];
     }
-    return [a, b];
+    if (len <= template.length) {
+      return template.slice(0, len).map((v) => Math.round(v));
+    }
+    const out: number[] = [];
+    const maxI = template.length - 1;
+    for (let i = 0; i < len; i++) {
+      const u = (i / (len - 1)) * maxI;
+      const j = Math.floor(u);
+      const f = u - j;
+      const v =
+        j < maxI
+          ? template[j] * (1 - f) + template[j + 1] * f
+          : template[maxI];
+      out.push(Math.round(v));
+    }
+    return out;
   }
 }

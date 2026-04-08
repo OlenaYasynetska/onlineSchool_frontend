@@ -7,6 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -86,6 +87,15 @@ import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop
             </p>
           </div>
 
+          @if (loginError()) {
+            <p
+              class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800"
+              role="alert"
+            >
+              {{ loginError() }}
+            </p>
+          }
+
           <button
             type="submit"
             [disabled]="form.invalid || loading()"
@@ -122,6 +132,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   });
 
   loading = signal(false);
+  /** Повідомлення з бекенду / мережі (раніше помилка була лише в консолі). */
+  loginError = signal<string | null>(null);
 
   ngOnInit(): void {
     document.documentElement.style.overflow = 'hidden';
@@ -144,6 +156,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.form.invalid) return;
+    this.loginError.set(null);
     const { roleIdentifier, password } = this.form.getRawValue();
     if (this.auth.loginAsSuperAdminIfValid(roleIdentifier, password)) {
       void this.router.navigate(['/super-admin']);
@@ -170,10 +183,29 @@ export class LoginComponent implements OnInit, OnDestroy {
               void this.router.navigate(['/dashboard']);
           }
         },
-        error: (err) => {
+        error: (err: unknown) => {
           console.error(err);
           this.loading.set(false);
+          this.loginError.set(this.describeLoginError(err));
         },
       });
+  }
+
+  private describeLoginError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (err.status === 0) {
+        return 'Cannot reach the server. Start the backend (e.g. Spring on http://localhost:8080) and check the API URL in environment.';
+      }
+      if (err.status === 401) {
+        return 'Invalid email or password.';
+      }
+      const body = err.error;
+      if (body && typeof body === 'object' && 'message' in body) {
+        const m = (body as { message?: unknown }).message;
+        if (typeof m === 'string' && m.trim()) return m;
+      }
+      return `Login failed (${err.status}).`;
+    }
+    return 'Login failed. Please try again.';
   }
 }

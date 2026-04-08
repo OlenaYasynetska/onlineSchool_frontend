@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/services/auth.service';
 import { TeacherHomeworkService } from '../../services/teacher-homework.service';
 import type { HomeworkSubmission } from '../../../student-dashboard/models/student-homework.model';
@@ -20,8 +21,8 @@ export class TeacherHomeworkPageComponent implements OnInit {
   pending: HomeworkSubmission[] = [];
   graded: HomeworkSubmission[] = [];
 
-  /** Row opened for grading */
-  gradingId: string | null = null;
+  /** Запись, для которой открыта оценка (звёзды + отзыв). */
+  gradingSubmission: HomeworkSubmission | null = null;
   gradeStars = 2;
   gradeFeedback = '';
   gradeError: string | null = null;
@@ -67,25 +68,25 @@ export class TeacherHomeworkPageComponent implements OnInit {
   }
 
   openGrade(sub: HomeworkSubmission): void {
-    this.gradingId = sub.id;
+    this.gradingSubmission = sub;
     this.gradeStars = 2;
     this.gradeFeedback = '';
     this.gradeError = null;
   }
 
   closeGrade(): void {
-    this.gradingId = null;
+    this.gradingSubmission = null;
     this.gradeError = null;
   }
 
   submitGrade(): void {
     const u = this.auth.currentUser();
-    const id = this.gradingId;
-    if (!u?.id || !id) return;
+    const sub = this.gradingSubmission;
+    if (!u?.id || !sub) return;
     this.gradeError = null;
     this.gradingBusy = true;
     this.api
-      .grade(u.id, id, {
+      .grade(u.id, sub.id, {
         stars: this.gradeStars,
         feedback: this.gradeFeedback.trim() || undefined,
       })
@@ -95,9 +96,16 @@ export class TeacherHomeworkPageComponent implements OnInit {
           this.closeGrade();
           this.reload(u.id);
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
           this.gradingBusy = false;
-          this.gradeError = 'Could not save grade.';
+          const body = err.error;
+          let msg = '';
+          if (typeof body === 'string') {
+            msg = body;
+          } else if (body && typeof body === 'object' && 'message' in body) {
+            msg = String((body as { message?: string }).message);
+          }
+          this.gradeError = msg || err.message || 'Не удалось сохранить оценку.';
         },
       });
   }

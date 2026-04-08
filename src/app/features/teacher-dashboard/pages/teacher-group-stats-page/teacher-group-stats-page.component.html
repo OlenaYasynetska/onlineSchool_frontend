@@ -67,44 +67,61 @@
               subjects in school admin or set group topics.
             </p>
           } @else {
-            <div class="min-w-0 -mx-1 overflow-x-auto sm:mx-0">
-              <apx-chart
-                [series]="barSeries(g)"
-                [chart]="barChartOptions(g)"
-                [plotOptions]="barPlotOptions"
-                [dataLabels]="barDataLabels"
-                [xaxis]="barXaxis(g)"
-                [yaxis]="barYaxis"
-                [legend]="barLegend"
-                [tooltip]="barTooltip"
-                [colors]="chartColors(g.subjectTitles.length)"
-              ></apx-chart>
-            </div>
-            <div class="mt-4 overflow-x-auto">
-              <table class="w-full min-w-[480px] text-left text-sm">
-                <thead>
-                  <tr
-                    class="border-b border-slate-200 text-xs font-semibold uppercase text-slate-600"
-                  >
-                    <th class="pb-2 pr-3">Student</th>
-                    @for (sub of g.subjectTitles; track sub) {
-                      <th class="pb-2 pr-3 text-right">{{ sub }}</th>
-                    }
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of g.students; track row.studentId) {
-                    <tr class="border-b border-slate-100 last:border-0">
-                      <td class="py-2 pr-3 font-medium text-slate-900">{{ row.fullName }}</td>
-                      @for (sub of g.subjectTitles; track sub) {
-                        <td class="py-2 pr-3 text-right tabular-nums text-slate-800">
-                          {{ row.starsBySubject[sub] ?? 0 }}
-                        </td>
+            <div
+              class="grid min-w-0 gap-6 xl:grid-cols-2 xl:items-start"
+            >
+              <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-4 shadow-sm">
+                <div class="overflow-x-auto">
+                  <table class="w-full min-w-[480px] text-left text-sm">
+                    <thead>
+                      <tr
+                        class="border-b border-slate-200 text-xs font-semibold uppercase text-slate-600"
+                      >
+                        <th class="pb-2 pr-3">Student</th>
+                        @for (sub of g.subjectTitles; track sub) {
+                          <th class="pb-2 pr-3 text-right">{{ sub }}</th>
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of g.students; track row.studentId) {
+                        <tr class="border-b border-slate-100 last:border-0">
+                          <td class="py-2 pr-3 font-medium text-slate-900">{{ row.fullName }}</td>
+                          @for (sub of g.subjectTitles; track sub) {
+                            <td class="py-2 pr-3 text-right tabular-nums text-slate-800">
+                              {{ row.starsBySubject[sub] ?? 0 }}
+                            </td>
+                          }
+                        </tr>
                       }
-                    </tr>
-                  }
-                </tbody>
-              </table>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+                <h3 class="text-lg font-bold text-slate-900">
+                  Stars by subject over time
+                </h3>
+                <p class="mt-1 text-xs text-slate-500">
+                  Cumulative stars by month from graded homework stored in the database (by grading
+                  date). One line per subject.
+                </p>
+                <div class="mt-2 min-w-0 -mx-1 sm:mx-0">
+                  <apx-chart
+                    [series]="seriesForGroup(g)"
+                    [chart]="chartForGroup(g)"
+                    [colors]="colorsForGroup(g)"
+                    [xaxis]="xaxisForGroup(g)"
+                    [yaxis]="yaxisForGroup(g)"
+                    [stroke]="groupStatsStroke"
+                    [plotOptions]="groupStatsPlotOptions"
+                    [legend]="groupStatsLegend"
+                    [grid]="groupStatsGrid"
+                    [tooltip]="groupStatsTooltip"
+                  ></apx-chart>
+                </div>
+              </div>
             </div>
           }
         </section>

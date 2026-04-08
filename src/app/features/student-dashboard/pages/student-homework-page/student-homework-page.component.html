@@ -7,7 +7,8 @@
         Submit homework
       </h1>
       <p class="mt-1 text-sm text-slate-600">
-        Choose a teacher, enter the subject, add a message, and attach your file.
+        Choose a teacher and group (if needed), subject and message. Send with a file attachment or
+        without.
       </p>
     </div>
 
@@ -30,10 +31,10 @@
       >
         <h2 class="text-lg font-bold text-slate-900">Send homework</h2>
         <p class="mt-1 text-xs text-slate-500">
-          PDF, Word, images, or other formats your teacher accepts.
+          Two actions: attach a file (it sends after you pick one) or send without a file.
         </p>
 
-        <form class="mt-5 space-y-4" (ngSubmit)="submit()">
+        <form class="mt-5 space-y-4" (submit)="$event.preventDefault()">
           <div>
             <label
               for="hw-teacher"
@@ -54,24 +55,47 @@
             </select>
           </div>
 
-          @if (groups.length > 0) {
+          @if (groups.length === 0) {
+            <div
+              class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+              role="status"
+            >
+              You are not enrolled in any class group yet. Ask your school administrator to add you
+              to a group in the database — then your groups will appear here.
+            </div>
+          } @else {
             <div>
               <label
                 for="hw-group"
                 class="mb-1 block text-sm font-medium text-slate-700"
-                >Group (optional)</label
+                >Group</label
               >
-              <select
-                id="hw-group"
-                name="groupId"
-                [(ngModel)]="groupId"
-                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-              >
-                <option value="">—</option>
-                @for (g of groups; track g.id) {
-                  <option [value]="g.id">{{ g.name }} ({{ g.code }})</option>
-                }
-              </select>
+              @if (groups.length === 1) {
+                <p class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800">
+                  {{ groups[0].name }}
+                  <span class="text-slate-500">({{ groups[0].code }})</span>
+                </p>
+                <p class="mt-1 text-xs text-slate-500">
+                  From your enrollments in the school roster. Your teacher will see this homework in
+                  the inbox for this group.
+                </p>
+              } @else {
+                <select
+                  id="hw-group"
+                  name="groupId"
+                  [(ngModel)]="groupId"
+                  required
+                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                >
+                  <option value="" disabled>Select group</option>
+                  @for (g of groups; track g.id) {
+                    <option [value]="g.id">{{ g.name }} ({{ g.code }})</option>
+                  }
+                </select>
+                <p class="mt-1 text-xs text-slate-500">
+                  Required — you are enrolled in several groups (from the database).
+                </p>
+              }
             </div>
           }
 
@@ -110,20 +134,21 @@
           </div>
 
           <div>
-            <label
-              for="hw-file"
-              class="mb-1 block text-sm font-medium text-slate-700"
-              >File</label
-            >
+            <span class="mb-1 block text-sm font-medium text-slate-700">File (optional)</span>
             <input
+              #fileInput
               id="hw-file"
               name="file"
               type="file"
+              class="hidden"
               (change)="onFileChange($event)"
-              class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:font-medium file:text-slate-800 hover:file:bg-slate-200"
             />
             @if (selectedFile) {
-              <p class="mt-1 text-xs text-slate-500">{{ selectedFile.name }}</p>
+              <p class="text-xs text-slate-600">
+                Selected: <span class="font-medium">{{ selectedFile.name }}</span>
+              </p>
+            } @else {
+              <p class="text-xs text-slate-500">You can send without a file — use the second button.</p>
             }
           </div>
 
@@ -131,13 +156,24 @@
             <p class="text-sm text-rose-600" role="alert">{{ submitError }}</p>
           }
 
-          <button
-            type="submit"
-            [disabled]="submitting"
-            class="w-full rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {{ submitting ? 'Sending…' : 'Send' }}
-          </button>
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+            <button
+              type="button"
+              (click)="triggerFilePicker()"
+              [disabled]="submitting || groups.length === 0"
+              class="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {{ submitting ? 'Sending…' : 'Attach file' }}
+            </button>
+            <button
+              type="button"
+              (click)="sendWithoutFile()"
+              [disabled]="submitting || groups.length === 0"
+              class="flex-1 rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {{ submitting ? 'Sending…' : 'Send without file' }}
+            </button>
+          </div>
         </form>
       </div>
 
@@ -146,7 +182,7 @@
       >
         <h2 class="text-lg font-bold text-slate-900">My submissions</h2>
         <p class="mt-1 text-sm text-slate-600">
-          Status and grade after your teacher reviews the work.
+          After your teacher grades the work, stars (1–3) and feedback appear here.
         </p>
         @if (submissions.length === 0) {
           <p class="mt-4 text-sm text-slate-600">No submissions yet.</p>
@@ -168,7 +204,7 @@
                 @for (s of submissions; track s.id) {
                   <tr class="border-b border-slate-100 last:border-0">
                     <td class="py-2.5 pr-3 text-slate-800">{{ s.subjectTitle }}</td>
-                    <td class="py-2.5 pr-3 text-slate-700">{{ s.fileName }}</td>
+                    <td class="py-2.5 pr-3 text-slate-700">{{ formatFileName(s.fileName) }}</td>
                     <td class="py-2.5 pr-3 text-slate-600">
                       {{ s.groupName ?? '—' }}
                     </td>

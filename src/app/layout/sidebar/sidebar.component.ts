@@ -94,7 +94,7 @@ export class SidebarComponent implements OnInit {
     },
     {
       path: '/teacher/group-stats',
-      label: 'Group stats',
+      label: 'Group stars',
       icon: 'lineChart',
       fragment: 'teacher-group-stats',
     },
@@ -168,7 +168,7 @@ export class SidebarComponent implements OnInit {
     },
     {
       path: '/student/group-stats',
-      label: 'Group stats',
+      label: 'My stars',
       icon: 'lineChart',
       fragment: 'student-group-stats',
     },

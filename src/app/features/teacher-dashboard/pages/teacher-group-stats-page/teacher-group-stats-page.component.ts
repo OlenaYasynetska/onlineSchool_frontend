@@ -2,17 +2,27 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import type {
+  ApexAxisChartSeries,
   ApexChart,
-  ApexDataLabels,
-  ApexLegend,
   ApexPlotOptions,
-  ApexTooltip,
   ApexXAxis,
   ApexYAxis,
 } from 'ng-apexcharts';
 import { AuthService } from '../../../../core/services/auth.service';
+import {
+  APEX_LINE_GRID,
+  APEX_LINE_LEGEND,
+  APEX_LINE_PLOT_OPTIONS,
+  APEX_LINE_STROKE,
+  APEX_LINE_TOOLTIP,
+  APEX_LINE_YAXIS_DEFAULT,
+  createApexLineChart,
+} from '../../../../shared/charts/apex-line-chart-student-style';
 import { TeacherDashboardService } from '../../services/teacher-dashboard.service';
 import type { TeacherGroupStats } from '../../models/teacher-group-stats.model';
+
+/** Та сама крива накопичення, що й у учня — масштабується до сумарних зірок по предмету в групі. */
+const LINE_TEMPLATE = [22, 45, 52, 68, 82];
 
 @Component({
   selector: 'app-teacher-group-stats-page',
@@ -29,65 +39,43 @@ export class TeacherGroupStatsPageComponent implements OnInit {
   noProfile = false;
   groups: TeacherGroupStats[] = [];
 
-  readonly barChartBase: ApexChart = {
-    type: 'bar',
-    toolbar: { show: false },
-    fontFamily:
-      'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-    animations: { enabled: true, speed: 450 },
-  };
+  private readonly emptySeries: ApexAxisChartSeries = [];
 
-  readonly barPlotOptions: ApexPlotOptions = {
-    bar: {
-      horizontal: false,
-      columnWidth: '62%',
-      borderRadius: 4,
-      dataLabels: { position: 'top' },
+  /** Стабільні посилання після завантаження API — інакше apx-chart пересоздається щоразу. */
+  seriesByGroupId = new Map<string, ApexAxisChartSeries>();
+  private chartOptionsByGroupId = new Map<string, ApexChart>();
+  yaxisByGroupId = new Map<string, ApexYAxis>();
+  private colorsByGroupId = new Map<string, string[]>();
+  private xaxisByGroupId = new Map<string, ApexXAxis>();
+
+  private readonly chartMonthsFallback = ['Apr', 'May', 'Jun', 'Jul', 'Aug'];
+
+  private readonly subjectLineColors = ['#2563eb', '#16a34a', '#d97706', '#9333ea'];
+
+  readonly groupStatsStroke = APEX_LINE_STROKE;
+
+  readonly groupStatsPlotOptions: ApexPlotOptions = APEX_LINE_PLOT_OPTIONS;
+
+  readonly groupStatsLegend = APEX_LINE_LEGEND;
+
+  readonly groupStatsGrid = APEX_LINE_GRID;
+
+  readonly groupStatsTooltip = APEX_LINE_TOOLTIP;
+
+  readonly lineYaxisFallback: ApexYAxis = APEX_LINE_YAXIS_DEFAULT;
+
+  readonly lineXaxisFallback: ApexXAxis = {
+    categories: this.chartMonthsFallback,
+    labels: {
+      style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
     },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
   };
 
-  readonly barDataLabels: ApexDataLabels = {
-    enabled: false,
-  };
-
-  readonly barTooltip: ApexTooltip = {
-    theme: 'light',
-    shared: true,
-    intersect: false,
-    y: {
-      formatter: (val: number) => `${val} ★`,
-    },
-  };
-
-  readonly barLegend: ApexLegend = {
-    position: 'top',
-    horizontalAlign: 'left',
-    fontSize: '12px',
-    fontWeight: 500,
-    labels: { colors: '#334155' },
-    markers: { strokeWidth: 0 },
-  };
-
-  readonly barYaxis: ApexYAxis = {
-    min: 0,
-    tickAmount: 5,
-    labels: { style: { colors: '#64748b', fontSize: '11px' } },
-  };
-
-  private readonly colorPalette = [
-    '#3b82f6',
-    '#22c55e',
-    '#d97706',
-    '#a855f7',
-    '#ec4899',
-    '#14b8a6',
-    '#f97316',
-  ];
-
-  chartColors(count: number): string[] {
-    const n = Math.min(Math.max(count, 1), this.colorPalette.length);
-    return this.colorPalette.slice(0, n);
-  }
+  readonly groupLineChartFallback: ApexChart = createApexLineChart(
+    'teacher-group-stats-line'
+  );
 
   ngOnInit(): void {
     const u = this.auth.currentUser();
@@ -99,6 +87,7 @@ export class TeacherGroupStatsPageComponent implements OnInit {
     this.api.listGroupStats(u.id).subscribe({
       next: (g) => {
         this.groups = g;
+        this.rebuildChartCaches(g);
         this.loading = false;
       },
       error: (err: { status?: number }) => {
@@ -106,51 +95,129 @@ export class TeacherGroupStatsPageComponent implements OnInit {
         if (err?.status === 404) {
           this.noProfile = true;
         } else {
-          this.loadError = 'Could not load group statistics.';
+          this.loadError = 'Could not load statistics.';
         }
       },
     });
   }
 
-  chartHeight(g: TeacherGroupStats): number {
-    const n = Math.max(g.students.length, 1);
-    return Math.min(520, 200 + n * 36);
-  }
-
-  barSeries(g: TeacherGroupStats) {
-    const subs = g.subjectTitles;
-    const studs = g.students;
-    if (subs.length === 0 || studs.length === 0) {
-      return [];
+  private rebuildChartCaches(groups: TeacherGroupStats[]): void {
+    const nextSeries = new Map<string, ApexAxisChartSeries>();
+    const nextCharts = new Map<string, ApexChart>();
+    const nextYaxis = new Map<string, ApexYAxis>();
+    const nextColors = new Map<string, string[]>();
+    const nextXaxis = new Map<string, ApexXAxis>();
+    for (const grp of groups) {
+      const series = this.buildLineSeries(grp);
+      nextSeries.set(grp.groupId, series);
+      nextCharts.set(
+        grp.groupId,
+        createApexLineChart(`teacher-group-line-${grp.groupId}`)
+      );
+      nextYaxis.set(grp.groupId, this.computeYaxisForSeries(series));
+      nextXaxis.set(grp.groupId, this.buildXaxisForGroup(grp));
+      nextColors.set(
+        grp.groupId,
+        grp.subjectTitles.map(
+          (_, i) => this.subjectLineColors[i % this.subjectLineColors.length]
+        )
+      );
     }
-    return subs.map((sub) => ({
-      name: sub,
-      data: studs.map((s) => s.starsBySubject[sub] ?? 0),
-    }));
+    this.seriesByGroupId = nextSeries;
+    this.chartOptionsByGroupId = nextCharts;
+    this.yaxisByGroupId = nextYaxis;
+    this.xaxisByGroupId = nextXaxis;
+    this.colorsByGroupId = nextColors;
   }
 
-  barXaxis(g: TeacherGroupStats): ApexXAxis {
+  private buildXaxisForGroup(g: TeacherGroupStats): ApexXAxis {
+    const categories =
+      g.chartMonthLabels?.length > 0
+        ? g.chartMonthLabels
+        : this.chartMonthsFallback;
     return {
-      categories: g.students.map((s) => s.fullName),
+      categories,
       labels: {
-        style: { colors: '#64748b', fontSize: '11px' },
-        rotate: -35,
-        rotateAlways: studsNeedRotate(g),
+        style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
     };
   }
 
-  barChartOptions(g: TeacherGroupStats): ApexChart {
+  private computeYaxisForSeries(series: ApexAxisChartSeries): ApexYAxis {
+    let max = 0;
+    for (const s of series) {
+      for (const v of s.data as number[]) {
+        if (v > max) max = v;
+      }
+    }
+    const cap =
+      max <= 0 ? 5 : Math.max(5, Math.ceil(max / 5) * 5);
     return {
-      ...this.barChartBase,
-      id: `teacher-group-stats-${g.groupId}`,
-      height: this.chartHeight(g),
+      min: 0,
+      max: cap,
+      tickAmount: 5,
+      labels: {
+        style: { colors: '#64748b', fontSize: '11px' },
+      },
     };
   }
-}
 
-function studsNeedRotate(g: TeacherGroupStats): boolean {
-  return g.students.some((s) => s.fullName.length > 14);
+  seriesForGroup(g: TeacherGroupStats): ApexAxisChartSeries {
+    return this.seriesByGroupId.get(g.groupId) ?? this.emptySeries;
+  }
+
+  chartForGroup(g: TeacherGroupStats): ApexChart {
+    return (
+      this.chartOptionsByGroupId.get(g.groupId) ?? this.groupLineChartFallback
+    );
+  }
+
+  yaxisForGroup(g: TeacherGroupStats): ApexYAxis {
+    return this.yaxisByGroupId.get(g.groupId) ?? this.lineYaxisFallback;
+  }
+
+  colorsForGroup(g: TeacherGroupStats): string[] {
+    return this.colorsByGroupId.get(g.groupId) ?? [];
+  }
+
+  xaxisForGroup(g: TeacherGroupStats): ApexXAxis {
+    return this.xaxisByGroupId.get(g.groupId) ?? this.lineXaxisFallback;
+  }
+
+  subjectTotalStars(g: TeacherGroupStats, subject: string): number {
+    return g.students.reduce(
+      (sum, s) => sum + (s.starsBySubject[subject] ?? 0),
+      0
+    );
+  }
+
+  private scaledLinePoints(total: number): number[] {
+    if (total <= 0) {
+      return [0, 0, 0, 0, 0];
+    }
+    const maxT = LINE_TEMPLATE[LINE_TEMPLATE.length - 1];
+    return LINE_TEMPLATE.map((t) => Math.round((t / maxT) * total));
+  }
+
+  private buildLineSeries(g: TeacherGroupStats): ApexAxisChartSeries {
+    if (g.subjectTitles.length === 0) {
+      return [];
+    }
+    const fromDb = g.chartMonthLabels?.length && g.starsBySubjectChartSeries;
+    if (fromDb) {
+      const n = g.chartMonthLabels!.length;
+      return g.subjectTitles.map((sub) => ({
+        name: sub,
+        data:
+          g.starsBySubjectChartSeries![sub] ??
+          Array.from({ length: n }, () => 0),
+      }));
+    }
+    return g.subjectTitles.map((sub) => ({
+      name: sub,
+      data: this.scaledLinePoints(this.subjectTotalStars(g, sub)),
+    }));
+  }
 }

@@ -3,7 +3,9 @@
  * Підхоплює кореневий .env у каталозі frontend (якщо є).
  *
  * Змінні:
- *   NG_APP_API_URL              — базовий URL API (production: зазвичай '/api')
+ *   NG_APP_API_URL              — базовий URL API (краще повний https://…/api; див. Vercel нижче)
+ *   NG_APP_BACKEND_URL          — опційно: повний URL API на Vercel, якщо не заданий NG_APP_API_URL як https
+ *   NG_APP_USE_RELATIVE_API=1    — на Vercel не підставляти прямий Railway URL (лише якщо знаєш, що робиш)
  *   ENABLE_LOCAL_SUPER_ADMIN  — 'true' щоб увімкнути локальний вхід суперадміна без бекенду (за замовчуванням false)
  *   SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASSWORD — обовʼязкові, якщо ENABLE_LOCAL_SUPER_ADMIN=true (інакше збірка завершиться з помилкою)
  *
@@ -61,7 +63,29 @@ function normalizeApiUrl(raw) {
   return '/api';
 }
 
-const apiUrl = normalizeApiUrl(process.env.NG_APP_API_URL);
+/** Продакшен Railway; запити напряму з браузера обходять Vercel rewrite (POST інколи → 405). */
+const DEFAULT_RAILWAY_API =
+  (process.env.NG_APP_BACKEND_URL ?? '').trim() ||
+  'https://onlineschoolbackend-production.up.railway.app/api';
+
+let apiUrl = normalizeApiUrl(process.env.NG_APP_API_URL);
+
+const forceRelativeApi =
+  String(process.env.NG_APP_USE_RELATIVE_API ?? '')
+    .trim() === '1';
+const buildingOnVercel = process.env.VERCEL === '1';
+
+if (
+  buildingOnVercel &&
+  !forceRelativeApi &&
+  !apiUrl.startsWith('http://') &&
+  !apiUrl.startsWith('https://')
+) {
+  apiUrl = DEFAULT_RAILWAY_API;
+  console.log(
+    '  Vercel: apiUrl → absolute backend (avoid POST 405 on /api proxy). Override: NG_APP_API_URL=https://…/api'
+  );
+}
 
 const enableLocal =
   String(process.env.ENABLE_LOCAL_SUPER_ADMIN ?? '')

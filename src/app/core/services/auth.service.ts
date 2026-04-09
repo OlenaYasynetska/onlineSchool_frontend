@@ -47,14 +47,10 @@ export class AuthService {
   }
 
   /**
-   * В backend auth-контроллеры мапятся на `/auth/*` без префикса `/api`,
-   * а остальные контроллеры (students/super-admin/...) используют `/api/*`.
-   */
-  private readonly authBaseUrl = environment.apiUrl.replace(/\/api\/?$/, '');
-
-  /**
    * Перевірка захардкоджених облікових даних суперадміна (без запиту на бекенд).
    * Повертає true, якщо сесію створено.
+   *
+   * Реєстрація/логін через API: `POST .../api/auth/*` (той самий `environment.apiUrl`, що й для school-admin).
    */
   loginAsSuperAdminIfValid(identifier: string, password: string): boolean {
     if (!environment.enableLocalSuperAdminLogin) {
@@ -89,7 +85,7 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${this.authBaseUrl}/auth/login`, credentials)
+      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, credentials)
       .pipe(
         tap((res) => {
           const authUser: AuthUser = {
@@ -107,7 +103,7 @@ export class AuthService {
 
   register(body: RegisterRequest): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${this.authBaseUrl}/auth/register`, body)
+      .post<LoginResponse>(`${environment.apiUrl}/auth/register`, body)
       .pipe(
         tap((res) => {
           // После регистрации сразу создаём сессию (чтобы кнопка в модалке/дашборд работали без повторного логина)

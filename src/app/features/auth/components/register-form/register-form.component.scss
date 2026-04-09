@@ -1,9 +1,38 @@
+.input-register,
+.input-payment {
+  --sm: 0 1px 2px rgb(0 0 0 / 0.05);
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid;
+  border-radius: 0.5rem;
+  box-shadow: var(--sm);
+}
+
+.input-register::placeholder,
+.input-payment::placeholder {
+  color: #94a3b8;
+}
+
 .input-register {
-  @apply block w-full rounded-lg border border-orange-200/90 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm;
-  @apply focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-200/70;
+  border-color: rgb(254 215 170 / 0.9);
 }
 
 .input-payment {
-  @apply block w-full rounded-lg border border-sky-200/90 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm;
-  @apply focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-200/70;
+  border-color: rgb(186 230 253 / 0.9);
+}
+
+.input-register:focus {
+  outline: none;
+  border-color: #fb923c;
+  box-shadow: var(--sm), 0 0 0 2px rgb(254 215 170 / 0.7);
+}
+
+.input-payment:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: var(--sm), 0 0 0 2px rgb(186 230 253 / 0.7);
 }

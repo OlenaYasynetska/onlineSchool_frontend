@@ -3,6 +3,9 @@ services:
     name: online-school-frontend
     env: static
     rootDir: .
+    envVars:
+      - key: NG_APP_API_URL
+        value: https://online-school-backend.onrender.com/api
     buildCommand: npm install --legacy-peer-deps && npm run build
     staticPublishPath: dist/education-frontend/browser
     routes:

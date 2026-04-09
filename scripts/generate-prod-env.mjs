@@ -41,7 +41,27 @@ function loadDotEnv() {
 
 loadDotEnv();
 
-const apiUrl = process.env.NG_APP_API_URL ?? '/api';
+/**
+ * У Vercel інколи задають порожній рядок — тоді `?? '/api'` не спрацьовує, і в збірку потрапляє "",
+ * а запити йдуть на `/auth/login` (SPA) замість `/api/auth/login` → 405.
+ * Абсолютний URL без суфікса `/api` також ламає шляхи до Spring.
+ */
+function normalizeApiUrl(raw) {
+  let u = (raw ?? '').trim();
+  if (!u) return '/api';
+  u = u.replace(/\/$/, '');
+  if (u.startsWith('http://') || u.startsWith('https://')) {
+    if (!/\/api$/i.test(u)) return `${u}/api`;
+    return u;
+  }
+  if (u.startsWith('/')) {
+    if (u === '/api' || u.startsWith('/api/')) return u;
+    return '/api';
+  }
+  return '/api';
+}
+
+const apiUrl = normalizeApiUrl(process.env.NG_APP_API_URL);
 
 const enableLocal =
   String(process.env.ENABLE_LOCAL_SUPER_ADMIN ?? '')
@@ -77,6 +97,7 @@ export const environment: AppEnvironment = {
 const target = path.join(root, 'src/environments/environment.prod.generated.ts');
 fs.writeFileSync(target, out, 'utf8');
 console.log('Wrote', path.relative(root, target));
+console.log('  apiUrl:', apiUrl);
 console.log(
   '  enableLocalSuperAdminLogin:',
   enableLocal ? 'true (override via ENABLE_LOCAL_SUPER_ADMIN)' : 'false (use DB user + /auth/login)'

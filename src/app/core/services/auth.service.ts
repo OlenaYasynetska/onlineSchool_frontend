@@ -85,7 +85,7 @@ export class AuthService {
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/auth/login`, credentials)
+      .post<LoginResponse>(this.authHttpUrl('login'), credentials)
       .pipe(
         tap((res) => {
           const authUser: AuthUser = {
@@ -103,7 +103,7 @@ export class AuthService {
 
   register(body: RegisterRequest): Observable<LoginResponse> {
     return this.http
-      .post<LoginResponse>(`${environment.apiUrl}/auth/register`, body)
+      .post<LoginResponse>(this.authHttpUrl('register'), body)
       .pipe(
         tap((res) => {
           // После регистрации сразу создаём сессию (чтобы кнопка в модалке/дашборд работали без повторного логина)
@@ -131,6 +131,26 @@ export class AuthService {
 
   getAccessToken(): string | null {
     return this.currentUserSignal()?.accessToken ?? null;
+  }
+
+  /**
+   * Завжди `…/api/auth/login|register`. Якщо `apiUrl` порожній або зібраний старий бандл,
+   * простий шаблон `${apiUrl}/auth/login` дає `/auth/login` (маршрут Angular) → POST → 405.
+   */
+  private authHttpUrl(path: 'login' | 'register'): string {
+    let base = (environment.apiUrl ?? '').trim();
+    if (!base) {
+      base = '/api';
+    }
+    base = base.replace(/\/$/, '');
+    if (base.startsWith('http://') || base.startsWith('https://')) {
+      if (!/\/api$/i.test(base)) {
+        base = `${base}/api`;
+      }
+    } else if (!base.startsWith('/api')) {
+      base = '/api';
+    }
+    return `${base}/auth/${path}`;
   }
 
   private persistSession(user: AuthUser): void {

@@ -37,11 +37,21 @@ export interface SchoolCard {
   studentCount: number;
 }
 
+/** Агрегати для карток /dashboard (суперадмін). */
+export interface PlatformSummary {
+  students: number;
+  teachers: number;
+  schools: number;
+  courses: number;
+}
+
 export interface SuperAdminDashboardResponse {
   planOverview: PlanOverviewCard[];
   schools: SchoolCard[];
   organizations: OrganizationRow[];
   payments: PaymentHistoryRow[];
+  /** З бекенду з V15+ dashboard summary; якщо немає — картки /dashboard лишаються «—». */
+  summary?: PlatformSummary;
 }
 
 /** Рядок таблиці «Адміністратори шкіл» (суперадмін). */
@@ -52,5 +62,17 @@ export interface SchoolAdminContactRow {
   email: string;
   login: string;
   registeredAt: string;
+  /** Внутрішні нотатки суперадміна (щоб не забути). */
+  notes?: string;
+  /** false — деактивовано (не може увійти), рядок лишається в списку. */
+  enabled?: boolean;
+}
+
+export interface SchoolAdminUpdatePayload {
+  fullName: string;
+  schoolName: string;
+  email: string;
+  login: string;
+  notes: string;
 }
 

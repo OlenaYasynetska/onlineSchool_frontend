@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SuperAdminDashboardService } from '../../services/super-admin-dashboard.service';
@@ -7,6 +7,15 @@ import type {
   PaymentHistoryRow,
   SuperAdminDashboardResponse,
 } from '../../models/super-admin-dashboard.model';
+import { createSuperAdminOrganizationsSearchState } from '../../super-admin-organizations-search.state';
+import { createSuperAdminPaymentsSearchState } from '../../super-admin-payments-search.state';
+
+const emptyDash: SuperAdminDashboardResponse = {
+  planOverview: [],
+  schools: [],
+  organizations: [],
+  payments: [],
+};
 
 @Component({
   selector: 'app-super-admin-subscribers',
@@ -18,17 +27,20 @@ export class SuperAdminSubscribersComponent implements OnInit {
   private readonly dashboardApi = inject(SuperAdminDashboardService);
 
   loading = true;
-  dash: SuperAdminDashboardResponse = {
-    planOverview: [],
-    schools: [],
-    organizations: [],
-    payments: [],
-  };
+  readonly dash = signal<SuperAdminDashboardResponse>(emptyDash);
+
+  readonly orgsUi = createSuperAdminOrganizationsSearchState(
+    computed(() => this.dash().organizations)
+  );
+
+  readonly paymentsUi = createSuperAdminPaymentsSearchState(
+    computed(() => this.dash().payments)
+  );
 
   ngOnInit(): void {
     this.dashboardApi.getDashboard().subscribe({
       next: (data) => {
-        this.dash = data;
+        this.dash.set(data);
         this.loading = false;
       },
       error: (err) => {
@@ -64,4 +76,3 @@ export class SuperAdminSubscribersComponent implements OnInit {
     }
   }
 }
-

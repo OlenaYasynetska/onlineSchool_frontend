@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type {
@@ -13,6 +13,11 @@ export interface TeacherActivityEntry {
   studentName: string;
   change: number;
   reason: string;
+}
+
+export interface TeacherHomeworkStarsChartDto {
+  bucketLabels: string[];
+  starsBySubjectSeries: Record<string, number[]>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -44,6 +49,22 @@ export class TeacherDashboardService {
   listGroupStats(userId: string): Observable<TeacherGroupStats[]> {
     return this.http.get<TeacherGroupStats[]>(
       `${environment.apiUrl}/teacher/group-stats?userId=${encodeURIComponent(userId)}`
+    );
+  }
+
+  /** Зірки з оцінених ДЗ вчителя по предметах (кумулятивно по днях або місяцях). */
+  getHomeworkStarsChart(
+    userId: string,
+    fromIsoDate: string,
+    toIsoDate: string
+  ): Observable<TeacherHomeworkStarsChartDto> {
+    const params = new HttpParams()
+      .set('userId', userId)
+      .set('from', fromIsoDate)
+      .set('to', toIsoDate);
+    return this.http.get<TeacherHomeworkStarsChartDto>(
+      `${environment.apiUrl}/teacher/homework-stars-chart`,
+      { params }
     );
   }
 }

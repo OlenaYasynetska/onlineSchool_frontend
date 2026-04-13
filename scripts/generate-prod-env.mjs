@@ -73,7 +73,18 @@ let apiUrl = normalizeApiUrl(process.env.NG_APP_API_URL);
 const forceRelativeApi =
   String(process.env.NG_APP_USE_RELATIVE_API ?? '')
     .trim() === '1';
-const buildingOnVercel = process.env.VERCEL === '1';
+/** На збірці Vercel зазвичай VERCEL=1 і/або VERCEL_ENV=preview|production. Рідко лишається лише VERCEL_ENV — тоді старий код лишав /api → 405 на прев’ю з Deployment Protection. */
+const vercelEnv = String(process.env.VERCEL_ENV ?? '').trim();
+const buildingOnVercel =
+  process.env.VERCEL === '1' ||
+  process.env.VERCEL === 'true' ||
+  ['preview', 'production', 'development'].includes(vercelEnv);
+
+if (buildingOnVercel && forceRelativeApi) {
+  console.warn(
+    '  Vercel: NG_APP_USE_RELATIVE_API=1 — API йде через /api на домені Vercel. Якщо увімкнено Deployment Protection, POST до /api може дати 405. Краще прибрати цю змінну або задати NG_APP_API_URL=https://…/api'
+  );
+}
 
 if (
   buildingOnVercel &&
@@ -83,7 +94,7 @@ if (
 ) {
   apiUrl = DEFAULT_RAILWAY_API;
   console.log(
-    '  Vercel: apiUrl → absolute backend (avoid POST 405 on /api proxy). Override: NG_APP_API_URL=https://…/api'
+    '  Vercel: apiUrl → absolute backend (browser calls Railway directly; avoids POST 405 / auth wall on /api). Override: NG_APP_API_URL=https://…/api'
   );
 }
 

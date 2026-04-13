@@ -14,6 +14,14 @@ export interface SubjectStarTotalRow {
   starsTotal: number;
 }
 
+/** GET my-stars: здані ДЗ по предметах (усі статуси) + оцінені + зірки. */
+export interface SubjectHomeworkProgressRow {
+  subject: string;
+  submittedCount: number;
+  gradedCount: number;
+  starsTotal: number;
+}
+
 export interface StarRewardLogDto {
   gradedAt: string;
   teacherName: string;
@@ -37,6 +45,7 @@ export interface StudentMyStarsDto {
   chartMonthLabels: string[];
   starsBySubjectChartSeries: Record<string, number[]>;
   rewardLog: StarRewardLogDto[];
+  subjectHomeworkProgress?: SubjectHomeworkProgressRow[];
 }
 
 export interface HomeworkSubmission {

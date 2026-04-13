@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { catchError, filter } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 import type {
@@ -34,6 +35,16 @@ import {
   createApexLineChart,
 } from '../../../../shared/charts/apex-line-chart-student-style';
 
+const SUBJECT_LINE_COLORS = [
+  '#2563eb',
+  '#16a34a',
+  '#d97706',
+  '#9333ea',
+  '#0ea5e9',
+  '#ec4899',
+  '#64748b',
+];
+
 @Component({
   selector: 'app-teacher-dashboard-page',
   standalone: true,
@@ -57,19 +68,21 @@ export class TeacherDashboardPageComponent implements OnInit {
   groupSearchQuery = '';
   studentSearchQuery = '';
 
-  /** Демо-графік: діапазон дат і серії перераховуються (до live API). */
+  /** Період графіка: за замовчуванням поточний місяць (від 1-го числа до сьогодні). */
   readonly trendDateFrom = signal(this.defaultTrendFromIso());
   readonly trendDateTo = signal(this.defaultTrendToIso());
   readonly trendRangeError = signal<string | null>(null);
 
-  private readonly trendLabels = signal<string[]>([]);
-  private readonly trendDataA = signal<number[]>([]);
-  private readonly trendDataB = signal<number[]>([]);
+  readonly trendLabels = signal<string[]>([]);
+  readonly trendChartSeries = signal<ApexAxisChartSeries>([]);
+  readonly trendChartLoading = signal(false);
+  readonly trendChartError = signal<string | null>(null);
+  readonly trendChartColors = signal<string[]>([...SUBJECT_LINE_COLORS]);
+  readonly trendChartYaxis = signal<ApexYAxis>(APEX_LINE_YAXIS_DEFAULT);
 
-  readonly groupTrendSeries = computed<ApexAxisChartSeries>(() => [
-    { name: 'Group A (demo)', data: this.trendDataA() },
-    { name: 'Group B (demo)', data: this.trendDataB() },
-  ]);
+  readonly groupTrendSeries = computed<ApexAxisChartSeries>(() =>
+    this.trendChartSeries()
+  );
 
   /** Той самий `ApexChart`, що й у учня (`shared/charts/apex-line-chart-student-style`). */
   readonly groupTrendChartConfig: ApexChart = createApexLineChart(
@@ -84,23 +97,18 @@ export class TeacherDashboardPageComponent implements OnInit {
     categories: this.trendLabels(),
     labels: {
       style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
-      rotate: this.trendLabels().length > 10 ? -45 : 0,
+      rotate: this.trendLabels().length > 14 ? -45 : 0,
       maxHeight: 52,
     },
     axisBorder: { show: false },
     axisTicks: { show: false },
   }));
 
-  readonly groupTrendYaxis: ApexYAxis = APEX_LINE_YAXIS_DEFAULT;
-
   readonly groupTrendLegend = APEX_LINE_LEGEND;
 
   readonly groupTrendGrid = APEX_LINE_GRID;
 
   readonly groupTrendTooltip = APEX_LINE_TOOLTIP;
-
-  /** Як у student-dashboard (лінії предметів). */
-  readonly groupTrendColors: string[] = ['#2563eb', '#16a34a'];
 
   constructor() {
     this.router.events
@@ -129,7 +137,6 @@ export class TeacherDashboardPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.rebuildTrendDemoFromRange();
     this.updateCabinetSegment();
     const u = this.auth.currentUser();
     if (!u?.id) {
@@ -151,6 +158,7 @@ export class TeacherDashboardPageComponent implements OnInit {
         this.activity = activity;
         this.loading = false;
         this.noTeacherProfile = false;
+        this.loadHomeworkStarsChart();
       },
       error: (err: { status?: number }) => {
         this.loading = false;
@@ -206,7 +214,7 @@ export class TeacherDashboardPageComponent implements OnInit {
   }
 
   applyTrendRange(): void {
-    this.rebuildTrendDemoFromRange();
+    this.loadHomeworkStarsChart();
   }
 
   presetTrendMonths(months: number): void {
@@ -215,13 +223,21 @@ export class TeacherDashboardPageComponent implements OnInit {
     start.setMonth(start.getMonth() - (months - 1));
     this.trendDateFrom.set(this.toIsoDate(start));
     this.trendDateTo.set(this.toIsoDate(end));
-    this.rebuildTrendDemoFromRange();
+    this.loadHomeworkStarsChart();
+  }
+
+  /** Поточний календарний місяць (від 1-го числа до сьогодні). */
+  presetCurrentMonth(): void {
+    const end = new Date();
+    const start = new Date(end.getFullYear(), end.getMonth(), 1);
+    this.trendDateFrom.set(this.toIsoDate(start));
+    this.trendDateTo.set(this.toIsoDate(end));
+    this.loadHomeworkStarsChart();
   }
 
   private defaultTrendFromIso(): string {
     const d = new Date();
-    d.setMonth(d.getMonth() - 6);
-    return this.toIsoDate(d);
+    return this.toIsoDate(new Date(d.getFullYear(), d.getMonth(), 1));
   }
 
   private defaultTrendToIso(): string {
@@ -235,8 +251,13 @@ export class TeacherDashboardPageComponent implements OnInit {
     return `${y}-${m}-${day}`;
   }
 
-  private rebuildTrendDemoFromRange(): void {
+  private loadHomeworkStarsChart(): void {
+    const u = this.auth.currentUser();
+    if (!u?.id) {
+      return;
+    }
     this.trendRangeError.set(null);
+    this.trendChartError.set(null);
     const a = new Date(this.trendDateFrom() + 'T12:00:00');
     const b = new Date(this.trendDateTo() + 'T12:00:00');
     if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) {
@@ -247,68 +268,92 @@ export class TeacherDashboardPageComponent implements OnInit {
       this.trendRangeError.set('Start date must be before end date.');
       return;
     }
-    const labels = this.monthLabelsBetween(a, b);
-    const maxMonths = 36;
-    if (labels.length > maxMonths) {
-      this.trendRangeError.set(`Choose at most ${maxMonths} months (narrow the range).`);
+    const daySpan =
+      Math.floor((b.getTime() - a.getTime()) / 86_400_000) + 1;
+    if (daySpan > 800) {
+      this.trendRangeError.set('Choose at most 800 days.');
       return;
     }
-    if (labels.length === 0) {
-      this.trendLabels.set([]);
-      this.trendDataA.set([]);
-      this.trendDataB.set([]);
-      return;
-    }
-    const [dataA, dataB] = this.buildDemoSeriesPair(labels.length);
-    this.trendLabels.set(labels);
-    this.trendDataA.set(dataA);
-    this.trendDataB.set(dataB);
+
+    this.trendChartLoading.set(true);
+    this.api
+      .getHomeworkStarsChart(u.id, this.trendDateFrom(), this.trendDateTo())
+      .subscribe({
+        next: (data) => {
+          const labels = data.bucketLabels ?? [];
+          const map = data.starsBySubjectSeries ?? {};
+          const keys = Object.keys(map).sort((x, y) =>
+            x.localeCompare(y, undefined, { sensitivity: 'base' })
+          );
+          const n = labels.length;
+          const series: ApexAxisChartSeries = keys.map((k) => {
+            const raw = map[k] ?? [];
+            const dataRow =
+              n === 0
+                ? []
+                : raw.length >= n
+                  ? raw.slice(0, n)
+                  : [...raw, ...Array(n - raw.length).fill(0)];
+            return { name: k, data: dataRow };
+          });
+          this.trendLabels.set(labels);
+          this.trendChartSeries.set(series);
+          this.trendChartColors.set(
+            keys.map((_, i) => SUBJECT_LINE_COLORS[i % SUBJECT_LINE_COLORS.length])
+          );
+          this.trendChartYaxis.set(this.computeYaxisForSeries(series));
+          this.trendChartLoading.set(false);
+        },
+        error: (err: unknown) => {
+          this.trendChartError.set(this.describeHomeworkChartError(err));
+          this.trendChartLoading.set(false);
+          this.trendChartSeries.set([]);
+          this.trendLabels.set([]);
+        },
+      });
   }
 
-  private monthLabelsBetween(start: Date, end: Date): string[] {
-    const labels: string[] = [];
-    const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-    const endMonth = new Date(end.getFullYear(), end.getMonth(), 1);
-    while (cur <= endMonth) {
-      labels.push(
-        cur.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })
-      );
-      cur.setMonth(cur.getMonth() + 1);
+  private describeHomeworkChartError(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      const body = err.error;
+      const serverMsg =
+        body && typeof body === 'object' && 'message' in body
+          ? (body as { message?: unknown }).message
+          : undefined;
+      const detail =
+        typeof serverMsg === 'string' && serverMsg.trim() ? serverMsg.trim() : '';
+
+      if (err.status === 404) {
+        return (
+          'Chart: API not found (404). Rebuild and restart the education-web backend ' +
+          '(main class com.education.web.EducationWebApplication) so ' +
+          'GET /api/teacher/homework-stars-chart is on the classpath. ' +
+          (detail ? `Server: ${detail}` : '')
+        );
+      }
+      if (detail) {
+        return `Chart: ${detail}`;
+      }
+      return `Chart failed (HTTP ${err.status}). Restart backend after deploy; check server logs.`;
     }
-    return labels;
+    return 'Could not load homework stars chart.';
   }
 
-  /**
-   * Демо-ряди з «хвилястою» формою як у учня (не лінійний 20→95),
-   * інакше smooth-line виглядає майже прямою.
-   */
-  private buildDemoSeriesPair(n: number): [number[], number[]] {
-    if (n <= 0) return [[], []];
-    const baseA = [22, 45, 52, 68, 82];
-    const baseB = [18, 38, 48, 58, 70];
-    return [this.resampleDemoSeries(baseA, n), this.resampleDemoSeries(baseB, n)];
-  }
-
-  private resampleDemoSeries(template: number[], len: number): number[] {
-    if (len <= 0) return [];
-    if (len === 1) {
-      return [Math.round(template[template.length - 1])];
+  private computeYaxisForSeries(series: ApexAxisChartSeries): ApexYAxis {
+    let max = 0;
+    for (const s of series) {
+      for (const v of s.data as number[]) {
+        if (v > max) max = v;
+      }
     }
-    if (len <= template.length) {
-      return template.slice(0, len).map((v) => Math.round(v));
-    }
-    const out: number[] = [];
-    const maxI = template.length - 1;
-    for (let i = 0; i < len; i++) {
-      const u = (i / (len - 1)) * maxI;
-      const j = Math.floor(u);
-      const f = u - j;
-      const v =
-        j < maxI
-          ? template[j] * (1 - f) + template[j + 1] * f
-          : template[maxI];
-      out.push(Math.round(v));
-    }
-    return out;
+    const cap = max <= 0 ? 5 : Math.max(5, Math.ceil(max / 5) * 5);
+    return {
+      min: 0,
+      max: cap,
+      tickAmount: 5,
+      labels: {
+        style: { colors: '#64748b', fontSize: '11px' },
+      },
+    };
   }
 }

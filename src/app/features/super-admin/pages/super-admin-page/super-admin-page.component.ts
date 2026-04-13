@@ -1,4 +1,13 @@
-import { Component, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SuperAdminDashboardService } from '../../services/super-admin-dashboard.service';
@@ -8,6 +17,19 @@ import type {
   SuperAdminDashboardResponse,
 } from '../../models/super-admin-dashboard.model';
 import { SchoolGridCardComponent } from '../../components/school-grid-card/school-grid-card.component';
+import { createSuperAdminOrganizationsSearchState } from '../../super-admin-organizations-search.state';
+import { createSuperAdminSchoolsToolbarState } from '../../super-admin-schools-toolbar.state';
+import {
+  schoolPlanBadgeClass,
+  schoolPlanBadgeLabel,
+} from '../../school-plan-badge';
+
+const emptyDash: SuperAdminDashboardResponse = {
+  planOverview: [],
+  schools: [],
+  organizations: [],
+  payments: [],
+};
 
 @Component({
   selector: 'app-super-admin-page',
@@ -17,19 +39,29 @@ import { SchoolGridCardComponent } from '../../components/school-grid-card/schoo
 })
 export class SuperAdminPageComponent implements OnInit {
   private readonly dashboardApi = inject(SuperAdminDashboardService);
+  private readonly filterHostRef =
+    viewChild<ElementRef<HTMLElement>>('filterHost');
 
   loading = true;
-  dash: SuperAdminDashboardResponse = {
-    planOverview: [],
-    schools: [],
-    organizations: [],
-    payments: [],
-  };
+  readonly dash = signal<SuperAdminDashboardResponse>(emptyDash);
+
+  /** Стан пошуку / фільтрів / вигляду блоку Schools (композиція-функція). */
+  readonly schoolsUi = createSuperAdminSchoolsToolbarState(
+    computed(() => this.dash().schools)
+  );
+
+  readonly orgsUi = createSuperAdminOrganizationsSearchState(
+    computed(() => this.dash().organizations)
+  );
+
+  /** Для шаблону: чисті функції бейджа плану. */
+  readonly schoolPlanBadgeClass = schoolPlanBadgeClass;
+  readonly schoolPlanBadgeLabel = schoolPlanBadgeLabel;
 
   ngOnInit(): void {
     this.dashboardApi.getDashboard().subscribe({
       next: (data) => {
-        this.dash = data;
+        this.dash.set(data);
         this.loading = false;
       },
       error: (err) => {
@@ -37,6 +69,14 @@ export class SuperAdminPageComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    this.schoolsUi.onOutsideClick(
+      this.filterHostRef()?.nativeElement ?? null,
+      event.target as Node
+    );
   }
 
   orgStatusClass(status: OrganizationRow['status']): string {

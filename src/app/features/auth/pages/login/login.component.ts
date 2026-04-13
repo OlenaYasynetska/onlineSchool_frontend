@@ -11,6 +11,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
+import { environment } from '../../../../../environments/environment';
 import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop/auth-plans-backdrop.component';
 
 @Component({
@@ -170,6 +171,9 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.loading.set(false);
           const role = this.auth.currentUser()?.role;
           switch (role) {
+            case 'SUPER_ADMIN':
+              void this.router.navigate(['/super-admin']);
+              break;
             case 'ADMIN_SCHOOL':
               void this.router.navigate(['/school-admin']);
               break;
@@ -196,13 +200,27 @@ export class LoginComponent implements OnInit, OnDestroy {
       if (err.status === 0) {
         return 'Cannot reach the server. Start the backend (e.g. Spring on http://localhost:8080) and check the API URL in environment.';
       }
-      if (err.status === 401) {
-        return 'Invalid email or password.';
-      }
       const body = err.error;
       if (body && typeof body === 'object' && 'message' in body) {
         const m = (body as { message?: unknown }).message;
         if (typeof m === 'string' && m.trim()) return m;
+      }
+      if (err.status === 401) {
+        return 'Invalid email or password.';
+      }
+      if (err.status === 405) {
+        if (environment.production) {
+          return (
+            'Login failed (405). The login POST did not reach Spring. On Vercel: set Environment Variable ' +
+            'NG_APP_API_URL to your full API base (https://your-backend…/api), redeploy, and ensure ' +
+            'NG_APP_USE_RELATIVE_API is not set to 1. If previews use Deployment Protection, prefer a direct API URL instead of /api proxy.'
+          );
+        }
+        return (
+          'Login failed (405): the request hit the frontend instead of the API. ' +
+          'Run the Spring backend on port 8080, use ng serve (proxy forwards /api), ' +
+          'or set apiUrl to the full backend URL (e.g. http://localhost:8080/api).'
+        );
       }
       return `Login failed (${err.status}).`;
     }

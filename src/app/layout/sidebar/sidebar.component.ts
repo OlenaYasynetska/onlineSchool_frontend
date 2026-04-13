@@ -94,7 +94,7 @@ export class SidebarComponent implements OnInit {
     },
     {
       path: '/teacher/group-stats',
-      label: 'Group stars',
+      label: 'Groups stars',
       icon: 'lineChart',
       fragment: 'teacher-group-stats',
     },

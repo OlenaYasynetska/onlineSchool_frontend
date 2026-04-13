@@ -61,6 +61,8 @@
           <input
             type="search"
             placeholder="Search admin"
+            [value]="adminsUi.adminSearch()"
+            (input)="adminsUi.onAdminSearchInput($event)"
             class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
           <span
@@ -87,7 +89,7 @@
         class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
       >
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[900px] text-left text-sm">
+          <table class="w-full min-w-[1040px] text-left text-sm">
             <thead>
               <tr
                 class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600"
@@ -98,28 +100,65 @@
                 <th class="px-4 py-3">Email</th>
                 <th class="px-4 py-3">Login</th>
                 <th class="px-4 py-3">Reg. date</th>
+                <th class="min-w-[10rem] max-w-[14rem] px-4 py-3">Notes</th>
                 <th class="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
-              @if (rows.length > 0) {
-                @for (row of rows; track row.userId; let i = $index) {
-                  <tr class="border-b border-slate-100 hover:bg-slate-50/80">
+              @if (rows().length > 0) {
+                @if (adminsUi.filteredSchoolAdmins().length > 0) {
+                  @for (
+                    row of adminsUi.filteredSchoolAdmins();
+                    track row.userId;
+                    let i = $index
+                  ) {
+                  <tr
+                    class="border-b border-slate-100 transition-colors"
+                    [class.bg-slate-50]="row.enabled === false"
+                    [class.opacity-70]="row.enabled === false"
+                    [ngClass]="
+                      row.enabled !== false ? 'hover:bg-slate-50/80' : ''
+                    "
+                  >
                     <td class="px-4 py-3 text-center text-slate-600">
                       {{ i + 1 }}
                     </td>
                     <td class="px-4 py-3 font-medium text-slate-900">
                       {{ row.fullName }}
+                      @if (row.enabled === false) {
+                        <span
+                          class="ml-2 inline-block align-middle rounded-md bg-slate-200/90 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600"
+                          >Inactive</span
+                        >
+                      }
                     </td>
                     <td class="px-4 py-3 text-slate-700">{{ row.schoolName }}</td>
                     <td class="px-4 py-3"><app-email-link [email]="row.email" /></td>
                     <td class="px-4 py-3 text-slate-600">{{ row.login }}</td>
                     <td class="px-4 py-3 text-slate-600">{{ row.registeredAt }}</td>
+                    <td class="min-w-[10rem] max-w-[14rem] px-4 py-3 align-top">
+                      @if (row.notes?.trim()) {
+                        <span
+                          class="line-clamp-3 whitespace-pre-wrap break-words text-slate-700"
+                          [title]="row.notes"
+                          >{{ row.notes }}</span
+                        >
+                      } @else {
+                        <span class="text-slate-400">—</span>
+                      }
+                    </td>
                     <td class="px-4 py-3 text-right">
                       <button
                         type="button"
-                        class="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm transition hover:bg-amber-600"
+                        class="mr-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-40"
                         aria-label="Edit"
+                        [disabled]="row.enabled === false"
+                        [title]="
+                          row.enabled === false
+                            ? 'Reactivate the account to edit'
+                            : null
+                        "
+                        (click)="openEdit(row)"
                       >
                         <svg
                           class="h-4 w-4"
@@ -136,25 +175,69 @@
                           />
                         </svg>
                       </button>
+                      @if (row.enabled !== false) {
+                        <button
+                          type="button"
+                          class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Deactivate administrator"
+                          [disabled]="deactivatingUserId() === row.userId"
+                          (click)="openDeactivateConfirm(row)"
+                        >
+                          <svg
+                            class="h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                            />
+                          </svg>
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                          aria-label="Reactivate administrator"
+                          [disabled]="reactivatingUserId() === row.userId"
+                          (click)="openReactivateConfirm(row)"
+                        >
+                          <svg
+                            class="h-4 w-4"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                            />
+                          </svg>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td
+                      colspan="8"
+                      class="px-4 py-10 text-center text-sm text-slate-600"
+                    >
+                      No administrators match your search.
                       <button
                         type="button"
-                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-white shadow-sm transition hover:bg-slate-800"
-                        aria-label="Delete"
+                        class="mt-2 block w-full text-center font-medium text-blue-600 hover:underline"
+                        (click)="adminsUi.clearAdminSearch()"
                       >
-                        <svg
-                          class="h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke-width="1.5"
-                          stroke="currentColor"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                          />
-                        </svg>
+                        Clear search
                       </button>
                     </td>
                   </tr>
@@ -162,7 +245,7 @@
               } @else {
                 <tr>
                   <td
-                    colspan="7"
+                    colspan="8"
                     class="px-4 py-12 text-center text-sm text-slate-500"
                   >
                     No school administrators yet.
@@ -175,9 +258,280 @@
         <div
           class="border-t border-slate-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-600"
         >
-          Total: {{ rows.length }} administrators
+          Showing {{ adminsUi.filteredSchoolAdmins().length }} of
+          {{ rows().length }} administrators
+          <span class="text-slate-500">
+            · {{ activeAdminCount() }} active, {{ inactiveAdminCount() }} inactive
+          </span>
         </div>
       </section>
     }
   </div>
 </div>
+
+@if (editModalOpen()) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+    role="presentation"
+    (click)="onEditBackdropClick($event)"
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-admin-title"
+      class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-start justify-between gap-4">
+        <h2
+          id="edit-admin-title"
+          class="text-lg font-semibold text-slate-900"
+        >
+          Edit administrator
+        </h2>
+        <button
+          type="button"
+          class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+          aria-label="Close"
+          (click)="closeEdit()"
+        >
+          <span class="block text-xl leading-none">&times;</span>
+        </button>
+      </div>
+
+      <form
+        [formGroup]="editForm"
+        (ngSubmit)="submitEdit()"
+        class="mt-4 space-y-4"
+        novalidate
+      >
+        <div>
+          <label
+            for="edit-full-name"
+            class="mb-1 block text-sm font-medium text-slate-700"
+            >Full name</label
+          >
+          <input
+            id="edit-full-name"
+            type="text"
+            formControlName="fullName"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            autocomplete="name"
+          />
+          @if (
+            editForm.controls.fullName.invalid &&
+            editForm.controls.fullName.touched
+          ) {
+            <p class="mt-1 text-xs text-rose-600">Full name is required.</p>
+          }
+        </div>
+
+        <div>
+          <label
+            for="edit-school"
+            class="mb-1 block text-sm font-medium text-slate-700"
+            >School</label
+          >
+          <input
+            id="edit-school"
+            type="text"
+            formControlName="schoolName"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            autocomplete="organization"
+          />
+        </div>
+
+        <div>
+          <label
+            for="edit-email"
+            class="mb-1 block text-sm font-medium text-slate-700"
+            >Email</label
+          >
+          <input
+            id="edit-email"
+            type="email"
+            formControlName="email"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            autocomplete="email"
+          />
+          @if (
+            editForm.controls.email.invalid && editForm.controls.email.touched
+          ) {
+            <p class="mt-1 text-xs text-rose-600">Enter a valid email.</p>
+          }
+        </div>
+
+        <div>
+          <label
+            for="edit-login"
+            class="mb-1 block text-sm font-medium text-slate-700"
+            >Login</label
+          >
+          <input
+            id="edit-login"
+            type="text"
+            formControlName="login"
+            class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            autocomplete="username"
+          />
+          <p class="mt-1 text-xs text-slate-500">
+            If you change only the login (without a full email), the domain
+            from the current email is kept.
+          </p>
+        </div>
+
+        <div>
+          <label
+            for="edit-notes"
+            class="mb-1 block text-sm font-medium text-slate-700"
+            >Notes</label
+          >
+          <textarea
+            id="edit-notes"
+            formControlName="notes"
+            rows="4"
+            maxlength="8000"
+            placeholder="Reminders for yourself — so you don't forget…"
+            class="min-h-[5rem] w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          ></textarea>
+          <p class="mt-1 text-xs text-slate-500">
+            Saved only for super admin; the school administrator does not see
+            this.
+          </p>
+        </div>
+
+        @if (saveError()) {
+          <p class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            {{ saveError() }}
+          </p>
+        }
+
+        <div class="flex flex-wrap justify-end gap-2 pt-2">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            (click)="closeEdit()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="editForm.invalid || saveInProgress()"
+          >
+            {{ saveInProgress() ? 'Saving…' : 'Save changes' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (deactivateTarget(); as dRow) {
+  <div
+    class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4"
+    role="presentation"
+    (click)="onDeactivateBackdropClick($event)"
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="deactivate-admin-title"
+      class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+      (click)="$event.stopPropagation()"
+    >
+      <h2
+        id="deactivate-admin-title"
+        class="text-lg font-semibold text-slate-900"
+      >
+        Deactivate administrator?
+      </h2>
+      <p class="mt-3 text-sm text-slate-600">
+        The account
+        <span class="font-medium text-slate-800">{{ dRow.fullName }}</span>
+        ({{ dRow.email }}) will no longer be able to sign in. The school
+        record stays in the system; this does not delete data.
+      </p>
+      @if (deactivateError()) {
+        <p
+          class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800"
+          role="alert"
+        >
+          {{ deactivateError() }}
+        </p>
+      }
+      <div class="mt-6 flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="deactivateInProgress()"
+          (click)="closeDeactivateConfirm()"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="deactivateInProgress()"
+          (click)="confirmDeactivate()"
+        >
+          {{ deactivateInProgress() ? 'Working…' : 'Deactivate' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (reactivateTarget(); as rRow) {
+  <div
+    class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4"
+    role="presentation"
+    (click)="onReactivateBackdropClick($event)"
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reactivate-admin-title"
+      class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+      (click)="$event.stopPropagation()"
+    >
+      <h2
+        id="reactivate-admin-title"
+        class="text-lg font-semibold text-slate-900"
+      >
+        Reactivate administrator?
+      </h2>
+      <p class="mt-3 text-sm text-slate-600">
+        The account
+        <span class="font-medium text-slate-800">{{ rRow.fullName }}</span>
+        ({{ rRow.email }}) will be able to sign in again.
+      </p>
+      @if (reactivateError()) {
+        <p
+          class="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800"
+          role="alert"
+        >
+          {{ reactivateError() }}
+        </p>
+      }
+      <div class="mt-6 flex flex-wrap justify-end gap-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="reactivateInProgress()"
+          (click)="closeReactivateConfirm()"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="reactivateInProgress()"
+          (click)="confirmReactivate()"
+        >
+          {{ reactivateInProgress() ? 'Working…' : 'Reactivate' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

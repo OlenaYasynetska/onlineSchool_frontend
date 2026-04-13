@@ -353,7 +353,6 @@
       }
 
       @if (cabinetSegment() === '') {
-      <!-- Group trends (demo) — детальна статистика по групах: /teacher/group-stats -->
       <section
         id="teacher-group-stats"
         class="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
@@ -370,8 +369,8 @@
           Stars by subject over time
         </h2>
         <p class="mb-3 text-xs text-slate-500">
-          Each line is a demo trend (demo, ApexCharts) — same shared chart options as the student
-          view. Pick a period — one point per month. Live metrics:
+          Cumulative stars from graded homework in the portal, one line per subject. Short ranges
+          use daily buckets; longer ranges use months. Default: current month. More detail:
           <a
             routerLink="/teacher/group-stats"
             class="font-medium text-violet-700 underline hover:text-violet-900"
@@ -409,6 +408,13 @@
           <div class="flex flex-wrap gap-2 sm:ml-auto">
             <button
               type="button"
+              (click)="presetCurrentMonth()"
+              class="rounded-lg border border-violet-200 bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-800 hover:bg-violet-100"
+            >
+              This month
+            </button>
+            <button
+              type="button"
               (click)="presetTrendMonths(3)"
               class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
             >
@@ -435,21 +441,36 @@
             {{ trendRangeError() }}
           </p>
         }
+        @if (trendChartError()) {
+          <p class="mb-3 text-sm text-rose-600" role="alert">
+            {{ trendChartError() }}
+          </p>
+        }
         <div
           class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
         >
-          <apx-chart
-            [series]="groupTrendSeries()"
-            [chart]="groupTrendChartConfig"
-            [colors]="groupTrendColors"
-            [stroke]="groupTrendStroke"
-            [plotOptions]="groupTrendPlotOptions"
-            [xaxis]="groupTrendXaxis()"
-            [yaxis]="groupTrendYaxis"
-            [legend]="groupTrendLegend"
-            [grid]="groupTrendGrid"
-            [tooltip]="groupTrendTooltip"
-          ></apx-chart>
+          @if (trendChartLoading()) {
+            <p class="text-sm text-slate-600">Loading chart…</p>
+          } @else if (
+            !trendChartLoading() && trendChartSeries().length === 0 && !trendChartError()
+          ) {
+            <p class="text-sm text-slate-600">
+              No graded homework in this date range (or no star data yet).
+            </p>
+          } @else if (!trendChartLoading() && trendChartSeries().length > 0) {
+            <apx-chart
+              [series]="groupTrendSeries()"
+              [chart]="groupTrendChartConfig"
+              [colors]="trendChartColors()"
+              [stroke]="groupTrendStroke"
+              [plotOptions]="groupTrendPlotOptions"
+              [xaxis]="groupTrendXaxis()"
+              [yaxis]="trendChartYaxis()"
+              [legend]="groupTrendLegend"
+              [grid]="groupTrendGrid"
+              [tooltip]="groupTrendTooltip"
+            ></apx-chart>
+          }
         </div>
       </section>
       }

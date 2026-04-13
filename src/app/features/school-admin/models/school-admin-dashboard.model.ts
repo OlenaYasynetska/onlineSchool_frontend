@@ -18,6 +18,9 @@ export interface PaymentHistoryRow {
 
 export interface SchoolDashboardStats {
   totalStudents: number;
+  totalTeachers: number;
+  totalGroups: number;
+  totalSubjects: number;
   totalPayments: number;
   paidPayments: number;
   totalReceived: string;

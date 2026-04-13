@@ -6,6 +6,7 @@ import type {
   OrganizationRow,
   PlanOverviewCard,
   SchoolAdminContactRow,
+  SchoolAdminUpdatePayload,
   SchoolCard,
   SuperAdminDashboardResponse,
 } from '../models/super-admin-dashboard.model';
@@ -17,6 +18,34 @@ export class SuperAdminDashboardService {
   getSchoolAdmins(): Observable<SchoolAdminContactRow[]> {
     return this.http.get<SchoolAdminContactRow[]>(
       `${environment.apiUrl}/super-admin/school-admins`
+    );
+  }
+
+  updateSchoolAdmin(
+    userId: string,
+    payload: SchoolAdminUpdatePayload
+  ): Observable<SchoolAdminContactRow> {
+    return this.http.put<SchoolAdminContactRow>(
+      `${environment.apiUrl}/super-admin/school-admins/${userId}`,
+      payload
+    );
+  }
+
+  /**
+   * Деактивація акаунта (enabled=false), 204 без тіла.
+   * POST + userId у тілі: стабільніший шлях без UUID у URL (уникає 404 «No static resource …/deactivate»).
+   */
+  deactivateSchoolAdmin(userId: string): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/super-admin/school-admins/deactivate`,
+      { userId }
+    );
+  }
+
+  reactivateSchoolAdmin(userId: string): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/super-admin/school-admins/reactivate`,
+      { userId }
     );
   }
 

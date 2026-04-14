@@ -52,6 +52,9 @@ export class StudentHomeworkPageComponent implements OnInit {
 
   loadError: string | null = null;
 
+  /** Set when the groups API fails (distinct from empty enrollments). */
+  groupsLoadError: string | null = null;
+
   submitError: string | null = null;
 
 
@@ -134,7 +137,9 @@ export class StudentHomeworkPageComponent implements OnInit {
 
       error: () => {
 
-        /* optional */
+        this.groupsLoadError =
+
+          'Could not load your class groups. Refresh the page or try again later.';
 
       },
 
@@ -282,7 +287,7 @@ export class StudentHomeworkPageComponent implements OnInit {
 
       this.submitError =
 
-        'You are not enrolled in any class group. Ask your school administrator to add you to a group.';
+        'You are not enrolled in any class group. Ask your school administrator to add you under Groups in the school admin panel.';
 
       return;
 

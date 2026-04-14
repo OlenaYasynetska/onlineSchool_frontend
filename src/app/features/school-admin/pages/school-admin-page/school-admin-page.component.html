@@ -178,12 +178,16 @@
                 }
               </div>
               <div class="mt-2 flex flex-1 flex-col">
-                <p class="font-mono text-sm text-violet-700">{{ g.code }}</p>
-                <p
-                  class="mt-2 max-h-[2.5rem] overflow-hidden break-words text-sm text-slate-600 leading-snug"
-                >
-                  {{ g.topicsLabel }}
-                </p>
+                @if (g.showSubjectOnCard !== false) {
+                  <p class="font-mono text-sm text-violet-700">{{ g.code }}</p>
+                  @if (g.topicsLabel.trim()) {
+                    <p
+                      class="mt-2 max-h-[2.5rem] overflow-hidden break-words text-sm text-slate-600 leading-snug"
+                    >
+                      {{ g.topicsLabel }}
+                    </p>
+                  }
+                }
                 @if (g.teacherDisplayName) {
                   <p class="mt-2 text-sm font-medium text-slate-800">
                     <span class="font-normal text-slate-500">Teacher:</span>

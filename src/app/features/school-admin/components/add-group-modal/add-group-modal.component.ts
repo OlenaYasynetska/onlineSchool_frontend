@@ -28,6 +28,8 @@ export type AddGroupPayload = {
   endDate: string; // dd.MM.yyyy
   studentsCount: number;
   active: boolean;
+  /** Показувати предмет/програму на картці групи. */
+  showSubjectOnCard: boolean;
 };
 
 @Component({
@@ -173,6 +175,17 @@ export type AddGroupPayload = {
                 </button>
               </div>
             }
+            <label
+              class="mt-3 flex cursor-pointer items-start gap-2.5 text-sm text-slate-700"
+            >
+              <input
+                type="checkbox"
+                name="showSubjectOnCard"
+                [(ngModel)]="form.showSubjectOnCard"
+                class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+              />
+              <span>Show course code and subject on the group card</span>
+            </label>
           </div>
 
           <div>
@@ -291,6 +304,7 @@ export class AddGroupModalComponent implements OnInit, OnDestroy, OnChanges {
     endYmd: string;
     startDate: string;
     endDate: string;
+    showSubjectOnCard: boolean;
   } = {
     name: '',
     code: '',
@@ -300,6 +314,7 @@ export class AddGroupModalComponent implements OnInit, OnDestroy, OnChanges {
     endYmd: this.ymdInOneMonth(),
     startDate: '',
     endDate: '',
+    showSubjectOnCard: true,
   };
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -446,6 +461,8 @@ export class AddGroupModalComponent implements OnInit, OnDestroy, OnChanges {
       endDate: this.ymdToDdMmYyyy(this.form.endYmd),
       studentsCount: 0,
       active: true,
+      // Явне true/false: JSON.stringify опускає undefined, тоді бекенд бачить null і лишає «показувати».
+      showSubjectOnCard: this.form.showSubjectOnCard !== false,
     };
     this.createGroup.emit(payload);
   }

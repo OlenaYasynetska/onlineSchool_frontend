@@ -110,22 +110,26 @@
                   }
                 </div>
                 <div class="mt-2 flex flex-1 flex-col">
-                  <p
-                    class="font-mono text-sm"
-                    [class.rounded-md]="g.active"
-                    [class.bg-orange-50]="g.active"
-                    [class.px-2]="g.active"
-                    [class.py-0.5]="g.active"
-                    [class.text-orange-900]="g.active"
-                    [class.text-violet-700]="!g.active"
-                  >
-                    {{ g.code }}
-                  </p>
-                  <p
-                    class="mt-2 max-h-[2.5rem] overflow-hidden break-words text-sm text-slate-600 leading-snug"
-                  >
-                    {{ g.topicsLabel }}
-                  </p>
+                  @if (g.showSubjectOnCard !== false) {
+                    <p
+                      class="font-mono text-sm"
+                      [class.rounded-md]="g.active"
+                      [class.bg-orange-50]="g.active"
+                      [class.px-2]="g.active"
+                      [class.py-0.5]="g.active"
+                      [class.text-orange-900]="g.active"
+                      [class.text-violet-700]="!g.active"
+                    >
+                      {{ g.code }}
+                    </p>
+                    @if (g.topicsLabel.trim()) {
+                      <p
+                        class="mt-2 max-h-[2.5rem] overflow-hidden break-words text-sm text-slate-600 leading-snug"
+                      >
+                        {{ g.topicsLabel }}
+                      </p>
+                    }
+                  }
                   <div
                     class="mt-4 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4 text-xs text-slate-500"
                   >

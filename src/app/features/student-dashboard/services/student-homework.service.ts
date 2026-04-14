@@ -36,9 +36,19 @@ export class StudentHomeworkService {
     );
   }
 
-  myStars(userId: string): Observable<StudentMyStarsDto> {
+  myStars(
+    userId: string,
+    opts?: { chartFrom?: string; chartTo?: string },
+  ): Observable<StudentMyStarsDto> {
+    const params = new URLSearchParams({ userId });
+    if (opts?.chartFrom?.trim()) {
+      params.set('chartFrom', opts.chartFrom.trim());
+    }
+    if (opts?.chartTo?.trim()) {
+      params.set('chartTo', opts.chartTo.trim());
+    }
     return this.http.get<StudentMyStarsDto>(
-      `${this.base()}/my-stars?userId=${encodeURIComponent(userId)}`
+      `${this.base()}/my-stars?${params.toString()}`,
     );
   }
 

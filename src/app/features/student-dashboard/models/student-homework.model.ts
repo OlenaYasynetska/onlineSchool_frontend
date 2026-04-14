@@ -46,6 +46,8 @@ export interface StudentMyStarsDto {
   starsBySubjectChartSeries: Record<string, number[]>;
   rewardLog: StarRewardLogDto[];
   subjectHomeworkProgress?: SubjectHomeworkProgressRow[];
+  /** DAY = щоденні відра, MONTH = місячні (узгоджено з chartMonthLabels). */
+  starsChartGranularity?: 'DAY' | 'MONTH';
 }
 
 export interface HomeworkSubmission {

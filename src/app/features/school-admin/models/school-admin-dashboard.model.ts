@@ -55,6 +55,8 @@ export interface SchoolGroupCard {
   /** ПІБ викладача з users (якщо є teacher_id). */
   teacherDisplayName?: string | null;
   topicsLabel: string;
+  /** Якщо false — рядок предмету/програми не показується на картці (дані в БД лишаються). */
+  showSubjectOnCard?: boolean;
   startDate: string;
   endDate: string;
   studentsCount: number;

@@ -4,7 +4,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { CommonModule } from '@angular/common';
 
-import { NavigationEnd, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 
 import { forkJoin } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -87,7 +89,7 @@ export type StudentSubjectRow = {
 
   standalone: true,
 
-  imports: [CommonModule, NgApexchartsModule],
+  imports: [CommonModule, FormsModule, NgApexchartsModule, RouterLink],
 
   templateUrl: './student-dashboard-page.component.html',
 
@@ -117,7 +119,20 @@ export class StudentDashboardPageComponent implements OnInit {
 
   enrolledGroups: StudentGroupOption[] = [];
 
+  /** Період графіка «Stars by subject» (як у вчителя): за замовчуванням поточний місяць. */
+  readonly chartDateFrom = signal(this.defaultChartFromIso());
 
+  readonly chartDateTo = signal(this.defaultChartToIso());
+
+  readonly chartRangeError = signal<string | null>(null);
+
+  readonly chartPreset = signal<
+    'thisMonth' | 'last3mo' | 'last6mo' | 'last12mo' | 'custom'
+  >('thisMonth');
+
+  readonly chartRefreshing = signal(false);
+
+  readonly starsChartError = signal<string | null>(null);
 
   totalStars = 0;
 
@@ -331,7 +346,10 @@ export class StudentDashboardPageComponent implements OnInit {
     this.loadingStars = true;
     this.starsLoadError = null;
     forkJoin({
-      stars: this.homeworkApi.myStars(u.id),
+      stars: this.homeworkApi.myStars(u.id, {
+        chartFrom: this.chartDateFrom(),
+        chartTo: this.chartDateTo(),
+      }),
       context: this.homeworkApi.dashboardContext(u.id),
     }).subscribe({
       next: ({
@@ -353,7 +371,99 @@ export class StudentDashboardPageComponent implements OnInit {
     });
   }
 
+  applyStarsChartRange(): void {
+    this.chartPreset.set('custom');
+    this.reloadMyStarsChart();
+  }
 
+  presetStarsCurrentMonth(): void {
+    const end = new Date();
+    const start = new Date(end.getFullYear(), end.getMonth(), 1);
+    this.chartDateFrom.set(this.toIsoDate(start));
+    this.chartDateTo.set(this.toIsoDate(end));
+    this.chartPreset.set('thisMonth');
+    this.reloadMyStarsChart();
+  }
+
+  presetStarsLastMonths(months: 3 | 6 | 12): void {
+    const end = new Date();
+    const start = new Date(end.getFullYear(), end.getMonth(), 1);
+    start.setMonth(start.getMonth() - (months - 1));
+    this.chartDateFrom.set(this.toIsoDate(start));
+    this.chartDateTo.set(this.toIsoDate(end));
+    this.chartPreset.set(
+      months === 3 ? 'last3mo' : months === 6 ? 'last6mo' : 'last12mo',
+    );
+    this.reloadMyStarsChart();
+  }
+
+  onChartFromInput(value: string): void {
+    this.chartDateFrom.set(value);
+    this.chartPreset.set('custom');
+  }
+
+  onChartToInput(value: string): void {
+    this.chartDateTo.set(value);
+    this.chartPreset.set('custom');
+  }
+
+  private defaultChartFromIso(): string {
+    const d = new Date();
+    return this.toIsoDate(new Date(d.getFullYear(), d.getMonth(), 1));
+  }
+
+  private defaultChartToIso(): string {
+    return this.toIsoDate(new Date());
+  }
+
+  private toIsoDate(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private reloadMyStarsChart(): void {
+    const u = this.auth.currentUser();
+    if (!u?.id) {
+      return;
+    }
+    this.chartRangeError.set(null);
+    this.starsChartError.set(null);
+    const a = new Date(this.chartDateFrom() + 'T12:00:00');
+    const b = new Date(this.chartDateTo() + 'T12:00:00');
+    if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) {
+      this.chartRangeError.set('Invalid dates.');
+      return;
+    }
+    if (a > b) {
+      this.chartRangeError.set('Start date must be before end date.');
+      return;
+    }
+    const daySpan =
+      Math.floor((b.getTime() - a.getTime()) / 86_400_000) + 1;
+    if (daySpan > 800) {
+      this.chartRangeError.set('Choose at most 800 days.');
+      return;
+    }
+
+    this.chartRefreshing.set(true);
+    this.homeworkApi
+      .myStars(u.id, {
+        chartFrom: this.chartDateFrom(),
+        chartTo: this.chartDateTo(),
+      })
+      .subscribe({
+        next: (stars) => {
+          this.applyMyStars(stars);
+          this.chartRefreshing.set(false);
+        },
+        error: () => {
+          this.chartRefreshing.set(false);
+          this.starsChartError.set('Could not load chart data. Try again.');
+        },
+      });
+  }
 
   private applyMyStars(data: StudentMyStarsDto): void {
 
@@ -389,19 +499,11 @@ export class StudentDashboardPageComponent implements OnInit {
 
     const seriesMap = data.starsBySubjectChartSeries ?? {};
 
-    let keys = Object.keys(seriesMap).sort((a, b) =>
+    const keys = Object.keys(seriesMap).sort((a, b) =>
 
       a.localeCompare(b, undefined, { sensitivity: 'base' })
 
     );
-
-    if (keys.length === 0) {
-
-      keys = totals.map((t) => t.subject);
-
-    }
-
-
 
     this.groupStatsSeries = keys.map((sub) => ({
 
@@ -425,11 +527,25 @@ export class StudentDashboardPageComponent implements OnInit {
 
 
 
+    const rotate = labels.length > 14 ? -45 : 0;
+
     this.groupStatsXaxis = {
 
       ...this.groupStatsXaxis,
 
       categories: labels.length > 0 ? labels : ['—'],
+
+      labels: {
+
+        ...this.groupStatsXaxis.labels,
+
+        style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
+
+        rotate,
+
+        maxHeight: rotate ? 52 : undefined,
+
+      },
 
     };
 

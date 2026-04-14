@@ -36,7 +36,7 @@ export function useSchoolAdminGroups(dash: SchoolAdminDashboardResponse) {
         (g) =>
           g.name.toLowerCase().includes(q) ||
           g.code.toLowerCase().includes(q) ||
-          g.topicsLabel.toLowerCase().includes(q),
+          (g.topicsLabel ?? '').toLowerCase().includes(q),
       );
     }
 

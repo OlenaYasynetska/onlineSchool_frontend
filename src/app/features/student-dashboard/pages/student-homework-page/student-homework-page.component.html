@@ -34,6 +34,15 @@
           Two actions: attach a file (it sends after you pick one) or send without a file.
         </p>
 
+        @if (groupsLoadError) {
+          <div
+            class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            role="alert"
+          >
+            {{ groupsLoadError }}
+          </div>
+        }
+
         <form class="mt-5 space-y-4" (submit)="$event.preventDefault()">
           <div>
             <label
@@ -60,8 +69,9 @@
               class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
               role="status"
             >
-              You are not enrolled in any class group yet. Ask your school administrator to add you
-              to a group in the database — then your groups will appear here.
+              You are not enrolled in any class group yet. Your school administrator must add you to
+              a class group in the school admin panel (Groups → enroll students). After that, your
+              groups will appear here and you can submit homework.
             </div>
           } @else {
             <div>

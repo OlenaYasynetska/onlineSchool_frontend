@@ -116,6 +116,7 @@ export class TeacherGroupDetailPageComponent implements OnInit {
   /** Рядки для списку «Courses included» з topicsLabel. */
   topicLines(): string[] {
     const g = this.group;
+    if (g?.showSubjectOnCard === false) return [];
     if (!g?.topicsLabel?.trim()) return [];
     return g.topicsLabel
       .split(',')

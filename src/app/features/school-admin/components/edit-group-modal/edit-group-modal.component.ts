@@ -169,6 +169,17 @@ type EditGroupPayload = AddGroupPayload;
                   </button>
                 </div>
               }
+              <label
+                class="flex cursor-pointer items-start gap-2 text-sm text-slate-700"
+              >
+                <input
+                  type="checkbox"
+                  name="showSubjectOnCard"
+                  [(ngModel)]="form.showSubjectOnCard"
+                  class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                />
+                <span>Show course code and subject on the group card</span>
+              </label>
             </div>
 
             <label
@@ -289,6 +300,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     endYmd: string;
     studentsCount: number;
     active: boolean;
+    showSubjectOnCard: boolean;
   } = {
     name: '',
     code: '',
@@ -299,6 +311,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     endYmd: '',
     studentsCount: 0,
     active: true,
+    showSubjectOnCard: true,
   };
 
   /** Snapshot of the form when the dialog opened (revert target). Not API-shaped — avoids losing `topicsLabel` when a catalog subject is selected. */
@@ -312,6 +325,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     endYmd: string;
     studentsCount: number;
     active: boolean;
+    showSubjectOnCard: boolean;
   } | null = null;
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -324,8 +338,8 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     }
     const g = this.group;
 
-    const startYmd = this.ddMmYyyyToYmd(g.startDate);
-    const endYmd = this.ddMmYyyyToYmd(g.endDate);
+    const startYmd = this.groupApiDateToYmd(g.startDate);
+    const endYmd = this.groupApiDateToYmd(g.endDate);
 
     this.form.name = g.name ?? '';
     this.form.code = g.code ?? '';
@@ -336,6 +350,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     this.form.endYmd = endYmd;
     this.form.studentsCount = Number(g.studentsCount ?? 0);
     this.form.active = Boolean(g.active);
+    this.form.showSubjectOnCard = g.showSubjectOnCard !== false;
     this.showAddCoursePanel = false;
     this.newSubjectTitle = '';
 
@@ -349,6 +364,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
       endYmd: this.form.endYmd,
       studentsCount: this.form.studentsCount,
       active: this.form.active,
+      showSubjectOnCard: this.form.showSubjectOnCard,
     };
   }
 
@@ -464,6 +480,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     this.form.endYmd = s.endYmd;
     this.form.studentsCount = s.studentsCount;
     this.form.active = s.active;
+    this.form.showSubjectOnCard = s.showSubjectOnCard;
     this.showAddCoursePanel = false;
     this.newSubjectTitle = '';
   }
@@ -492,6 +509,8 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
       endDate: this.ymdToDdMmYyyy(this.form.endYmd),
       studentsCount: Number(this.form.studentsCount) || 0,
       active: this.form.active,
+      // Явне true/false: JSON.stringify опускає undefined, тоді бекенд бачить null і лишає «показувати».
+      showSubjectOnCard: this.form.showSubjectOnCard !== false,
     };
   }
 
@@ -503,10 +522,17 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
     return `${pad2(d)}.${pad2(m)}.${y}`;
   }
 
-  private ddMmYyyyToYmd(ddMmYyyy: string): string {
-    // Input: dd.MM.yyyy -> YYYY-MM-DD
-    if (!ddMmYyyy || ddMmYyyy === '—') return '';
-    const parts = ddMmYyyy.split('.');
+  /**
+   * Dashboard groups use `yyyy-MM-dd`; POST /groups responses use `dd.MM.yyyy`.
+   * `<input type="date">` needs `yyyy-MM-dd`.
+   */
+  private groupApiDateToYmd(raw: string): string {
+    if (!raw || raw === '—') return '';
+    const s = raw.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+      return s;
+    }
+    const parts = s.split('.');
     if (parts.length !== 3) return '';
     const [dd, mm, yyyy] = parts;
     if (!dd || !mm || !yyyy) return '';

@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
  * Завантаження / перегляд вкладень ДЗ через API (не жорстко http://localhost:8080).
  * Бекенд: GET .../teacher/homework/{id}/file та GET .../student/homework/submissions/{id}/file.
  */
+
 @Injectable({ providedIn: 'root' })
 export class HomeworkFileService {
   private readonly http = inject(HttpClient);
@@ -18,6 +19,7 @@ export class HomeworkFileService {
     );
   }
 
+  
   /** inline=true — коректний Content-Type + Content-Disposition: inline для PDF/зображень. */
   previewTeacherFile(userId: string, submissionId: string): Observable<Blob> {
     return this.http.get(

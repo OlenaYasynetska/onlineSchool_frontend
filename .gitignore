@@ -11,3 +11,6 @@ src/environments/environment.prod.generated.ts
 
 .idea/
 .vscode/
+
+# Завантажені ДЗ та інші локальні файли з uploads (не комітити)
+uploads/

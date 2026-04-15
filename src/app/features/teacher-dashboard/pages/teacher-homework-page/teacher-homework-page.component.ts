@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/services/auth.service';
+import { HomeworkFileService } from '../../../../core/services/homework-file.service';
 import { TeacherHomeworkService } from '../../services/teacher-homework.service';
 import type { HomeworkSubmission } from '../../../student-dashboard/models/student-homework.model';
 
@@ -15,6 +16,7 @@ import type { HomeworkSubmission } from '../../../student-dashboard/models/stude
 export class TeacherHomeworkPageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly api = inject(TeacherHomeworkService);
+  private readonly files = inject(HomeworkFileService);
 
   loading = true;
   noProfile = false;
@@ -110,20 +112,34 @@ export class TeacherHomeworkPageComponent implements OnInit {
       });
   }
 
+  /** Є реальне вкладення (не «без файлу»). */
+  hasAttachment(sub: HomeworkSubmission): boolean {
+    const t = (sub.fileName ?? '').trim();
+    if (!t || t === '(no file)') return false;
+    if (t === '__no_hw_attachment__.txt' || t === 'no-attachment.txt') return false;
+    return true;
+  }
+
   download(sub: HomeworkSubmission): void {
     const u = this.auth.currentUser();
     if (!u?.id) return;
-    this.api.downloadFileBlob(u.id, sub.id).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = sub.fileName || 'homework';
-        a.click();
-        URL.revokeObjectURL(url);
-      },
+    this.files.downloadTeacherFile(u.id, sub.id).subscribe({
+      next: (blob) =>
+        this.files.triggerDownload(blob, sub.fileName || 'homework'),
       error: () => {
         window.alert('Could not download file.');
+      },
+    });
+  }
+
+  preview(sub: HomeworkSubmission): void {
+    const u = this.auth.currentUser();
+    if (!u?.id) return;
+    this.files.previewTeacherFile(u.id, sub.id).subscribe({
+      next: (blob) =>
+        this.files.openBlobInNewTab(blob, sub.fileName || 'homework'),
+      error: () => {
+        window.alert('Could not open preview.');
       },
     });
   }

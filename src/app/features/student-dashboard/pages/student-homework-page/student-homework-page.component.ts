@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { HomeworkFileService } from '../../../../core/services/homework-file.service';
 import { environment } from '../../../../../environments/environment';
 
 import { StudentHomeworkService } from '../../services/student-homework.service';
@@ -40,6 +41,8 @@ export class StudentHomeworkPageComponent implements OnInit {
   private readonly auth = inject(AuthService);
 
   private readonly api = inject(StudentHomeworkService);
+
+  private readonly files = inject(HomeworkFileService);
 
 
 
@@ -424,6 +427,33 @@ export class StudentHomeworkPageComponent implements OnInit {
       return '(no file)';
     }
     return t || '—';
+  }
+
+  hasAttachmentRow(s: HomeworkSubmission): boolean {
+    const t = (s.fileName ?? '').trim();
+    if (!t || t === '(no file)') return false;
+    if (t === '__no_hw_attachment__.txt' || t === 'no-attachment.txt') return false;
+    return true;
+  }
+
+  openOwnFile(s: HomeworkSubmission, inline: boolean): void {
+    const u = this.auth.currentUser();
+    if (!u?.id) return;
+    const req = inline
+      ? this.files.previewStudentOwnFile(u.id, s.id)
+      : this.files.downloadStudentOwnFile(u.id, s.id);
+    req.subscribe({
+      next: (blob) => {
+        if (inline) {
+          this.files.openBlobInNewTab(blob, s.fileName || 'homework');
+        } else {
+          this.files.triggerDownload(blob, s.fileName || 'homework');
+        }
+      },
+      error: () => {
+        window.alert(inline ? 'Could not open file.' : 'Could not download file.');
+      },
+    });
   }
 
   private describeTeachersLoadError(err: unknown): string {

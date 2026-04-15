@@ -111,36 +111,83 @@
         <div
           class="rounded-2xl border border-sky-100 bg-white p-5 shadow-sm"
         >
-          <h2 class="text-lg font-bold text-slate-900">
-            Performance by subject
-          </h2>
-          <p class="mt-1 text-xs text-slate-500">
-            Homework you submitted per subject (all statuses) and stars from
-            graded work. Waiting teacher review counts toward submissions, not
-            stars.
-          </p>
-          <div class="mt-2 min-w-0 -mx-1 sm:mx-0">
-            @if (!loadingStars && subjectHomeworkProgress.length === 0) {
-              <p class="text-sm text-slate-600">
-                No homework submissions yet — use Submit homework when you are
-                ready.
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">
+                Homework activity
+              </h2>
+              <p class="mt-1 text-xs text-slate-500">
+                Counts come from your homework records in the school database (not from files on disk).
+                <span class="font-medium text-slate-600">Submitted</span> = all pieces sent;
+                <span class="font-medium text-slate-600">Graded</span> = checked by a teacher;
+                <span class="font-medium text-slate-600">Awaiting</span> = submitted but not graded yet.
               </p>
-            } @else if (!loadingStars) {
-              <apx-chart
-                [series]="performanceBySubjectSeries"
-                [chart]="performanceBySubjectChart"
-                [colors]="performanceBySubjectColors"
-                [plotOptions]="performanceBySubjectPlotOptions"
-                [dataLabels]="{ enabled: false }"
-                [stroke]="performanceBySubjectStroke"
-                [xaxis]="performanceBySubjectXaxis"
-                [yaxis]="performanceBySubjectYaxis"
-                [legend]="performanceBySubjectLegend"
-                [grid]="performanceBySubjectGrid"
-                [tooltip]="performanceBySubjectTooltip"
-              ></apx-chart>
-            }
+            </div>
+            <a
+              routerLink="/student/homework"
+              class="shrink-0 rounded-lg bg-sky-700 px-4 py-2 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800"
+            >
+              Submit homework
+            </a>
           </div>
+
+          @if (!loadingStars && subjectHomeworkProgress.length === 0) {
+            <p class="mt-4 text-sm text-slate-600">
+              No homework submissions yet — use <a routerLink="/student/homework" class="font-medium text-sky-800 underline">Submit homework</a> when you are ready.
+            </p>
+          } @else if (!loadingStars) {
+            <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div class="rounded-xl border border-slate-100 bg-slate-50/80 px-4 py-3">
+                <p class="text-xs font-medium text-slate-500">Total submissions</p>
+                <p class="mt-1 text-2xl font-bold tabular-nums text-slate-900">
+                  {{ homeworkSubmissionTotals().submitted }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-slate-100 bg-emerald-50/80 px-4 py-3">
+                <p class="text-xs font-medium text-emerald-800">Graded</p>
+                <p class="mt-1 text-2xl font-bold tabular-nums text-emerald-900">
+                  {{ homeworkSubmissionTotals().graded }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-amber-100 bg-amber-50/90 px-4 py-3">
+                <p class="text-xs font-medium text-amber-900">Awaiting review</p>
+                <p class="mt-1 text-2xl font-bold tabular-nums text-amber-950">
+                  {{ homeworkSubmissionTotals().awaiting }}
+                </p>
+              </div>
+              <div class="rounded-xl border border-violet-100 bg-violet-50/80 px-4 py-3">
+                <p class="text-xs font-medium text-violet-800">Stars (graded)</p>
+                <p class="mt-1 text-2xl font-bold tabular-nums text-violet-950">
+                  {{ homeworkSubmissionTotals().starsInTable }}
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-6 overflow-x-auto">
+              <table class="w-full min-w-[520px] text-left text-sm">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-600">
+                    <th class="pb-2 pr-3 font-semibold">Subject</th>
+                    <th class="pb-2 pr-3 font-semibold">Submitted</th>
+                    <th class="pb-2 pr-3 font-semibold">Graded</th>
+                    <th class="pb-2 pr-3 font-semibold">Awaiting</th>
+                    <th class="pb-2 font-semibold">Stars</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of subjectHomeworkRowsSorted(); track row.subject) {
+                    <tr class="border-b border-slate-100 last:border-0">
+                      <td class="py-2.5 pr-3 font-medium text-slate-900">{{ row.subject }}</td>
+                      <td class="py-2.5 pr-3 tabular-nums text-slate-800">{{ row.submittedCount }}</td>
+                      <td class="py-2.5 pr-3 tabular-nums text-slate-800">{{ row.gradedCount }}</td>
+                      <td class="py-2.5 pr-3 tabular-nums text-slate-700">{{ awaitingForRow(row) }}</td>
+                      <td class="py-2.5 font-semibold tabular-nums text-slate-900">{{ row.starsTotal }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         </div>
       </div>
     }

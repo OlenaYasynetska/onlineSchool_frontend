@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { HomeworkFileService } from '../../../core/services/homework-file.service';
 import type { HomeworkSubmission } from '../../student-dashboard/models/student-homework.model';
 
 export interface GradeHomeworkBody {
@@ -11,7 +12,8 @@ export interface GradeHomeworkBody {
 
 @Injectable({ providedIn: 'root' })
 export class TeacherHomeworkService {
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
+  private readonly files = inject(HomeworkFileService);
 
   private base(): string {
     return `${environment.apiUrl}/teacher/homework`;
@@ -42,9 +44,10 @@ export class TeacherHomeworkService {
 
   /** Binary download (avoids cross-origin window.open issues). */
   downloadFileBlob(userId: string, submissionId: string): Observable<Blob> {
-    return this.http.get(`${this.base()}/${encodeURIComponent(submissionId)}/file`, {
-      params: { userId },
-      responseType: 'blob',
-    });
+    return this.files.downloadTeacherFile(userId, submissionId);
+  }
+
+  previewFileBlob(userId: string, submissionId: string): Observable<Blob> {
+    return this.files.previewTeacherFile(userId, submissionId);
   }
 }

@@ -17,7 +17,6 @@ import type {
   ApexAxisChartSeries,
   ApexChart,
   ApexPlotOptions,
-  ApexStroke,
   ApexXAxis,
   ApexYAxis,
 } from 'ng-apexcharts';
@@ -149,83 +148,6 @@ export class StudentDashboardPageComponent implements OnInit {
   subjects: StudentSubjectRow[] = [];
 
   subjectHomeworkProgress: SubjectHomeworkProgressRow[] = [];
-
-  performanceBySubjectSeries: ApexAxisChartSeries = [];
-
-  readonly performanceBySubjectChart: ApexChart = {
-    type: 'bar',
-    height: 320,
-    id: 'student-dashboard-performance-by-subject',
-    toolbar: { show: false },
-    fontFamily:
-      'ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
-    animations: {
-      enabled: true,
-      speed: 450,
-      animateGradually: { enabled: true, delay: 150 },
-      dynamicAnimation: { enabled: true, speed: 350 },
-    },
-  };
-
-  readonly performanceBySubjectPlotOptions: ApexPlotOptions = {
-    bar: {
-      columnWidth: '55%',
-      borderRadius: 4,
-      borderRadiusApplication: 'end',
-    },
-  };
-
-  readonly performanceBySubjectStroke: ApexStroke = {
-    show: true,
-    width: 2,
-    colors: ['transparent'],
-  };
-
-  performanceBySubjectXaxis: ApexXAxis = {
-    categories: [],
-    labels: {
-      style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
-      rotate: -28,
-      maxHeight: 120,
-    },
-    axisBorder: { show: false },
-    axisTicks: { show: false },
-  };
-
-  performanceBySubjectYaxis: ApexYAxis[] = [
-    {
-      min: 0,
-      max: 5,
-      tickAmount: 5,
-      labels: { style: { colors: '#64748b', fontSize: '11px' } },
-      title: {
-        text: 'Homework submitted',
-        style: { color: '#64748b', fontSize: '11px', fontWeight: 600 },
-      },
-    },
-    {
-      opposite: true,
-      min: 0,
-      max: 5,
-      tickAmount: 5,
-      labels: { style: { colors: '#64748b', fontSize: '11px' } },
-      title: {
-        text: 'Stars (graded)',
-        style: { color: '#64748b', fontSize: '11px', fontWeight: 600 },
-      },
-    },
-  ];
-
-  readonly performanceBySubjectColors = ['#0ea5e9', '#22c55e'];
-
-  readonly performanceBySubjectLegend = APEX_LINE_LEGEND;
-
-  readonly performanceBySubjectGrid = {
-    ...APEX_LINE_GRID,
-    padding: { top: 12, right: 8, bottom: 0, left: 12 },
-  };
-
-  readonly performanceBySubjectTooltip = APEX_LINE_TOOLTIP;
 
   groupStatsSeries: ApexAxisChartSeries = [];
 
@@ -475,8 +397,6 @@ export class StudentDashboardPageComponent implements OnInit {
 
     this.subjectHomeworkProgress = data.subjectHomeworkProgress ?? [];
 
-    this.updatePerformanceBySubjectChart(this.subjectHomeworkProgress);
-
     const totals = data.subjectTotals ?? [];
 
     this.subjects = totals.map((r, i) => ({
@@ -571,59 +491,36 @@ export class StudentDashboardPageComponent implements OnInit {
 
   }
 
-  private updatePerformanceBySubjectChart(
-    rows: SubjectHomeworkProgressRow[],
-  ): void {
-    const sorted = [...rows].sort(
+  /**
+   * Аналітика здачі ДЗ з API (таблиця homework у БД), без прив’язки до папки uploads на диску.
+   */
+  homeworkSubmissionTotals(): {
+    submitted: number;
+    graded: number;
+    awaiting: number;
+    starsInTable: number;
+  } {
+    let submitted = 0;
+    let graded = 0;
+    let awaiting = 0;
+    let starsInTable = 0;
+    for (const r of this.subjectHomeworkProgress) {
+      submitted += r.submittedCount;
+      graded += r.gradedCount;
+      awaiting += Math.max(0, r.submittedCount - r.gradedCount);
+      starsInTable += r.starsTotal;
+    }
+    return { submitted, graded, awaiting, starsInTable };
+  }
+
+  subjectHomeworkRowsSorted(): SubjectHomeworkProgressRow[] {
+    return [...this.subjectHomeworkProgress].sort(
       (a, b) => b.submittedCount - a.submittedCount,
     );
-    const categories = sorted.map((r) => r.subject);
-    this.performanceBySubjectSeries = [
-      {
-        name: 'Homework submitted',
-        data: sorted.map((r) => r.submittedCount),
-      },
-      {
-        name: 'Stars (graded)',
-        data: sorted.map((r) => r.starsTotal),
-      },
-    ];
-    this.performanceBySubjectXaxis = {
-      ...this.performanceBySubjectXaxis,
-      categories,
-    };
-    const maxSub = sorted.length
-      ? Math.max(...sorted.map((r) => r.submittedCount))
-      : 0;
-    const maxStars = sorted.length
-      ? Math.max(...sorted.map((r) => r.starsTotal))
-      : 0;
-    const capSub = maxSub <= 0 ? 5 : Math.max(5, Math.ceil(maxSub / 5) * 5);
-    const capStars =
-      maxStars <= 0 ? 5 : Math.max(5, Math.ceil(maxStars / 5) * 5);
-    this.performanceBySubjectYaxis = [
-      {
-        min: 0,
-        max: capSub,
-        tickAmount: 5,
-        labels: { style: { colors: '#64748b', fontSize: '11px' } },
-        title: {
-          text: 'Homework submitted',
-          style: { color: '#64748b', fontSize: '11px', fontWeight: 600 },
-        },
-      },
-      {
-        opposite: true,
-        min: 0,
-        max: capStars,
-        tickAmount: 5,
-        labels: { style: { colors: '#64748b', fontSize: '11px' } },
-        title: {
-          text: 'Stars (graded)',
-          style: { color: '#64748b', fontSize: '11px', fontWeight: 600 },
-        },
-      },
-    ];
+  }
+
+  awaitingForRow(r: SubjectHomeworkProgressRow): number {
+    return Math.max(0, r.submittedCount - r.gradedCount);
   }
 
   private computeYaxisForSeries(series: ApexAxisChartSeries): ApexYAxis {

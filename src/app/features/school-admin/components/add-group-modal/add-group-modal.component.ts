@@ -30,6 +30,8 @@ export type AddGroupPayload = {
   active: boolean;
   /** Показувати предмет/програму на картці групи. */
   showSubjectOnCard: boolean;
+  /** Лише для редагування: оновити існуючий рядок за id, а не створювати новий при зміні code. */
+  groupId?: string | null;
 };
 
 @Component({
@@ -98,9 +100,13 @@ export type AddGroupPayload = {
                 type="text"
                 [(ngModel)]="form.code"
                 required
+                maxlength="255"
                 class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
                 placeholder="CODE-101"
               />
+              <p class="mt-1 text-xs text-slate-500">
+                Short unique ID within your school (max 255 characters).
+              </p>
             </div>
           </div>
 

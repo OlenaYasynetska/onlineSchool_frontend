@@ -304,7 +304,7 @@ export function useSchoolAdminQuickActions(
   }
 
   function onEditGroupApply(payload: AddGroupPayload): void {
-    // Используем тот же endpoint, что и для Create: backend делает upsert.
+    // Той самий POST, але payload містить groupId — бекенд оновлює рядок за id, а не upsert лише за code.
     const schoolId = resolveSchoolIdForActions(auth, dash);
     if (!schoolId) {
       window.alert(

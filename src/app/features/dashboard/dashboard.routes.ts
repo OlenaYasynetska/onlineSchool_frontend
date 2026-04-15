@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../../core/guards/auth.guard';
+import { dashboardEntryGuard } from '../../core/guards/dashboard-entry.guard';
 
 export const DASHBOARD_ROUTES: Routes = [
   {
@@ -8,6 +9,6 @@ export const DASHBOARD_ROUTES: Routes = [
       import('./pages/dashboard-page/dashboard-page.component').then(
         (m) => m.DashboardPageComponent
       ),
-    canActivate: [authGuard],
+    canActivate: [authGuard, dashboardEntryGuard],
   },
 ];

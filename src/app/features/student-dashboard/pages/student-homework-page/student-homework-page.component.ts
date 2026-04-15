@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../../../core/services/auth.service';
+import { environment } from '../../../../../environments/environment';
 
 import { StudentHomeworkService } from '../../services/student-homework.service';
 
@@ -105,18 +106,9 @@ export class StudentHomeworkPageComponent implements OnInit {
 
       },
 
-      error: (err: { status?: number; error?: unknown }) => {
-
+      error: (err: unknown) => {
         this.loading = false;
-
-        this.loadError =
-
-          err?.status === 404
-
-            ? 'Student profile is not linked to this account. Ask your school administrator.'
-
-            : 'Could not load teachers.';
-
+        this.loadError = this.describeTeachersLoadError(err);
       },
 
     });
@@ -388,5 +380,41 @@ export class StudentHomeworkPageComponent implements OnInit {
     return t || '—';
   }
 
+  private describeTeachersLoadError(err: unknown): string {
+    if (!err || typeof err !== 'object') {
+      return 'Could not load teachers.';
+    }
+    const e = err as HttpErrorResponse;
+    if (e.status === 404) {
+      return 'Student profile is not linked to this account. Ask your school administrator.';
+    }
+    if (e.status === 0) {
+      return (
+        'Cannot reach the homework API (network error). Check that the backend is running and ' +
+        'NG_APP_API_URL points to your Spring API (e.g. https://…/api).'
+      );
+    }
+    if (e.status === 401) {
+      return 'Session expired. Log in again.';
+    }
+    if (e.status === 503 || e.status === 502) {
+      return 'The homework service is temporarily unavailable. Try again later.';
+    }
+    const body = e.error;
+    let serverMsg = '';
+    if (body && typeof body === 'object' && 'message' in body) {
+      const m = (body as { message?: unknown }).message;
+      if (typeof m === 'string' && m.trim()) {
+        serverMsg = m.trim();
+      }
+    }
+    if (serverMsg) {
+      return `Could not load teachers: ${serverMsg}`;
+    }
+    if (e.status >= 500) {
+      return 'Could not load teachers (server error). Check backend logs.';
+    }
+    return `Could not load teachers (HTTP ${e.status}). API base: ${environment.apiUrl}`;
+  }
 }
 

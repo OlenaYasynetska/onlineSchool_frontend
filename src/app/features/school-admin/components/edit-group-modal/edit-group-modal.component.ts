@@ -487,6 +487,12 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
   }
 
   apply(): void {
+    if (!this.group?.id?.trim()) {
+      window.alert(
+        'Group id is missing. Close this dialog and open the group again from the list.',
+      );
+      return;
+    }
     const sid = this.form.subjectId?.trim();
     if (!sid && !(this.form.topicsLabel ?? '').trim()) {
       window.alert(
@@ -512,7 +518,7 @@ export class EditGroupModalComponent implements OnChanges, OnInit, OnDestroy {
       active: this.form.active,
       // Явне true/false: JSON.stringify опускає undefined, тоді бекенд бачить null і лишає «показувати».
       showSubjectOnCard: this.form.showSubjectOnCard !== false,
-      groupId: this.group?.id ?? null,
+      groupId: this.group!.id,
     };
   }
 

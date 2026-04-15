@@ -76,6 +76,13 @@ export class StudentHomeworkPageComponent implements OnInit {
 
   subjectTitle = '';
 
+  /** Предмети обраного вчителя (GET /teacher-subjects). */
+  subjectOptions: string[] = [];
+
+  loadingSubjects = false;
+
+  subjectLoadError: string | null = null;
+
   messageText = '';
 
   selectedFile: File | null = null;
@@ -142,6 +149,33 @@ export class StudentHomeworkPageComponent implements OnInit {
   }
 
 
+
+  onTeacherChange(): void {
+    this.subjectTitle = '';
+    this.subjectOptions = [];
+    this.subjectLoadError = null;
+    const tid = this.teacherId?.trim();
+    if (!tid) {
+      return;
+    }
+    const u = this.auth.currentUser();
+    if (!u?.id) {
+      return;
+    }
+    this.loadingSubjects = true;
+    this.api.listTeacherSubjects(u.id, tid).subscribe({
+      next: (titles) => {
+        this.subjectOptions = titles ?? [];
+        this.loadingSubjects = false;
+      },
+      error: () => {
+        this.loadingSubjects = false;
+        this.subjectOptions = [];
+        this.subjectLoadError =
+          'Could not load subjects for this teacher. Check the connection and try again.';
+      },
+    });
+  }
 
   triggerFilePicker(): void {
 
@@ -211,6 +245,10 @@ export class StudentHomeworkPageComponent implements OnInit {
 
     this.subjectTitle = '';
 
+    this.subjectOptions = [];
+
+    this.subjectLoadError = null;
+
     this.messageText = '';
 
     this.selectedFile = null;
@@ -259,9 +297,17 @@ export class StudentHomeworkPageComponent implements OnInit {
 
     }
 
+    if (this.loadingSubjects) {
+      this.submitError = 'Wait until subjects are loaded.';
+      return;
+    }
+
     if (!this.subjectTitle.trim()) {
 
-      this.submitError = 'Enter the subject.';
+      this.submitError =
+        this.subjectOptions.length > 0
+          ? 'Select a subject.'
+          : 'Enter the subject.';
 
       return;
 

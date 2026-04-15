@@ -30,6 +30,15 @@ export class StudentHomeworkService {
     );
   }
 
+  /** Назви предметів з teacher_subjects для обраного вчителя. */
+  listTeacherSubjects(userId: string, teacherId: string): Observable<string[]> {
+    const q = new URLSearchParams({
+      userId,
+      teacherId: teacherId.trim(),
+    });
+    return this.http.get<string[]>(`${this.base()}/teacher-subjects?${q.toString()}`);
+  }
+
   listSubmissions(userId: string): Observable<HomeworkSubmission[]> {
     return this.http.get<HomeworkSubmission[]>(
       `${this.base()}/submissions?userId=${encodeURIComponent(userId)}`

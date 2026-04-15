@@ -54,6 +54,7 @@
               id="hw-teacher"
               name="teacherId"
               [(ngModel)]="teacherId"
+              (ngModelChange)="onTeacherChange()"
               required
               class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
             >
@@ -110,21 +111,56 @@
           }
 
           <div>
-            <label
-              for="hw-subject"
-              class="mb-1 block text-sm font-medium text-slate-700"
-              >Subject</label
-            >
-            <input
-              id="hw-subject"
-              name="subjectTitle"
-              type="text"
-              [(ngModel)]="subjectTitle"
-              required
-              placeholder="Enter subject"
-              autocomplete="off"
-              class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-            />
+            <span class="mb-1 block text-sm font-medium text-slate-700">Subject</span>
+            @if (!teacherId) {
+              <p
+                class="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500"
+                role="status"
+              >
+                Select a teacher first — their subjects will appear here.
+              </p>
+            } @else if (loadingSubjects) {
+              <p class="text-sm text-slate-600" role="status">Loading subjects…</p>
+            } @else if (subjectLoadError) {
+              <p class="mb-2 text-sm text-rose-600" role="alert">{{ subjectLoadError }}</p>
+              <input
+                id="hw-subject"
+                name="subjectTitle"
+                type="text"
+                [(ngModel)]="subjectTitle"
+                required
+                placeholder="Enter subject"
+                autocomplete="off"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              />
+            } @else if (subjectOptions.length > 0) {
+              <select
+                id="hw-subject"
+                name="subjectTitle"
+                [(ngModel)]="subjectTitle"
+                required
+                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              >
+                <option value="" disabled>Select subject</option>
+                @for (s of subjectOptions; track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
+            } @else {
+              <p class="mb-2 text-xs text-amber-900">
+                This teacher has no subjects in the roster yet. Enter the subject manually, or ask your school admin to assign subjects to the teacher.
+              </p>
+              <input
+                id="hw-subject-fallback"
+                name="subjectTitle"
+                type="text"
+                [(ngModel)]="subjectTitle"
+                required
+                placeholder="Enter subject"
+                autocomplete="off"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
+              />
+            }
           </div>
 
           <div>
@@ -170,7 +206,7 @@
             <button
               type="button"
               (click)="triggerFilePicker()"
-              [disabled]="submitting || groups.length === 0"
+              [disabled]="submitting || groups.length === 0 || loadingSubjects"
               class="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {{ submitting ? 'Sending…' : 'Attach file' }}
@@ -178,7 +214,7 @@
             <button
               type="button"
               (click)="sendWithoutFile()"
-              [disabled]="submitting || groups.length === 0"
+              [disabled]="submitting || groups.length === 0 || loadingSubjects"
               class="flex-1 rounded-xl bg-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {{ submitting ? 'Sending…' : 'Send without file' }}

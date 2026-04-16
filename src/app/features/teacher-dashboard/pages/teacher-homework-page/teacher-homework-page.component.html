@@ -78,8 +78,8 @@
                     <td class="py-3 pr-3 whitespace-nowrap text-slate-600">
                       {{ formatWhen(s.submittedAt) }}
                     </td>
-                    <td class="py-3">
-                      <div class="flex flex-wrap gap-2">
+                    <td class="py-3 align-middle">
+                      <div class="flex flex-wrap items-center gap-2">
                         @if (hasAttachment(s)) {
                           <button
                             type="button"
@@ -89,7 +89,7 @@
                             Download
                           </button>
                         } @else {
-                          <span class="text-xs text-slate-500">No file</span>
+                          <span class="text-sm text-slate-700">No file</span>
                         }
                         @if (hasSupplementaryFile(s)) {
                           <button

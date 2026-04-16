@@ -88,6 +88,9 @@ export class StudentHomeworkPageComponent implements OnInit {
 
   messageText = '';
 
+  /** Номер домашнього завдання / вправи (окремо від повідомлення). */
+  homeworkNumber = '';
+
   selectedFile: File | null = null;
 
 
@@ -254,6 +257,8 @@ export class StudentHomeworkPageComponent implements OnInit {
 
     this.messageText = '';
 
+    this.homeworkNumber = '';
+
     this.selectedFile = null;
 
     this.submitError = null;
@@ -359,6 +364,8 @@ export class StudentHomeworkPageComponent implements OnInit {
         subjectTitle: this.subjectTitle.trim(),
 
         messageText: this.messageText.trim() || undefined,
+
+        homeworkNumber: this.homeworkNumber.trim() || undefined,
 
         file: withFile && this.selectedFile ? this.selectedFile : undefined,
 

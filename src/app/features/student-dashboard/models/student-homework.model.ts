@@ -63,4 +63,6 @@ export interface HomeworkSubmission {
   groupName: string | null;
   submittedAt: string;
   gradedAt: string | null;
+  /** Номер ДЗ / вправи (окремо від повідомлення). */
+  homeworkNumber?: string | null;
 }

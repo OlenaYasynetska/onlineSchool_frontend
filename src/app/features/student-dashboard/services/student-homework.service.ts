@@ -73,6 +73,7 @@ export class StudentHomeworkService {
     groupId?: string;
     subjectTitle: string;
     messageText?: string;
+    homeworkNumber?: string;
     file?: File;
   }): Observable<HomeworkSubmission> {
     const fd = new FormData();
@@ -84,6 +85,9 @@ export class StudentHomeworkService {
     }
     if (params.messageText?.trim()) {
       fd.append('messageText', params.messageText.trim());
+    }
+    if (params.homeworkNumber?.trim()) {
+      fd.append('homeworkNumber', params.homeworkNumber.trim());
     }
     if (params.file) {
       fd.append('file', params.file, params.file.name);

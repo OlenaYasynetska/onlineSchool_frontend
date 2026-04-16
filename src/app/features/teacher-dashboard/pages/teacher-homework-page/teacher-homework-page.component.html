@@ -24,12 +24,23 @@
     }
 
     @if (!loading && !noProfile) {
+      @if (pending.length || graded.length) {
+        <div class="mb-6">
+          <app-homework-search-field
+            placeholder="Search group"
+            [value]="inboxSearchQuery"
+            (valueChange)="inboxSearchQuery = $event"
+          />
+        </div>
+      }
       <section
         class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >
         <h2 class="text-lg font-bold text-slate-900">Pending review</h2>
         @if (pending.length === 0) {
           <p class="mt-3 text-sm text-slate-600">Nothing to review.</p>
+        } @else if (filteredPending.length === 0) {
+          <p class="mt-3 text-sm text-slate-600">No matching rows.</p>
         } @else {
           <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[820px] text-left text-sm">
@@ -48,7 +59,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (s of pending; track s.id) {
+                @for (s of filteredPending; track s.id) {
                   <tr class="border-b border-slate-100 last:border-0">
                     <td class="py-3 pr-3 font-medium text-slate-900">
                       {{ s.studentName }}
@@ -70,13 +81,6 @@
                     <td class="py-3">
                       <div class="flex flex-wrap gap-2">
                         @if (hasAttachment(s)) {
-                          <button
-                            type="button"
-                            (click)="preview(s)"
-                            class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-900 hover:bg-sky-100"
-                          >
-                            Open
-                          </button>
                           <button
                             type="button"
                             (click)="download(s)"
@@ -110,6 +114,8 @@
         <h2 class="text-lg font-bold text-slate-900">Graded</h2>
         @if (graded.length === 0) {
           <p class="mt-3 text-sm text-slate-600">No graded items yet.</p>
+        } @else if (filteredGraded.length === 0) {
+          <p class="mt-3 text-sm text-slate-600">No matching rows.</p>
         } @else {
           <div class="mt-4 overflow-x-auto">
             <table class="w-full min-w-[720px] text-left text-sm">
@@ -126,7 +132,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (s of graded; track s.id) {
+                @for (s of filteredGraded; track s.id) {
                   <tr class="border-b border-slate-100 last:border-0">
                     <td class="py-2.5 pr-3 font-medium text-slate-900">
                       {{ s.studentName }}

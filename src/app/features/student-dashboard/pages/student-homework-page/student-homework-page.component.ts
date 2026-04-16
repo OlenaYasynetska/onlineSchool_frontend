@@ -12,6 +12,8 @@ import { environment } from '../../../../../environments/environment';
 
 import { StudentHomeworkService } from '../../services/student-homework.service';
 
+import { HomeworkSearchFieldComponent } from '../../../../shared/components/homework-search-field/homework-search-field.component';
+
 import type {
 
   HomeworkSubmission,
@@ -30,7 +32,7 @@ import type {
 
   standalone: true,
 
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HomeworkSearchFieldComponent],
 
   templateUrl: './student-homework-page.component.html',
 
@@ -70,6 +72,13 @@ export class StudentHomeworkPageComponent implements OnInit {
   groups: StudentGroupOption[] = [];
 
   submissions: HomeworkSubmission[] = [];
+
+  /** Клієнтська пагінація таблиці «My submissions». */
+  readonly submissionsPageSize = 10;
+
+  submissionsPageIndex = 0;
+
+  submissionsSearchQuery = '';
 
 
 
@@ -229,7 +238,13 @@ export class StudentHomeworkPageComponent implements OnInit {
 
     this.api.listSubmissions(userId).subscribe({
 
-      next: (s) => (this.submissions = s),
+      next: (s) => {
+
+        this.submissions = s;
+
+        this.clampSubmissionsPage();
+
+      },
 
       error: () => {
 
@@ -238,6 +253,133 @@ export class StudentHomeworkPageComponent implements OnInit {
       },
 
     });
+
+  }
+
+  /** Фільтр по полю пошуку (предмет, група, файл, статус, номер ДЗ, відгук тощо). */
+  get filteredSubmissions(): HomeworkSubmission[] {
+
+    const q = this.submissionsSearchQuery.trim().toLowerCase();
+
+    if (!q) {
+
+      return this.submissions;
+
+    }
+
+    return this.submissions.filter((s) => this.submissionMatchesQuery(s, q));
+
+  }
+
+  /** Рядки поточної сторінки (не більше {@link submissionsPageSize}). */
+  get pagedSubmissions(): HomeworkSubmission[] {
+
+    const list = this.filteredSubmissions;
+
+    const start = this.submissionsPageIndex * this.submissionsPageSize;
+
+    return list.slice(start, start + this.submissionsPageSize);
+
+  }
+
+  get submissionsTotalPages(): number {
+
+    const n = this.filteredSubmissions.length;
+
+    if (n === 0) {
+
+      return 0;
+
+    }
+
+    return Math.ceil(n / this.submissionsPageSize);
+
+  }
+
+  get submissionsRangeStart(): number {
+
+    const n = this.filteredSubmissions.length;
+
+    if (n === 0) {
+
+      return 0;
+
+    }
+
+    return this.submissionsPageIndex * this.submissionsPageSize + 1;
+
+  }
+
+  get submissionsRangeEnd(): number {
+
+    const n = this.filteredSubmissions.length;
+
+    return Math.min(n, (this.submissionsPageIndex + 1) * this.submissionsPageSize);
+
+  }
+
+  onSubmissionsSearchChange(): void {
+
+    this.submissionsPageIndex = 0;
+
+    this.clampSubmissionsPage();
+
+  }
+
+  private submissionMatchesQuery(s: HomeworkSubmission, q: string): boolean {
+
+    const parts: (string | null | undefined)[] = [
+      s.subjectTitle,
+      s.homeworkNumber,
+      s.fileName,
+      s.groupName,
+      s.status,
+      s.teacherFeedback,
+      s.messageText,
+      s.stars != null ? String(s.stars) : '',
+    ];
+
+    return parts.some((p) => p && String(p).toLowerCase().includes(q));
+
+  }
+
+  prevSubmissionsPage(): void {
+
+    if (this.submissionsPageIndex > 0) {
+
+      this.submissionsPageIndex--;
+
+    }
+
+  }
+
+  nextSubmissionsPage(): void {
+
+    if (this.submissionsPageIndex < this.submissionsTotalPages - 1) {
+
+      this.submissionsPageIndex++;
+
+    }
+
+  }
+
+  private clampSubmissionsPage(): void {
+
+    const totalPages = this.submissionsTotalPages;
+
+    if (totalPages === 0) {
+
+      this.submissionsPageIndex = 0;
+
+      return;
+
+    }
+
+    if (this.submissionsPageIndex >= totalPages) {
+
+      this.submissionsPageIndex = totalPages - 1;
+
+    }
 
   }
 
@@ -377,6 +519,8 @@ export class StudentHomeworkPageComponent implements OnInit {
 
           this.submitting = false;
 
+          this.submissionsPageIndex = 0;
+
           this.resetFormToInitialState();
 
           this.refreshSubmissions(u.id);
@@ -443,22 +587,15 @@ export class StudentHomeworkPageComponent implements OnInit {
     return true;
   }
 
-  openOwnFile(s: HomeworkSubmission, inline: boolean): void {
+  downloadOwnFile(s: HomeworkSubmission): void {
     const u = this.auth.currentUser();
     if (!u?.id) return;
-    const req = inline
-      ? this.files.previewStudentOwnFile(u.id, s.id)
-      : this.files.downloadStudentOwnFile(u.id, s.id);
-    req.subscribe({
+    this.files.downloadStudentOwnFile(u.id, s.id).subscribe({
       next: (blob) => {
-        if (inline) {
-          this.files.openBlobInNewTab(blob, s.fileName || 'homework');
-        } else {
-          this.files.triggerDownload(blob, s.fileName || 'homework');
-        }
+        this.files.triggerDownload(blob, s.fileName || 'homework');
       },
       error: () => {
-        window.alert(inline ? 'Could not open file.' : 'Could not download file.');
+        window.alert('Could not download file.');
       },
     });
   }

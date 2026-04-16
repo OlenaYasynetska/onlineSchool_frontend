@@ -6,11 +6,12 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { HomeworkFileService } from '../../../../core/services/homework-file.service';
 import { TeacherHomeworkService } from '../../services/teacher-homework.service';
 import type { HomeworkSubmission } from '../../../student-dashboard/models/student-homework.model';
+import { HomeworkSearchFieldComponent } from '../../../../shared/components/homework-search-field/homework-search-field.component';
 
 @Component({
   selector: 'app-teacher-homework-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HomeworkSearchFieldComponent],
   templateUrl: './teacher-homework-page.component.html',
 })
 export class TeacherHomeworkPageComponent implements OnInit {
@@ -22,6 +23,9 @@ export class TeacherHomeworkPageComponent implements OnInit {
   noProfile = false;
   pending: HomeworkSubmission[] = [];
   graded: HomeworkSubmission[] = [];
+
+  /** Фільтр для обох таблиць (учень, група, предмет, файл, повідомлення…). */
+  inboxSearchQuery = '';
 
   /** Запись, для которой открыта оценка (звёзды + отзыв). */
   gradingSubmission: HomeworkSubmission | null = null;
@@ -132,21 +136,40 @@ export class TeacherHomeworkPageComponent implements OnInit {
     });
   }
 
-  preview(sub: HomeworkSubmission): void {
-    const u = this.auth.currentUser();
-    if (!u?.id) return;
-    this.files.previewTeacherFile(u.id, sub.id).subscribe({
-      next: (blob) =>
-        this.files.openBlobInNewTab(blob, sub.fileName || 'homework'),
-      error: () => {
-        window.alert('Could not open preview.');
-      },
-    });
-  }
-
   formatWhen(iso: string | null): string {
     if (!iso) return '—';
     const d = new Date(iso);
     return Number.isNaN(d.getTime()) ? iso : d.toLocaleString();
+  }
+
+  get filteredPending(): HomeworkSubmission[] {
+    const q = this.inboxSearchQuery.trim().toLowerCase();
+    if (!q) {
+      return this.pending;
+    }
+    return this.pending.filter((s) => this.inboxRowMatches(s, q));
+  }
+
+  get filteredGraded(): HomeworkSubmission[] {
+    const q = this.inboxSearchQuery.trim().toLowerCase();
+    if (!q) {
+      return this.graded;
+    }
+    return this.graded.filter((s) => this.inboxRowMatches(s, q));
+  }
+
+  private inboxRowMatches(s: HomeworkSubmission, q: string): boolean {
+    const parts: (string | null | undefined)[] = [
+      s.studentName,
+      s.subjectTitle,
+      s.groupName,
+      s.homeworkNumber,
+      s.fileName,
+      s.messageText,
+      s.status,
+      s.teacherFeedback,
+      s.stars != null ? String(s.stars) : '',
+    ];
+    return parts.some((p) => p && String(p).toLowerCase().includes(q));
   }
 }

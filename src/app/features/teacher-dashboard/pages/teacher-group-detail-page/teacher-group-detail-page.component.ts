@@ -7,6 +7,7 @@ import type {
   SchoolGroupCard,
   StudentRow,
 } from '../../../school-admin/models/school-admin-dashboard.model';
+import type { TeacherGroupStats } from '../../models/teacher-group-stats.model';
 import { countStudentsInGroupForRoster } from '../../../school-admin/utils/group-student-count.util';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
@@ -31,6 +32,10 @@ export class TeacherGroupDetailPageComponent implements OnInit {
   group: SchoolGroupCard | null = null;
   students: StudentRow[] = [];
   activity: TeacherActivityEntry[] = [];
+  /** Статистика ДЗ по групі (зірки по предметах з БД), для графіка на цій сторінці. */
+  groupStats: TeacherGroupStats | null = null;
+  /** Обраний предмет для стовпчикового графіка «усі учні класу». */
+  selectedChartSubject = '';
   loading = true;
   notFound = false;
 
@@ -58,8 +63,11 @@ export class TeacherGroupDetailPageComponent implements OnInit {
         activity: this.api.listMyActivity(u.id).pipe(
           catchError(() => of<TeacherActivityEntry[]>([]))
         ),
+        stats: this.api.listGroupStats(u.id).pipe(
+          catchError(() => of<TeacherGroupStats[]>([]))
+        ),
       }).subscribe({
-        next: ({ groups, students, activity }) => {
+        next: ({ groups, students, activity, stats }) => {
           const g = groups.find((x) => x.id === id) ?? null;
           if (!g) {
             this.notFound = true;
@@ -71,6 +79,12 @@ export class TeacherGroupDetailPageComponent implements OnInit {
           }
           this.students = students;
           this.activity = activity;
+          const gs = stats.find((s) => s.groupId === id) ?? null;
+          this.groupStats = gs;
+          this.selectedChartSubject =
+            gs?.subjectTitles?.length && gs.subjectTitles[0]
+              ? gs.subjectTitles[0]
+              : '';
           this.loading = false;
         },
         error: () => {
@@ -93,24 +107,50 @@ export class TeacherGroupDetailPageComponent implements OnInit {
     return this.activity.filter((a) => a.reason.includes(g.name));
   }
 
-  /** Демо-точки для міні-графіка (як на макеті); пізніше — API. */
-  chartDemo = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    series: [12, 28, 42, 55, 68, 82, 95],
-  };
+  /** Учні з оцінками (зірки) по обраному предмету — для стовпчиків. */
+  studentBarsForChart(): {
+    studentId: string;
+    fullName: string;
+    label: string;
+    stars: number;
+  }[] {
+    const gs = this.groupStats;
+    const sub = this.selectedChartSubject?.trim();
+    if (!gs || !sub) return [];
+    return gs.students.map((s) => ({
+      studentId: s.studentId,
+      fullName: s.fullName,
+      label: this.shortLabelForBar(s.fullName),
+      stars: s.starsBySubject[sub] ?? 0,
+    }));
+  }
 
-  chartLinePoints(values: number[]): string {
-    if (values.length < 2) return '';
-    const max = Math.max(...values, 1);
-    const min = Math.min(...values, 0);
-    const range = max - min || 1;
-    return values
-      .map((v, i) => {
-        const x = (i / (values.length - 1)) * 100;
-        const y = 100 - ((v - min) / range) * 100;
-        return `${x.toFixed(2)},${y.toFixed(2)}`;
-      })
-      .join(' ');
+  maxStarsInChart(): number {
+    const rows = this.studentBarsForChart();
+    if (rows.length === 0) return 1;
+    const m = Math.max(...rows.map((r) => r.stars), 0);
+    return m > 0 ? m : 1;
+  }
+
+  barHeightPercent(stars: number): number {
+    return (stars / this.maxStarsInChart()) * 100;
+  }
+
+  onChartSubjectChange(ev: Event): void {
+    const t = ev.target as HTMLSelectElement;
+    this.selectedChartSubject = t.value;
+  }
+
+  private shortLabelForBar(fullName: string): string {
+    const t = fullName?.trim() ?? '';
+    if (!t) return '—';
+    const parts = t.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) {
+      return parts[0].length > 10 ? parts[0].slice(0, 9) + '…' : parts[0];
+    }
+    const first = parts[0];
+    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${first} ${lastInitial}.`;
   }
 
   /** Рядки для списку «Courses included» з topicsLabel. */

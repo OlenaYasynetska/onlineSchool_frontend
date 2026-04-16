@@ -567,7 +567,17 @@
 
     @if (cabinetSegment() === 'employees') {
       <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-900">Employees</h1>
+        <h1 class="flex items-center gap-2 text-2xl font-bold text-slate-900">
+          <img
+            src="/assets/icons/sidebar/employees.svg"
+            alt=""
+            width="24"
+            height="24"
+            class="h-7 w-7 shrink-0 object-contain"
+            aria-hidden="true"
+          />
+          Employees
+        </h1>
         <p class="mt-1 text-sm text-slate-600">
           School staff and administrators
         </p>
@@ -580,7 +590,17 @@
       id="school-admin-employees"
       class="scroll-mt-6 rounded-2xl border border-dashed border-slate-200 bg-white/80 p-4 shadow-sm sm:p-6"
     >
-      <h2 class="text-lg font-bold text-slate-900">Employees</h2>
+      <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
+        <img
+          src="/assets/icons/sidebar/employees.svg"
+          alt=""
+          width="24"
+          height="24"
+          class="h-6 w-6 shrink-0 object-contain"
+          aria-hidden="true"
+        />
+        Employees
+      </h2>
       <p class="mt-2 text-sm text-slate-600">
         School staff and administrators will appear here once the employee list is connected to the API.
       </p>

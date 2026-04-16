@@ -65,4 +65,6 @@ export interface HomeworkSubmission {
   gradedAt: string | null;
   /** Номер ДЗ / вправи (окремо від повідомлення). */
   homeworkNumber?: string | null;
+  /** Додатковий файл після здачі (доки статус submitted). */
+  supplementaryFileName?: string | null;
 }

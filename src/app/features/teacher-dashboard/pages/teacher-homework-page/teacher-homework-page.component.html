@@ -91,6 +91,15 @@
                         } @else {
                           <span class="text-xs text-slate-500">No file</span>
                         }
+                        @if (hasSupplementaryFile(s)) {
+                          <button
+                            type="button"
+                            (click)="downloadSupplementary(s)"
+                            class="rounded-lg border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-900 hover:bg-sky-100"
+                          >
+                            Extra file
+                          </button>
+                        }
                         <button
                           type="button"
                           (click)="openGrade(s)"

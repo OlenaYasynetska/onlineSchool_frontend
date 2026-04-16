@@ -12,10 +12,18 @@ import { environment } from '../../../environments/environment';
 export class HomeworkFileService {
   private readonly http = inject(HttpClient);
 
-  downloadTeacherFile(userId: string, submissionId: string): Observable<Blob> {
+  downloadTeacherFile(
+    userId: string,
+    submissionId: string,
+    part: 'primary' | 'supplementary' = 'primary',
+  ): Observable<Blob> {
+    const params: Record<string, string> = { userId };
+    if (part === 'supplementary') {
+      params['part'] = 'supplementary';
+    }
     return this.http.get(
       `${environment.apiUrl}/teacher/homework/${encodeURIComponent(submissionId)}/file`,
-      { params: { userId }, responseType: 'blob' },
+      { params, responseType: 'blob' },
     );
   }
 
@@ -28,10 +36,18 @@ export class HomeworkFileService {
     );
   }
 
-  downloadStudentOwnFile(userId: string, submissionId: string): Observable<Blob> {
+  downloadStudentOwnFile(
+    userId: string,
+    submissionId: string,
+    part: 'primary' | 'supplementary' = 'primary',
+  ): Observable<Blob> {
+    const params: Record<string, string> = { userId };
+    if (part === 'supplementary') {
+      params['part'] = 'supplementary';
+    }
     return this.http.get(
       `${environment.apiUrl}/student/homework/submissions/${encodeURIComponent(submissionId)}/file`,
-      { params: { userId }, responseType: 'blob' },
+      { params, responseType: 'blob' },
     );
   }
 

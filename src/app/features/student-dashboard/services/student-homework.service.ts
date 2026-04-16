@@ -102,4 +102,25 @@ export class StudentHomeworkService {
     }
     return this.http.post<HomeworkSubmission>(`${this.base()}/submit`, fd);
   }
+
+  /** Додати примітку та/або другий файл до здачі зі статусом submitted. */
+  supplement(params: {
+    userId: string;
+    submissionId: string;
+    extraMessage?: string;
+    file?: File;
+  }): Observable<HomeworkSubmission> {
+    const fd = new FormData();
+    fd.append('userId', params.userId);
+    if (params.extraMessage?.trim()) {
+      fd.append('extraMessage', params.extraMessage.trim());
+    }
+    if (params.file) {
+      fd.append('file', params.file, params.file.name);
+    }
+    return this.http.post<HomeworkSubmission>(
+      `${this.base()}/submissions/${encodeURIComponent(params.submissionId)}/supplement`,
+      fd,
+    );
+  }
 }

@@ -50,6 +50,8 @@ export class StudentHomeworkPageComponent implements OnInit {
 
   @ViewChild('fileInput') fileInput?: ElementRef<HTMLInputElement>;
 
+  @ViewChild('supplementFileInput') supplementFileInput?: ElementRef<HTMLInputElement>;
+
 
 
   loading = true;
@@ -101,6 +103,17 @@ export class StudentHomeworkPageComponent implements OnInit {
   homeworkNumber = '';
 
   selectedFile: File | null = null;
+
+  /** Модалка «додати ще» для здачі зі статусом submitted. */
+  supplementSubmission: HomeworkSubmission | null = null;
+
+  supplementMessage = '';
+
+  supplementSelectedFile: File | null = null;
+
+  supplementBusy = false;
+
+  supplementError: string | null = null;
 
 
 
@@ -331,6 +344,7 @@ export class StudentHomeworkPageComponent implements OnInit {
     const parts: (string | null | undefined)[] = [
       s.subjectTitle,
       s.homeworkNumber,
+      s.supplementaryFileName,
       s.fileName,
       s.groupName,
       s.status,
@@ -587,15 +601,102 @@ export class StudentHomeworkPageComponent implements OnInit {
     return true;
   }
 
+  hasSupplementaryFile(s: HomeworkSubmission): boolean {
+    return !!(s.supplementaryFileName && String(s.supplementaryFileName).trim());
+  }
+
+  openSupplementDialog(s: HomeworkSubmission): void {
+    this.supplementSubmission = s;
+    this.supplementMessage = '';
+    this.supplementSelectedFile = null;
+    this.supplementError = null;
+    if (this.supplementFileInput?.nativeElement) {
+      this.supplementFileInput.nativeElement.value = '';
+    }
+  }
+
+  closeSupplementDialog(): void {
+    this.supplementSubmission = null;
+    this.supplementMessage = '';
+    this.supplementSelectedFile = null;
+    this.supplementError = null;
+    this.supplementBusy = false;
+    if (this.supplementFileInput?.nativeElement) {
+      this.supplementFileInput.nativeElement.value = '';
+    }
+  }
+
+  triggerSupplementFilePicker(): void {
+    this.supplementFileInput?.nativeElement.click();
+  }
+
+  onSupplementFileChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.supplementSelectedFile = input.files?.[0] ?? null;
+  }
+
+  submitSupplement(): void {
+    const u = this.auth.currentUser();
+    const sub = this.supplementSubmission;
+    if (!u?.id || !sub) {
+      return;
+    }
+    const msg = this.supplementMessage.trim();
+    const file = this.supplementSelectedFile;
+    if (!msg && !file) {
+      this.supplementError = 'Add a note or choose a file.';
+      return;
+    }
+    this.supplementBusy = true;
+    this.supplementError = null;
+    this.api
+      .supplement({
+        userId: u.id,
+        submissionId: sub.id,
+        extraMessage: msg || undefined,
+        file: file ?? undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.supplementBusy = false;
+          this.closeSupplementDialog();
+          this.refreshSubmissions(u.id);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.supplementBusy = false;
+          const body = err.error;
+          let m = '';
+          if (typeof body === 'object' && body) {
+            m = String((body as { message?: string }).message ?? '');
+          }
+          this.supplementError = m || 'Could not save.';
+        },
+      });
+  }
+
   downloadOwnFile(s: HomeworkSubmission): void {
     const u = this.auth.currentUser();
     if (!u?.id) return;
-    this.files.downloadStudentOwnFile(u.id, s.id).subscribe({
+    this.files.downloadStudentOwnFile(u.id, s.id, 'primary').subscribe({
       next: (blob) => {
         this.files.triggerDownload(blob, s.fileName || 'homework');
       },
       error: () => {
         window.alert('Could not download file.');
+      },
+    });
+  }
+
+  downloadSupplementaryFile(s: HomeworkSubmission): void {
+    const u = this.auth.currentUser();
+    if (!u?.id) return;
+    const name = (s.supplementaryFileName ?? '').trim() || 'extra';
+    this.files.downloadStudentOwnFile(u.id, s.id, 'supplementary').subscribe({
+      next: (blob) => {
+        this.files.triggerDownload(blob, name);
+      },
+      error: () => {
+        window.alert('Could not download extra file.');
       },
     });
   }

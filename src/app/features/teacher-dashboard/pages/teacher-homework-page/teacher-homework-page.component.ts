@@ -127,13 +127,29 @@ export class TeacherHomeworkPageComponent implements OnInit {
   download(sub: HomeworkSubmission): void {
     const u = this.auth.currentUser();
     if (!u?.id) return;
-    this.files.downloadTeacherFile(u.id, sub.id).subscribe({
+    this.files.downloadTeacherFile(u.id, sub.id, 'primary').subscribe({
       next: (blob) =>
         this.files.triggerDownload(blob, sub.fileName || 'homework'),
       error: () => {
         window.alert('Could not download file.');
       },
     });
+  }
+
+  downloadSupplementary(sub: HomeworkSubmission): void {
+    const u = this.auth.currentUser();
+    if (!u?.id) return;
+    const name = (sub.supplementaryFileName ?? '').trim() || 'extra';
+    this.files.downloadTeacherFile(u.id, sub.id, 'supplementary').subscribe({
+      next: (blob) => this.files.triggerDownload(blob, name),
+      error: () => {
+        window.alert('Could not download extra file.');
+      },
+    });
+  }
+
+  hasSupplementaryFile(sub: HomeworkSubmission): boolean {
+    return !!(sub.supplementaryFileName && String(sub.supplementaryFileName).trim());
   }
 
   formatWhen(iso: string | null): string {
@@ -164,6 +180,7 @@ export class TeacherHomeworkPageComponent implements OnInit {
       s.subjectTitle,
       s.groupName,
       s.homeworkNumber,
+      s.supplementaryFileName,
       s.fileName,
       s.messageText,
       s.status,

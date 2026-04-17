@@ -1,17 +1,16 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
 import type {
   PaymentHistoryRow,
   SchoolAdminDashboardResponse,
   SchoolTeacher,
-  StudentRow,
 } from '../../models/school-admin-dashboard.model';
+import { useSchoolAdminCabinetSegment } from '../../hooks/use-school-admin-cabinet-segment.hook';
 import { useSchoolAdminDashboard } from '../../hooks/use-school-admin-dashboard.hook';
 import { useSchoolAdminGroups } from '../../hooks/use-school-admin-groups.hook';
 import { useSchoolAdminQuickActions } from '../../hooks/use-school-admin-quick-actions.hook';
+import { useSchoolAdminSortedStudents } from '../../hooks/use-school-admin-sorted-students.hook';
+import { useSchoolAdminTeachersFilter } from '../../hooks/use-school-admin-teachers-filter.hook';
 import { SchoolAdminDashboardService } from '../../services/school-admin-dashboard.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
@@ -43,45 +42,24 @@ import { EmailLinkComponent } from '../../../../shared/components/email-link/ema
 export class SchoolAdminPageComponent implements OnInit {
   private readonly dashApi = inject(SchoolAdminDashboardService);
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
 
-  /** Перший сегмент після `/school-admin` — `''` означає головний огляд. */
-  readonly cabinetSegment = signal<string>('');
+  readonly cabinetSegment = useSchoolAdminCabinetSegment().cabinetSegment;
 
   readonly dash: SchoolAdminDashboardResponse = useSchoolAdminDashboard();
   readonly groupsVm = useSchoolAdminGroups(this.dash);
   readonly actionsVm = useSchoolAdminQuickActions(this.dash, () =>
     this.refreshTeachersList()
   );
+  teachers: SchoolTeacher[] = [];
+  readonly teachersVm = useSchoolAdminTeachersFilter(() => this.teachers);
+  readonly studentsVm = useSchoolAdminSortedStudents(() => this.dash.students);
   loading = true;
   noSchoolAssigned = false;
-  teachers: SchoolTeacher[] = [];
   /**
    * UUID школи для API і модалок — виставляється явно (не лише геттер),
    * щоб `[schoolId]` у модалках завжди отримував рядок після завантаження дашборду.
    */
   schoolId = '';
-  /** Фільтр таблиці Teachers (як пошук у блоці Students). */
-  teacherSearchQuery = '';
-
-  constructor() {
-    this.router.events
-      .pipe(
-        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
-        takeUntilDestroyed()
-      )
-      .subscribe(() => this.updateCabinetSegment());
-  }
-
-  private updateCabinetSegment(): void {
-    const url = this.router.url.split('?')[0].split('#')[0];
-    if (!url.startsWith('/school-admin')) {
-      this.cabinetSegment.set('');
-      return;
-    }
-    const rest = url.slice('/school-admin'.length).replace(/^\//, '');
-    this.cabinetSegment.set((rest.split('/')[0] ?? '').trim());
-  }
 
   get adminDisplayName(): string {
     const u = this.auth.currentUser();
@@ -90,40 +68,7 @@ export class SchoolAdminPageComponent implements OnInit {
     return full || 'Admin';
   }
 
-  /** Порядковий № у таблиці (1, 2, 3…) за датою вступу. */
-  sortedStudents(): StudentRow[] {
-    return [...(this.dash.students ?? [])].sort((a, b) =>
-      a.joinedAt.localeCompare(b.joinedAt)
-    );
-  }
-
-  onTeacherSearchInput(event: Event): void {
-    const el = event.target as HTMLInputElement;
-    this.teacherSearchQuery = el.value ?? '';
-  }
-
-  /** Рядки Teachers з урахуванням пошуку (ім'я, email, тел., предмети, групи). */
-  filteredTeachers(): SchoolTeacher[] {
-    const q = this.teacherSearchQuery.trim().toLowerCase();
-    if (!q) {
-      return this.teachers;
-    }
-    return this.teachers.filter((t) => {
-      const hay = [
-        t.displayName,
-        t.email ?? '',
-        t.phone ?? '',
-        t.subjectTitles.join(' '),
-        t.groupNames.join(' '),
-      ]
-        .join(' ')
-        .toLowerCase();
-      return hay.includes(q);
-    });
-  }
-
   ngOnInit(): void {
-    this.updateCabinetSegment();
     const fromAuth = normalizeSchoolId(this.auth.currentUser()?.schoolId);
     const fromSession =
       typeof sessionStorage !== 'undefined'

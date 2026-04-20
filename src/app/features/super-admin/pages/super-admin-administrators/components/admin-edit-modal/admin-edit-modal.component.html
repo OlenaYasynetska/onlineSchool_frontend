@@ -1,0 +1,149 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4"
+  role="presentation"
+  (click)="onBackdropClick($event)"
+>
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="edit-admin-title"
+    class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-xl"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="flex items-start justify-between gap-4">
+      <h2 id="edit-admin-title" class="text-lg font-semibold text-slate-900">
+        Edit administrator
+      </h2>
+      <button
+        type="button"
+        class="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+        aria-label="Close"
+        (click)="close.emit()"
+      >
+        <span class="block text-xl leading-none">&times;</span>
+      </button>
+    </div>
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit.emit()"
+      class="mt-4 space-y-4"
+      novalidate
+    >
+      <div>
+        <label
+          for="edit-full-name"
+          class="mb-1 block text-sm font-medium text-slate-700"
+          >Full name</label
+        >
+        <input
+          id="edit-full-name"
+          type="text"
+          formControlName="fullName"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          autocomplete="name"
+        />
+        @if (
+          form.get('fullName')?.invalid && form.get('fullName')?.touched
+        ) {
+          <p class="mt-1 text-xs text-rose-600">Full name is required.</p>
+        }
+      </div>
+
+      <div>
+        <label
+          for="edit-school"
+          class="mb-1 block text-sm font-medium text-slate-700"
+          >School</label
+        >
+        <input
+          id="edit-school"
+          type="text"
+          formControlName="schoolName"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          autocomplete="organization"
+        />
+      </div>
+
+      <div>
+        <label
+          for="edit-email"
+          class="mb-1 block text-sm font-medium text-slate-700"
+          >Email</label
+        >
+        <input
+          id="edit-email"
+          type="email"
+          formControlName="email"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          autocomplete="email"
+        />
+        @if (form.get('email')?.invalid && form.get('email')?.touched) {
+          <p class="mt-1 text-xs text-rose-600">Enter a valid email.</p>
+        }
+      </div>
+
+      <div>
+        <label
+          for="edit-login"
+          class="mb-1 block text-sm font-medium text-slate-700"
+          >Login</label
+        >
+        <input
+          id="edit-login"
+          type="text"
+          formControlName="login"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+          autocomplete="username"
+        />
+        <p class="mt-1 text-xs text-slate-500">
+          If you change only the login (without a full email), the domain from
+          the current email is kept.
+        </p>
+      </div>
+
+      <div>
+        <label
+          for="edit-notes"
+          class="mb-1 block text-sm font-medium text-slate-700"
+          >Notes</label
+        >
+        <textarea
+          id="edit-notes"
+          formControlName="notes"
+          rows="4"
+          maxlength="8000"
+          placeholder="Reminders for yourself — so you don't forget…"
+          class="min-h-[5rem] w-full resize-y rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+        ></textarea>
+        <p class="mt-1 text-xs text-slate-500">
+          Saved only for super admin; the school administrator does not see
+          this.
+        </p>
+      </div>
+
+      @if (error) {
+        <p class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-800">
+          {{ error }}
+        </p>
+      }
+
+      <div class="flex flex-wrap justify-end gap-2 pt-2">
+        <button
+          type="button"
+          class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          (click)="close.emit()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="form.invalid || loading"
+        >
+          {{ loading ? 'Saving…' : 'Save changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

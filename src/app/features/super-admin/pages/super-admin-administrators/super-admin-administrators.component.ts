@@ -6,15 +6,29 @@ import {
   Validators,
 } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { EmailLinkComponent } from '../../../../shared/components/email-link/email-link.component';
 import { SuperAdminDashboardService } from '../../services/super-admin-dashboard.service';
 import type { SchoolAdminContactRow } from '../../models/super-admin-dashboard.model';
 import { createSuperAdminSchoolAdminsSearchState } from '../../super-admin-school-admins-search.state';
+import { AdminsHeaderComponent } from './components/admins-header/admins-header.component';
+import { AdminsTableComponent } from './components/admins-table/admins-table.component';
+import { AdminsFooterComponent } from './components/admins-footer/admins-footer.component';
+import { AdminEditModalComponent } from './components/admin-edit-modal/admin-edit-modal.component';
+import { AdminDeactivateModalComponent } from './components/admin-deactivate-modal/admin-deactivate-modal.component';
+import { AdminReactivateModalComponent } from './components/admin-reactivate-modal/admin-reactivate-modal.component';
 
 @Component({
   selector: 'app-super-admin-administrators',
   standalone: true,
-  imports: [CommonModule, EmailLinkComponent, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    AdminsHeaderComponent,
+    AdminsTableComponent,
+    AdminsFooterComponent,
+    AdminEditModalComponent,
+    AdminDeactivateModalComponent,
+    AdminReactivateModalComponent,
+  ],
   templateUrl: './super-admin-administrators.component.html',
 })
 export class SuperAdminAdministratorsComponent implements OnInit {
@@ -107,12 +121,6 @@ export class SuperAdminAdministratorsComponent implements OnInit {
     this.saveInProgress.set(false);
   }
 
-  onEditBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) {
-      this.closeEdit();
-    }
-  }
-
   openDeactivateConfirm(row: SchoolAdminContactRow): void {
     this.deactivateError.set(null);
     this.deactivateTarget.set(row);
@@ -123,12 +131,6 @@ export class SuperAdminAdministratorsComponent implements OnInit {
     this.deactivateError.set(null);
     this.deactivateInProgress.set(false);
     this.deactivatingUserId.set(null);
-  }
-
-  onDeactivateBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget && !this.deactivateInProgress()) {
-      this.closeDeactivateConfirm();
-    }
   }
 
   confirmDeactivate(): void {
@@ -164,12 +166,6 @@ export class SuperAdminAdministratorsComponent implements OnInit {
     this.reactivateError.set(null);
     this.reactivateInProgress.set(false);
     this.reactivatingUserId.set(null);
-  }
-
-  onReactivateBackdropClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget && !this.reactivateInProgress()) {
-      this.closeReactivateConfirm();
-    }
   }
 
   confirmReactivate(): void {

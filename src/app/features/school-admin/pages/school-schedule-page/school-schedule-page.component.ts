@@ -46,6 +46,8 @@ export class SchoolSchedulePageComponent implements OnInit {
 
   modalOpen = signal(false);
   editingSlot = signal<ScheduleSlot | null>(null);
+  /** Preset group when opening "Add lesson" from a class section. */
+  defaultGroupForModal = signal<string | null>(null);
 
   get adminDisplayName(): string {
     const u = this.auth.currentUser();
@@ -110,8 +112,10 @@ export class SchoolSchedulePageComponent implements OnInit {
     });
   }
 
-  openCreate(): void {
+  openCreate(groupId?: string | null): void {
     this.editingSlot.set(null);
+    const g = groupId?.trim();
+    this.defaultGroupForModal.set(g || null);
     this.modalOpen.set(true);
   }
 
@@ -123,6 +127,17 @@ export class SchoolSchedulePageComponent implements OnInit {
   closeModal(): void {
     this.modalOpen.set(false);
     this.editingSlot.set(null);
+    this.defaultGroupForModal.set(null);
+  }
+
+  sortedGroups(): SchoolGroupCard[] {
+    return [...this.groups].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+    );
+  }
+
+  slotsForGroup(groupId: string): ScheduleSlot[] {
+    return this.slots().filter((s) => s.groupId === groupId);
   }
 
   onSubmit(payload: UpsertSchedulePayload): void {

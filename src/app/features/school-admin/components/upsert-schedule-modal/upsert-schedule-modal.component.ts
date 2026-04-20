@@ -41,6 +41,8 @@ export class UpsertScheduleModalComponent implements OnChanges {
   @Input() subjects: SchoolSubject[] = [];
   /** Якщо задано — режим редагування. */
   @Input() editSlot: ScheduleSlot | null = null;
+  /** Для створення: попередньо обрати клас/групу (якщо id є в `groups`). */
+  @Input() defaultGroupId: string | null = null;
 
   @Output() readonly closeRequested = new EventEmitter<void>();
   @Output() readonly submitted = new EventEmitter<UpsertSchedulePayload>();
@@ -61,29 +63,38 @@ export class UpsertScheduleModalComponent implements OnChanges {
   };
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open']?.currentValue && this.editSlot) {
-      const s = this.editSlot;
-      this.form = {
-        groupId: s.groupId,
-        teacherId: s.teacherId,
-        subjectId: s.subjectId ?? '',
-        dayOfWeek: s.dayOfWeek,
-        startTime: this.normalizeTimeForInput(s.startTime),
-        endTime: this.normalizeTimeForInput(s.endTime),
-        validFrom: s.validFrom ?? '',
-        validUntil: s.validUntil ?? '',
-        notes: s.notes ?? '',
-        room: s.room ?? '',
-      };
-    }
-    if (changes['open']?.currentValue && !this.editSlot) {
+    if (!this.open) return;
+
+    if (this.editSlot) {
+      if (changes['open']?.currentValue || changes['editSlot']) {
+        const s = this.editSlot;
+        this.form = {
+          groupId: s.groupId,
+          teacherId: s.teacherId,
+          subjectId: s.subjectId ?? '',
+          dayOfWeek: s.dayOfWeek,
+          startTime: this.normalizeTimeForInput(s.startTime),
+          endTime: this.normalizeTimeForInput(s.endTime),
+          validFrom: s.validFrom ?? '',
+          validUntil: s.validUntil ?? '',
+          notes: s.notes ?? '',
+          room: s.room ?? '',
+        };
+      }
+    } else if (
+      changes['open']?.currentValue ||
+      changes['groups'] ||
+      changes['teachers'] ||
+      changes['subjects'] ||
+      changes['defaultGroupId']
+    ) {
       this.resetForm();
     }
   }
 
   private resetForm(): void {
     this.form = {
-      groupId: this.groups[0]?.id ?? '',
+      groupId: this.resolveDefaultGroupId(),
       teacherId: this.teachers[0]?.id ?? '',
       subjectId: '',
       dayOfWeek: 1,
@@ -94,6 +105,12 @@ export class UpsertScheduleModalComponent implements OnChanges {
       notes: '',
       room: '',
     };
+  }
+
+  private resolveDefaultGroupId(): string {
+    const want = this.defaultGroupId?.trim();
+    if (want && this.groups.some((g) => g.id === want)) return want;
+    return this.groups[0]?.id ?? '';
   }
 
   /** Бекенд може повертати `9:00:00` — для input type=time потрібно `HH:mm`. */

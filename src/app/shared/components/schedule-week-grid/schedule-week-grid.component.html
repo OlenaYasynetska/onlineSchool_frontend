@@ -21,7 +21,9 @@
             <p class="font-semibold text-violet-900">
               {{ slot.startTime }}–{{ slot.endTime }}
             </p>
-            <p class="mt-0.5 font-medium text-slate-800">{{ slot.groupName }}</p>
+            @if (!hideGroupName) {
+              <p class="mt-0.5 font-medium text-slate-800">{{ slot.groupName }}</p>
+            }
             @if (slot.subjectTitle) {
               <p class="text-[11px] text-slate-600">{{ slot.subjectTitle }}</p>
             }

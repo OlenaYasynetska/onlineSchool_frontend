@@ -21,6 +21,8 @@ const DAY_META: { value: number; short: string }[] = [
 export class ScheduleWeekGridComponent {
   @Input() slots: ScheduleSlot[] = [];
   @Input() readOnly = true;
+  /** When true, hides the class/group line (e.g. per-group schedule view). */
+  @Input() hideGroupName = false;
 
   @Output() readonly editSlot = new EventEmitter<ScheduleSlot>();
   @Output() readonly deleteSlot = new EventEmitter<ScheduleSlot>();

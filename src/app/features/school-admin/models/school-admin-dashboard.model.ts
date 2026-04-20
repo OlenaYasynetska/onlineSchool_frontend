@@ -39,6 +39,8 @@ export interface SchoolTeacher {
   email: string;
   phone: string | null;
   subjectTitles: string[];
+  /** `school_subjects.id` for subjects assigned to this teacher (from API). */
+  subjectIds?: string[];
   groupNames: string[];
   /** Після POST створення викладача. */
   inviteEmailSent?: boolean;

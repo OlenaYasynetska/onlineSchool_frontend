@@ -17,6 +17,13 @@ import {
 } from '../../utils/school-id.util';
 import { UpsertScheduleModalComponent } from '../../components/upsert-schedule-modal/upsert-schedule-modal.component';
 import { ScheduleWeekGridComponent } from '../../../../shared/components/schedule-week-grid/schedule-week-grid.component';
+import {
+  addWeeksIso,
+  calendarDayInSchoolWeek,
+  formatWeekRange,
+  isoDateMondayOfWeek,
+  slotVisibleOnCalendarDay,
+} from '../../../../shared/utils/schedule-week-dates';
 
 @Component({
   selector: 'app-school-schedule-page',
@@ -48,6 +55,8 @@ export class SchoolSchedulePageComponent implements OnInit {
   editingSlot = signal<ScheduleSlot | null>(null);
   /** Preset group when opening "Add lesson" from a class section. */
   defaultGroupForModal = signal<string | null>(null);
+  /** Monday (`yyyy-MM-dd`) of the week shown per class; independent navigation. */
+  weekStartMondayByGroup = signal<Record<string, string>>({});
 
   get adminDisplayName(): string {
     const u = this.auth.currentUser();
@@ -90,6 +99,12 @@ export class SchoolSchedulePageComponent implements OnInit {
         this.teachers = teachers;
         this.subjects = subjects;
         this.slots.set(schedule);
+        const mon = isoDateMondayOfWeek(new Date());
+        const weekAnchors: Record<string, string> = {};
+        for (const g of this.groups) {
+          weekAnchors[g.id] = mon;
+        }
+        this.weekStartMondayByGroup.set(weekAnchors);
         const echoed = normalizeSchoolId(dash.schoolId);
         if (echoed) {
           this.schoolId = echoed;
@@ -136,8 +151,30 @@ export class SchoolSchedulePageComponent implements OnInit {
     );
   }
 
-  slotsForGroup(groupId: string): ScheduleSlot[] {
-    return this.slots().filter((s) => s.groupId === groupId);
+  weekMondayFor(groupId: string): string {
+    return (
+      this.weekStartMondayByGroup()[groupId] ?? isoDateMondayOfWeek(new Date())
+    );
+  }
+
+  weekRangeLabel(groupId: string): string {
+    return formatWeekRange(this.weekMondayFor(groupId));
+  }
+
+  shiftWeek(groupId: string, deltaWeeks: number): void {
+    const cur = this.weekMondayFor(groupId);
+    const next = addWeeksIso(cur, deltaWeeks);
+    this.weekStartMondayByGroup.update((m) => ({ ...m, [groupId]: next }));
+  }
+
+  /** Slots for this class that apply to at least one day in the selected calendar week. */
+  slotsForGroupAndWeek(groupId: string, weekMondayIso: string): ScheduleSlot[] {
+    return this.slots()
+      .filter((s) => s.groupId === groupId)
+      .filter((s) => {
+        const dayIso = calendarDayInSchoolWeek(weekMondayIso, s.dayOfWeek);
+        return slotVisibleOnCalendarDay(s.validFrom, s.validUntil, dayIso);
+      });
   }
 
   onSubmit(payload: UpsertSchedulePayload): void {

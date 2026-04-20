@@ -135,13 +135,21 @@ export class UpsertScheduleModalComponent implements OnChanges {
   }
 
   private buildSubjectsForTeacher(teacher: SchoolTeacher): SchoolSubject[] {
-    const titles = new Set(
-      teacher.subjectTitles.map((x) => x.trim().toLowerCase()).filter((x) => x.length > 0)
-    );
-    let list =
-      titles.size === 0
-        ? []
-        : this.subjects.filter((s) => titles.has(s.title.trim().toLowerCase()));
+    const ids = new Set((teacher.subjectIds ?? []).filter((id) => !!id?.trim()));
+    let list: SchoolSubject[];
+    if (ids.size > 0) {
+      list = this.subjects.filter((s) => ids.has(s.id));
+    } else {
+      const titles = new Set(
+        (teacher.subjectTitles ?? [])
+          .map((x) => x.trim().toLowerCase())
+          .filter((x) => x.length > 0)
+      );
+      list =
+        titles.size === 0
+          ? []
+          : this.subjects.filter((s) => titles.has(s.title.trim().toLowerCase()));
+    }
     const editId = this.editSlot?.subjectId?.trim();
     if (editId) {
       const cur = this.subjects.find((s) => s.id === editId);

@@ -11,7 +11,13 @@
       <p
         class="mb-2 border-b border-slate-100 pb-1 text-center text-xs font-bold uppercase tracking-wide text-slate-500"
       >
-        {{ d.short }}
+        <span class="block">{{ d.short }}</span>
+        @if (weekStartMonday && headerDateLabel(d.value)) {
+          <span
+            class="mt-0.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400"
+            >{{ headerDateLabel(d.value) }}</span
+          >
+        }
       </p>
       <div class="flex flex-1 flex-col gap-2">
         @for (slot of slotsForDay(d.value); track slot.id) {

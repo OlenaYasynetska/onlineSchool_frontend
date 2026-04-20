@@ -1,6 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import type { ScheduleSlot } from '../../../features/school-admin/models/schedule-slot.model';
+import {
+  calendarDayInSchoolWeek,
+  formatShortDayDate,
+} from '../../utils/schedule-week-dates';
 
 const DAY_META: { value: number; short: string }[] = [
   { value: 1, short: 'Mon' },
@@ -23,11 +27,22 @@ export class ScheduleWeekGridComponent {
   @Input() readOnly = true;
   /** When true, hides the class/group line (e.g. per-group schedule view). */
   @Input() hideGroupName = false;
+  /**
+   * Monday of the displayed week (`yyyy-MM-dd`). When set, column headers show that week's dates.
+   * Teacher/student views omit this.
+   */
+  @Input() weekStartMonday: string | null = null;
 
   @Output() readonly editSlot = new EventEmitter<ScheduleSlot>();
   @Output() readonly deleteSlot = new EventEmitter<ScheduleSlot>();
 
   readonly days = DAY_META;
+
+  headerDateLabel(dayOfWeek: number): string {
+    if (!this.weekStartMonday?.trim()) return '';
+    const iso = calendarDayInSchoolWeek(this.weekStartMonday.trim(), dayOfWeek);
+    return formatShortDayDate(iso);
+  }
 
   slotsForDay(d: number): ScheduleSlot[] {
     return this.slots

@@ -113,6 +113,47 @@ export class UpsertScheduleModalComponent implements OnChanges {
     return this.groups[0]?.id ?? '';
   }
 
+  /**
+   * Предмети з каталогу школи, які призначені обраному викладачу (`subjectTitles` з API).
+   * У режимі редагування поточний предмет слота додається, якщо його немає в списку (рідкісна неконсистентність даних).
+   */
+  subjectsForSelectedTeacher(): SchoolSubject[] {
+    const tid = this.form.teacherId?.trim();
+    const teacher = tid ? this.teachers.find((t) => t.id === tid) : undefined;
+    if (!teacher) return [];
+    return this.buildSubjectsForTeacher(teacher);
+  }
+
+  onTeacherChange(teacherId: string): void {
+    const teacher = this.teachers.find((t) => t.id === teacherId);
+    if (!teacher) return;
+    const allowed = this.buildSubjectsForTeacher(teacher);
+    const sid = this.form.subjectId?.trim();
+    if (sid && !allowed.some((s) => s.id === sid)) {
+      this.form.subjectId = '';
+    }
+  }
+
+  private buildSubjectsForTeacher(teacher: SchoolTeacher): SchoolSubject[] {
+    const titles = new Set(
+      teacher.subjectTitles.map((x) => x.trim().toLowerCase()).filter((x) => x.length > 0)
+    );
+    let list =
+      titles.size === 0
+        ? []
+        : this.subjects.filter((s) => titles.has(s.title.trim().toLowerCase()));
+    const editId = this.editSlot?.subjectId?.trim();
+    if (editId) {
+      const cur = this.subjects.find((s) => s.id === editId);
+      if (cur && !list.some((s) => s.id === cur.id)) {
+        list = [...list, cur];
+      }
+    }
+    return [...list].sort((a, b) =>
+      a.title.localeCompare(b.title, undefined, { sensitivity: 'base' })
+    );
+  }
+
   /** Бекенд може повертати `9:00:00` — для input type=time потрібно `HH:mm`. */
   private normalizeTimeForInput(t: string): string {
     const s = t.trim();

@@ -8,6 +8,10 @@ import type {
   SchoolSubject,
   SchoolTeacher,
 } from '../../models/school-admin-dashboard.model';
+
+type SchedulePageSection =
+  | { kind: 'group'; group: SchoolGroupCard }
+  | { kind: 'teacherWorkload' };
 import { SchoolAdminDashboardService } from '../../services/school-admin-dashboard.service';
 import { SchoolScheduleService } from '../../services/school-schedule.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -57,6 +61,12 @@ export class SchoolSchedulePageComponent implements OnInit {
   defaultGroupForModal = signal<string | null>(null);
   /** Monday (`yyyy-MM-dd`) of the week shown per class; independent navigation. */
   weekStartMondayByGroup = signal<Record<string, string>>({});
+  /** Week for the teacher workload panel (separate from class sections). */
+  weekStartTeacherPanel = signal<string>('');
+  /** Selected teacher id for workload view; empty = empty grid. */
+  teacherFilterId = signal<string>('');
+
+  private static readonly RE_APP_ENTWICKLUNG = /app\s+entwicklung/i;
 
   get adminDisplayName(): string {
     const u = this.auth.currentUser();
@@ -105,6 +115,8 @@ export class SchoolSchedulePageComponent implements OnInit {
           weekAnchors[g.id] = mon;
         }
         this.weekStartMondayByGroup.set(weekAnchors);
+        this.weekStartTeacherPanel.set(mon);
+        this.teacherFilterId.set('');
         const echoed = normalizeSchoolId(dash.schoolId);
         if (echoed) {
           this.schoolId = echoed;
@@ -149,6 +161,87 @@ export class SchoolSchedulePageComponent implements OnInit {
     return [...this.groups].sort((a, b) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
     );
+  }
+
+  /**
+   * Renders class sections and inserts the teacher workload block before
+   * "App Entwicklung …" when present, else after "5B", else at the end.
+   */
+  scheduleSections(): SchedulePageSection[] {
+    const sorted = this.sortedGroups();
+    const insertAt = this.computeTeacherPanelInsertIndex(sorted);
+    const out: SchedulePageSection[] = [];
+    let inserted = false;
+    for (let i = 0; i < sorted.length; i++) {
+      if (i === insertAt && !inserted) {
+        out.push({ kind: 'teacherWorkload' });
+        inserted = true;
+      }
+      out.push({ kind: 'group', group: sorted[i] });
+    }
+    if (!inserted) {
+      out.push({ kind: 'teacherWorkload' });
+    }
+    return out;
+  }
+
+  sectionTrack(section: SchedulePageSection): string {
+    return section.kind === 'group' ? section.group.id : 'teacher-workload';
+  }
+
+  private computeTeacherPanelInsertIndex(sorted: SchoolGroupCard[]): number {
+    const clubIdx = sorted.findIndex(
+      (g) =>
+        SchoolSchedulePageComponent.RE_APP_ENTWICKLUNG.test(g.name.trim()) ||
+        SchoolSchedulePageComponent.RE_APP_ENTWICKLUNG.test(g.code?.trim() ?? '')
+    );
+    if (clubIdx >= 0) {
+      return clubIdx;
+    }
+    const b5Idx = sorted.findIndex(
+      (g) =>
+        g.name.trim() === '5B' ||
+        g.code?.trim() === '5B' ||
+        /^5B\b/i.test(g.name.trim())
+    );
+    if (b5Idx >= 0) {
+      return b5Idx + 1;
+    }
+    return sorted.length;
+  }
+
+  onTeacherFilterChange(event: Event): void {
+    const v = (event.target as HTMLSelectElement).value;
+    this.teacherFilterId.set(v);
+  }
+
+  weekMondayTeacherPanel(): string {
+    const w = this.weekStartTeacherPanel();
+    return w || isoDateMondayOfWeek(new Date());
+  }
+
+  teacherWeekRangeLabel(): string {
+    return formatWeekRange(this.weekMondayTeacherPanel());
+  }
+
+  shiftTeacherWeek(deltaWeeks: number): void {
+    const cur = this.weekMondayTeacherPanel();
+    this.weekStartTeacherPanel.set(addWeeksIso(cur, deltaWeeks));
+  }
+
+  /** All slots for the selected teacher in the visible week (or empty if none selected). */
+  slotsForTeacherWeek(): ScheduleSlot[] {
+    const tid = this.teacherFilterId().trim();
+    if (!tid) {
+      return [];
+    }
+    const weekIso = this.weekMondayTeacherPanel();
+    return this.slots()
+      .filter((s) => s.teacherId === tid)
+      .filter((s) => {
+        const dayIso = calendarDayInSchoolWeek(weekIso, s.dayOfWeek);
+        return slotVisibleOnCalendarDay(s.validFrom, s.validUntil, dayIso);
+      });
   }
 
   weekMondayFor(groupId: string): string {

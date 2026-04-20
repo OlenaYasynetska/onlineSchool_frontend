@@ -34,69 +34,152 @@
           </div>
         } @else {
           <div class="space-y-8">
-            @for (g of sortedGroups(); track g.id) {
-              <section
-                class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
-              >
-                <div
-                  class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <h2 class="text-lg font-semibold text-slate-900">
-                    {{ g.name }}
-                    @if (g.code) {
-                      <span class="font-normal text-slate-500">({{ g.code }})</span>
-                    }
-                  </h2>
-                  <button
-                    type="button"
-                    (click)="openCreate(g.id)"
-                    class="inline-flex shrink-0 items-center justify-center rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+            @for (section of scheduleSections(); track sectionTrack(section)) {
+              @switch (section.kind) {
+                @case ('group') {
+                  <section
+                    class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
                   >
-                    <img
-                      src="/assets/icons/about/tabler-icon-text-plus.svg"
-                      class="mr-2 inline-block h-5 w-5"
-                      alt=""
-                      aria-hidden="true"
-                    />
-                    Add lesson
-                  </button>
-                </div>
-                <div
-                  class="flex flex-wrap items-center justify-center gap-2 border-b border-slate-100 bg-white px-4 py-2.5"
-                >
-                  <button
-                    type="button"
-                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
-                    (click)="shiftWeek(g.id, -1)"
-                    aria-label="Previous week"
+                    <div
+                      class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <h2 class="text-lg font-semibold text-slate-900">
+                        {{ section.group.name }}
+                        @if (section.group.code) {
+                          <span class="font-normal text-slate-500"
+                            >({{ section.group.code }})</span
+                          >
+                        }
+                      </h2>
+                      <button
+                        type="button"
+                        (click)="openCreate(section.group.id)"
+                        class="inline-flex shrink-0 items-center justify-center rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+                      >
+                        <img
+                          src="/assets/icons/about/tabler-icon-text-plus.svg"
+                          class="mr-2 inline-block h-5 w-5"
+                          alt=""
+                          aria-hidden="true"
+                        />
+                        Add lesson
+                      </button>
+                    </div>
+                    <div
+                      class="flex flex-wrap items-center justify-center gap-2 border-b border-slate-100 bg-white px-4 py-2.5"
+                    >
+                      <button
+                        type="button"
+                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
+                        (click)="shiftWeek(section.group.id, -1)"
+                        aria-label="Previous week"
+                      >
+                        ←
+                      </button>
+                      <span
+                        class="min-w-[min(100%,14rem)] flex-1 text-center text-sm font-medium text-slate-800"
+                      >
+                        {{ weekRangeLabel(section.group.id) }}
+                      </span>
+                      <button
+                        type="button"
+                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
+                        (click)="shiftWeek(section.group.id, 1)"
+                        aria-label="Next week"
+                      >
+                        →
+                      </button>
+                    </div>
+                    <div class="p-3 sm:p-4">
+                      <app-schedule-week-grid
+                        [slots]="
+                          slotsForGroupAndWeek(
+                            section.group.id,
+                            weekMondayFor(section.group.id)
+                          )
+                        "
+                        [weekStartMonday]="weekMondayFor(section.group.id)"
+                        [readOnly]="false"
+                        [hideGroupName]="true"
+                        (editSlot)="openEdit($event)"
+                        (deleteSlot)="onDelete($event)"
+                      />
+                    </div>
+                  </section>
+                }
+                @case ('teacherWorkload') {
+                  <section
+                    class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
                   >
-                    ←
-                  </button>
-                  <span
-                    class="min-w-[min(100%,14rem)] flex-1 text-center text-sm font-medium text-slate-800"
-                  >
-                    {{ weekRangeLabel(g.id) }}
-                  </span>
-                  <button
-                    type="button"
-                    class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
-                    (click)="shiftWeek(g.id, 1)"
-                    aria-label="Next week"
-                  >
-                    →
-                  </button>
-                </div>
-                <div class="p-3 sm:p-4">
-                  <app-schedule-week-grid
-                    [slots]="slotsForGroupAndWeek(g.id, weekMondayFor(g.id))"
-                    [weekStartMonday]="weekMondayFor(g.id)"
-                    [readOnly]="false"
-                    [hideGroupName]="true"
-                    (editSlot)="openEdit($event)"
-                    (deleteSlot)="onDelete($event)"
-                  />
-                </div>
-              </section>
+                    <div
+                      class="flex flex-col gap-3 border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div class="min-w-0">
+                        <h2 class="text-lg font-semibold text-slate-900">
+                          Teacher workload
+                        </h2>
+                        <p class="mt-0.5 text-sm text-slate-600">
+                          Pick a teacher to see their lessons across all classes
+                          for the week.
+                        </p>
+                      </div>
+                      <div class="w-full min-w-0 sm:max-w-xs">
+                        <label
+                          class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                          for="teacher-workload-filter"
+                          >Teacher</label
+                        >
+                        <select
+                          id="teacher-workload-filter"
+                          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+                          [value]="teacherFilterId()"
+                          (change)="onTeacherFilterChange($event)"
+                        >
+                          <option value="">— None —</option>
+                          @for (t of teachers; track t.id) {
+                            <option [value]="t.id">{{ t.displayName }}</option>
+                          }
+                        </select>
+                      </div>
+                    </div>
+                    <div
+                      class="flex flex-wrap items-center justify-center gap-2 border-b border-slate-100 bg-white px-4 py-2.5"
+                    >
+                      <button
+                        type="button"
+                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
+                        (click)="shiftTeacherWeek(-1)"
+                        aria-label="Previous week"
+                      >
+                        ←
+                      </button>
+                      <span
+                        class="min-w-[min(100%,14rem)] flex-1 text-center text-sm font-medium text-slate-800"
+                      >
+                        {{ teacherWeekRangeLabel() }}
+                      </span>
+                      <button
+                        type="button"
+                        class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
+                        (click)="shiftTeacherWeek(1)"
+                        aria-label="Next week"
+                      >
+                        →
+                      </button>
+                    </div>
+                    <div class="p-3 sm:p-4">
+                      <app-schedule-week-grid
+                        [slots]="slotsForTeacherWeek()"
+                        [weekStartMonday]="weekMondayTeacherPanel()"
+                        [readOnly]="false"
+                        [hideGroupName]="false"
+                        (editSlot)="openEdit($event)"
+                        (deleteSlot)="onDelete($event)"
+                      />
+                    </div>
+                  </section>
+                }
+              }
             }
           </div>
         }

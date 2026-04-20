@@ -1,0 +1,58 @@
+<div
+  class="grid min-w-0 gap-3 lg:grid-cols-7 lg:gap-2"
+  role="list"
+  aria-label="Weekly schedule"
+>
+  @for (d of days; track d.value) {
+    <div
+      class="flex min-w-0 flex-col rounded-xl border border-slate-200 bg-white p-2 shadow-sm"
+      role="listitem"
+    >
+      <p
+        class="mb-2 border-b border-slate-100 pb-1 text-center text-xs font-bold uppercase tracking-wide text-slate-500"
+      >
+        {{ d.short }}
+      </p>
+      <div class="flex flex-1 flex-col gap-2">
+        @for (slot of slotsForDay(d.value); track slot.id) {
+          <div
+            class="rounded-lg border border-violet-100 bg-violet-50/80 px-2 py-1.5 text-left text-xs text-slate-800"
+          >
+            <p class="font-semibold text-violet-900">
+              {{ slot.startTime }}–{{ slot.endTime }}
+            </p>
+            <p class="mt-0.5 font-medium text-slate-800">{{ slot.groupName }}</p>
+            @if (slot.subjectTitle) {
+              <p class="text-[11px] text-slate-600">{{ slot.subjectTitle }}</p>
+            }
+            <p class="text-[11px] text-slate-600">{{ slot.teacherDisplayName }}</p>
+            @if (slot.room) {
+              <p class="text-[11px] text-slate-500">Room: {{ slot.room }}</p>
+            }
+            @if (!readOnly) {
+              <div class="mt-1 flex flex-wrap gap-1">
+                <button
+                  type="button"
+                  class="rounded bg-white/80 px-1.5 py-0.5 text-[11px] font-semibold text-violet-700 ring-1 ring-violet-200 hover:bg-violet-100"
+                  (click)="editSlot.emit(slot)"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  class="rounded bg-white/80 px-1.5 py-0.5 text-[11px] font-semibold text-red-600 ring-1 ring-red-100 hover:bg-red-50"
+                  (click)="deleteSlot.emit(slot)"
+                >
+                  Delete
+                </button>
+              </div>
+            }
+          </div>
+        }
+        @if (slotsForDay(d.value).length === 0) {
+          <p class="py-4 text-center text-[11px] text-slate-400">—</p>
+        }
+      </div>
+    </div>
+  }
+</div>

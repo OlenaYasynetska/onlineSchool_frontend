@@ -15,6 +15,11 @@ const loadHomework = () =>
     (m) => m.StudentHomeworkPageComponent
   );
 
+const loadStudentSchedulePage = () =>
+  import('./pages/student-schedule-page/student-schedule-page.component').then(
+    (m) => m.StudentSchedulePageComponent
+  );
+
 export const STUDENT_DASHBOARD_ROUTES: Routes = [
   {
     path: '',
@@ -23,7 +28,7 @@ export const STUDENT_DASHBOARD_ROUTES: Routes = [
       { path: '', loadComponent: loadPage },
       { path: 'group-stats', loadComponent: loadPage },
       { path: 'groups', loadComponent: loadPage },
-      { path: 'schedule', loadComponent: loadPage },
+      { path: 'schedule', loadComponent: loadStudentSchedulePage },
       { path: 'homework', loadComponent: loadHomework },
     ],
   },

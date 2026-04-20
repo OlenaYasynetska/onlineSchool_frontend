@@ -1,0 +1,212 @@
+@if (open) {
+  <div
+    class="fixed inset-0 z-[100] isolate flex items-center justify-center overflow-hidden bg-slate-900/50 p-3 sm:p-4"
+    role="dialog"
+    aria-modal="true"
+    (click)="$event.stopPropagation()"
+  >
+    <div
+      class="relative z-10 max-h-[90vh] w-full max-w-[560px] overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-slate-200"
+    >
+      <div class="mb-4 flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h1 class="text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
+            {{ editSlot ? 'Edit lesson' : 'Add lesson' }}
+          </h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Set day, time, group, and teacher for this slot.
+          </p>
+        </div>
+        <button
+          type="button"
+          class="rounded-lg bg-slate-100 px-2.5 py-2 text-slate-600 transition hover:bg-slate-200"
+          (click)="closeRequested.emit()"
+          aria-label="Close"
+        >
+          <span class="block text-xl leading-none">&times;</span>
+        </button>
+      </div>
+
+      <form (ngSubmit)="submit()" class="space-y-4">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-group"
+              >Group</label
+            >
+            <select
+              id="sch-group"
+              name="groupId"
+              [(ngModel)]="form.groupId"
+              required
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            >
+              @for (g of groups; track g.id) {
+                <option [ngValue]="g.id">{{ g.name }} ({{ g.code }})</option>
+              }
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-teacher"
+              >Teacher</label
+            >
+            <select
+              id="sch-teacher"
+              name="teacherId"
+              [(ngModel)]="form.teacherId"
+              required
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            >
+              @for (t of teachers; track t.id) {
+                <option [ngValue]="t.id">{{ t.displayName }}</option>
+              }
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-subject"
+              >Subject (optional)</label
+            >
+            <select
+              id="sch-subject"
+              name="subjectId"
+              [(ngModel)]="form.subjectId"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            >
+              <option value="">— From group / not set —</option>
+              @for (s of subjects; track s.id) {
+                <option [ngValue]="s.id">{{ s.title }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-day"
+              >Day</label
+            >
+            <select
+              id="sch-day"
+              name="dayOfWeek"
+              [(ngModel)]="form.dayOfWeek"
+              required
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            >
+              @for (d of dayOptions; track d.value) {
+                <option [ngValue]="d.value">{{ d.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label
+                class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                for="sch-start"
+                >Start</label
+              >
+              <input
+                id="sch-start"
+                name="startTime"
+                type="time"
+                [(ngModel)]="form.startTime"
+                required
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              />
+            </div>
+            <div>
+              <label
+                class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+                for="sch-end"
+                >End</label
+              >
+              <input
+                id="sch-end"
+                name="endTime"
+                type="time"
+                [(ngModel)]="form.endTime"
+                required
+                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-vf"
+              >Valid from (optional)</label
+            >
+            <input
+              id="sch-vf"
+              name="validFrom"
+              type="date"
+              [(ngModel)]="form.validFrom"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            />
+          </div>
+          <div>
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-vu"
+              >Valid until (optional)</label
+            >
+            <input
+              id="sch-vu"
+              name="validUntil"
+              type="date"
+              [(ngModel)]="form.validUntil"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-room"
+              >Room (optional)</label
+            >
+            <input
+              id="sch-room"
+              name="room"
+              type="text"
+              [(ngModel)]="form.room"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <label
+              class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
+              for="sch-notes"
+              >Notes (optional)</label
+            >
+            <textarea
+              id="sch-notes"
+              name="notes"
+              rows="2"
+              [(ngModel)]="form.notes"
+              class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
+          <button
+            type="button"
+            class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            (click)="closeRequested.emit()"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+          >
+            {{ editSlot ? 'Save' : 'Create' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

@@ -1,0 +1,64 @@
+<div id="school-admin-schedule" class="scroll-mt-6 w-full min-w-0 max-w-full">
+  <div
+    class="min-h-0 min-w-0 space-y-6 bg-slate-100/80 px-4 pb-8 pt-6 sm:px-6 lg:px-8"
+  >
+    @if (loading) {
+      <p class="text-sm text-slate-600">Loading schedule...</p>
+    }
+    @if (!loading && noSchoolAssigned) {
+      <div
+        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        role="status"
+      >
+        Your account is not linked to a school. Contact support.
+      </div>
+    }
+    @if (!loading && !noSchoolAssigned) {
+      <div class="space-y-4">
+        <div
+          class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900">
+              Class schedule · {{ adminDisplayName }}
+            </h1>
+            <p class="mt-1 text-sm text-slate-600">
+              Create and manage weekly lesson slots for your school.
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="openCreate()"
+            class="inline-flex items-center rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2"
+          >
+            <img
+              src="/assets/icons/about/tabler-icon-text-plus.svg"
+              class="mr-2 inline-block h-6 w-6"
+              alt=""
+              aria-hidden="true"
+            />
+            Add lesson
+          </button>
+        </div>
+
+        <app-schedule-week-grid
+          [slots]="slots()"
+          [readOnly]="false"
+          (editSlot)="openEdit($event)"
+          (deleteSlot)="onDelete($event)"
+        />
+      </div>
+    }
+  </div>
+</div>
+
+<app-upsert-schedule-modal
+  [open]="modalOpen()"
+  [schoolId]="schoolId"
+  [groups]="groups"
+  [teachers]="teachers"
+  [subjects]="subjects"
+  [editSlot]="editingSlot()"
+  (closeRequested)="closeModal()"
+  (submitted)="onSubmit($event)"
+/>

@@ -25,6 +25,11 @@ const loadGroupStats = () =>
     (m) => m.TeacherGroupStatsPageComponent
   );
 
+const loadTeacherSchedulePage = () =>
+  import('./pages/teacher-schedule-page/teacher-schedule-page.component').then(
+    (m) => m.TeacherSchedulePageComponent
+  );
+
 export const TEACHER_DASHBOARD_ROUTES: Routes = [
   {
     path: '',
@@ -37,6 +42,7 @@ export const TEACHER_DASHBOARD_ROUTES: Routes = [
       { path: 'homework', loadComponent: loadHomework },
       { path: 'activity', loadComponent: loadPage },
       { path: 'group-stats', loadComponent: loadGroupStats },
+      { path: 'schedule', loadComponent: loadTeacherSchedulePage },
     ],
   },
 ];

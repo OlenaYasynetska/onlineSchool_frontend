@@ -13,7 +13,8 @@ export type SidebarNavIcon =
   | 'envelope'
   | 'building'
   | 'clipboard'
-  | 'lineChart';
+  | 'lineChart'
+  | 'calendar';
 
 export type CompactNavItem = {
   path: string;
@@ -75,6 +76,12 @@ export class SidebarComponent implements OnInit {
       fragment: 'teacher-my-groups',
     },
     {
+      path: '/teacher/schedule',
+      label: 'Schedule',
+      icon: 'calendar',
+      fragment: 'teacher-schedule',
+    },
+    {
       path: '/teacher/students',
       label: 'Students',
       icon: 'graduate',
@@ -107,6 +114,12 @@ export class SidebarComponent implements OnInit {
       exact: true,
       icon: 'home',
       fragment: 'school-admin-top',
+    },
+    {
+      path: '/school-admin/schedule',
+      label: 'Schedule',
+      icon: 'calendar',
+      fragment: 'school-admin-schedule',
     },
     {
       path: '/school-admin/groups',
@@ -159,6 +172,12 @@ export class SidebarComponent implements OnInit {
       exact: true,
       icon: 'home',
       fragment: 'student-top',
+    },
+    {
+      path: '/student/schedule',
+      label: 'Schedule',
+      icon: 'calendar',
+      fragment: 'student-schedule',
     },
     {
       path: '/student/homework',

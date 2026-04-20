@@ -163,6 +163,16 @@ export function useSchoolAdminQuickActions(
     /* placeholder */
   }
 
+  function addSchedule(): void {
+    addGroupOpen.set(false);
+    addGroupSuccessOpen.set(false);
+    editGroupOpen.set(false);
+    selectedEditGroup.set(null);
+    addTeacherOpen.set(false);
+    addStudentOpen.set(false);
+    void router.navigate(['/school-admin/schedule'], { queryParams: { new: '1' } });
+  }
+
   function addStudent(): void {
     addGroupOpen.set(false);
     addGroupSuccessOpen.set(false);
@@ -358,6 +368,7 @@ export function useSchoolAdminQuickActions(
     addGroup,
     addTeacher,
     addEmployeer,
+    addSchedule,
     addStudent,
 
     addTeacherOpen,

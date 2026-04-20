@@ -1,0 +1,38 @@
+<div id="teacher-schedule" class="scroll-mt-6 w-full min-w-0 max-w-full">
+  <div
+    class="min-h-0 min-w-0 space-y-6 bg-slate-100/80 px-4 pb-8 pt-6 sm:px-6 lg:px-8"
+  >
+    @if (loading) {
+      <p class="text-sm text-slate-600">Loading schedule...</p>
+    }
+    @if (!loading && noProfile) {
+      <div
+        class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        role="status"
+      >
+        No teacher profile is linked to this account. Contact your school admin.
+      </div>
+    }
+    @if (!loading && error) {
+      <div
+        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+        role="alert"
+      >
+        {{ error }}
+      </div>
+    }
+    @if (!loading && !noProfile && !error) {
+      <div class="space-y-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">
+            My schedule · {{ displayName }}
+          </h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Weekly lesson slots for your groups (read-only).
+          </p>
+        </div>
+        <app-schedule-week-grid [slots]="slots()" [readOnly]="true" />
+      </div>
+    }
+  </div>
+</div>

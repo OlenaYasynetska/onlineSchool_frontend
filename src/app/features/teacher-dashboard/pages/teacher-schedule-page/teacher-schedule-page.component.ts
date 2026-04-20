@@ -5,6 +5,13 @@ import { ScheduleReadService } from '../../../school-admin/services/schedule-rea
 import type { ScheduleSlot } from '../../../school-admin/models/schedule-slot.model';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ScheduleWeekGridComponent } from '../../../../shared/components/schedule-week-grid/schedule-week-grid.component';
+import {
+  addWeeksIso,
+  calendarDayInSchoolWeek,
+  formatWeekRange,
+  isoDateMondayOfWeek,
+  slotVisibleOnCalendarDay,
+} from '../../../../shared/utils/schedule-week-dates';
 
 @Component({
   selector: 'app-teacher-schedule-page',
@@ -20,6 +27,8 @@ export class TeacherSchedulePageComponent implements OnInit {
   noProfile = false;
   error: string | null = null;
   slots = signal<ScheduleSlot[]>([]);
+  /** Monday (`yyyy-MM-dd`) of the week shown in the grid. */
+  weekStartTeacher = signal<string>(isoDateMondayOfWeek(new Date()));
 
   get displayName(): string {
     const u = this.auth.currentUser();
@@ -49,5 +58,28 @@ export class TeacherSchedulePageComponent implements OnInit {
         }
       },
     });
+  }
+
+  weekMondayFor(): string {
+    return this.weekStartTeacher() || isoDateMondayOfWeek(new Date());
+  }
+
+  weekRangeLabel(): string {
+    return formatWeekRange(this.weekMondayFor());
+  }
+
+  shiftWeek(deltaWeeks: number): void {
+    const cur = this.weekMondayFor();
+    this.weekStartTeacher.set(addWeeksIso(cur, deltaWeeks));
+  }
+
+  /** Lessons visible for the selected calendar week (validity range). */
+  slotsForWeek(): ScheduleSlot[] {
+    const weekIso = this.weekMondayFor();
+    return this.slots()
+      .filter((s) => {
+        const dayIso = calendarDayInSchoolWeek(weekIso, s.dayOfWeek);
+        return slotVisibleOnCalendarDay(s.validFrom, s.validUntil, dayIso);
+      });
   }
 }

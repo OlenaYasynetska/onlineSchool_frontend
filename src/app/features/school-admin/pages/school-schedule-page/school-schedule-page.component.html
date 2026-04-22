@@ -101,6 +101,7 @@
                         [weekStartMonday]="weekMondayFor(section.group.id)"
                         [readOnly]="false"
                         [hideGroupName]="true"
+                        [highlightedSlotIds]="modalConflictSlotIds()"
                         (editSlot)="openEdit($event)"
                         (deleteSlot)="onDelete($event)"
                       />
@@ -173,6 +174,7 @@
                         [weekStartMonday]="weekMondayTeacherPanel()"
                         [readOnly]="false"
                         [hideGroupName]="false"
+                        [highlightedSlotIds]="modalConflictSlotIds()"
                         (editSlot)="openEdit($event)"
                         (deleteSlot)="onDelete($event)"
                       />
@@ -196,6 +198,8 @@
   [subjects]="subjects"
   [editSlot]="editingSlot()"
   [defaultGroupId]="defaultGroupForModal()"
+  [existingSlots]="slots()"
   (closeRequested)="closeModal()"
   (submitted)="onSubmit($event)"
+  (teacherConflictSlotIdsChange)="onModalTeacherConflictSlotIds($event)"
 />

@@ -65,6 +65,8 @@ export class SchoolSchedulePageComponent implements OnInit {
   weekStartTeacherPanel = signal<string>('');
   /** Selected teacher id for workload view; empty = empty grid. */
   teacherFilterId = signal<string>('');
+  /** Outlined in week grids while the modal detects a teacher/time overlap. */
+  modalConflictSlotIds = signal<ReadonlySet<string>>(new Set());
 
   private static readonly RE_APP_ENTWICKLUNG = /app\s+entwicklung/i;
 
@@ -155,6 +157,11 @@ export class SchoolSchedulePageComponent implements OnInit {
     this.modalOpen.set(false);
     this.editingSlot.set(null);
     this.defaultGroupForModal.set(null);
+    this.modalConflictSlotIds.set(new Set());
+  }
+
+  onModalTeacherConflictSlotIds(ids: string[]): void {
+    this.modalConflictSlotIds.set(new Set(ids));
   }
 
   sortedGroups(): SchoolGroupCard[] {

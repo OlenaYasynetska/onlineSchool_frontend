@@ -22,7 +22,11 @@
       <div class="flex flex-1 flex-col gap-2">
         @for (slot of slotsForDay(d.value); track slot.id) {
           <div
-            class="rounded-lg border border-violet-100 bg-violet-50/80 px-2 py-1.5 text-left text-xs text-slate-800"
+            [ngClass]="
+              slotIsConflictHighlighted(slot)
+                ? 'rounded-lg border border-red-300 bg-red-50 px-2 py-1.5 text-left text-xs text-slate-800 ring-2 ring-red-400 transition-colors'
+                : 'rounded-lg border border-violet-100 bg-violet-50/80 px-2 py-1.5 text-left text-xs text-slate-800 transition-colors'
+            "
           >
             <p class="font-semibold text-violet-900">
               {{ slot.startTime }}–{{ slot.endTime }}

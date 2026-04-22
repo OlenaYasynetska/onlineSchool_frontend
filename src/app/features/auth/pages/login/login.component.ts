@@ -158,14 +158,16 @@ export class LoginComponent implements OnInit, OnDestroy {
   onSubmit(): void {
     if (this.form.invalid) return;
     this.loginError.set(null);
-    const { roleIdentifier, password } = this.form.getRawValue();
-    if (this.auth.loginAsSuperAdminIfValid(roleIdentifier, password)) {
+    const raw = this.form.getRawValue();
+    const email = raw.roleIdentifier.trim();
+    const password = (raw.password ?? '').trim();
+    if (this.auth.loginAsSuperAdminIfValid(email, password)) {
       void this.router.navigate(['/super-admin']);
       return;
     }
     this.loading.set(true);
     this.auth
-      .login({ email: roleIdentifier.trim(), password })
+      .login({ email, password })
       .subscribe({
         next: () => {
           this.loading.set(false);

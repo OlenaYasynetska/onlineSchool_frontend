@@ -14,6 +14,7 @@ import type {
   SchoolSubject,
   SchoolTeacher,
 } from '../../models/school-admin-dashboard.model';
+import { findTeacherScheduleConflicts } from '../../utils/schedule-teacher-conflict.util';
 
 export type { UpsertSchedulePayload };
 
@@ -43,11 +44,17 @@ export class UpsertScheduleModalComponent implements OnChanges {
   @Input() editSlot: ScheduleSlot | null = null;
   /** Для створення: попередньо обрати клас/групу (якщо id є в `groups`). */
   @Input() defaultGroupId: string | null = null;
+  /** Усі слоти школи для перевірки подвійного навантаження на одного вчителя. */
+  @Input() existingSlots: ScheduleSlot[] = [];
 
   @Output() readonly closeRequested = new EventEmitter<void>();
   @Output() readonly submitted = new EventEmitter<UpsertSchedulePayload>();
+  /** Id слотів, що перетинаються з чернеткою (для підсвітки в сітці). */
+  @Output() readonly teacherConflictSlotIdsChange = new EventEmitter<string[]>();
 
   readonly dayOptions = DAYS;
+
+  private lastConflictIdsKey = '';
 
   form = {
     groupId: '',
@@ -63,6 +70,11 @@ export class UpsertScheduleModalComponent implements OnChanges {
   };
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['open'] && !this.open) {
+      this.lastConflictIdsKey = '';
+      this.teacherConflictSlotIdsChange.emit([]);
+      return;
+    }
     if (!this.open) return;
 
     if (this.editSlot) {
@@ -80,6 +92,7 @@ export class UpsertScheduleModalComponent implements OnChanges {
           notes: s.notes ?? '',
           room: s.room ?? '',
         };
+        this.emitTeacherConflicts();
       }
     } else if (
       changes['open']?.currentValue ||
@@ -89,6 +102,11 @@ export class UpsertScheduleModalComponent implements OnChanges {
       changes['defaultGroupId']
     ) {
       this.resetForm();
+      this.emitTeacherConflicts();
+    }
+
+    if (this.open && changes['existingSlots']) {
+      this.emitTeacherConflicts();
     }
   }
 
@@ -132,6 +150,36 @@ export class UpsertScheduleModalComponent implements OnChanges {
     if (sid && !allowed.some((s) => s.id === sid)) {
       this.form.subjectId = '';
     }
+    this.emitTeacherConflicts();
+  }
+
+  onConflictRelevantFieldChange(): void {
+    this.emitTeacherConflicts();
+  }
+
+  teacherConflictSlots(): ScheduleSlot[] {
+    if (!this.open) return [];
+    return findTeacherScheduleConflicts(
+      {
+        teacherId: this.form.teacherId,
+        dayOfWeek: this.form.dayOfWeek,
+        startTime: this.form.startTime,
+        endTime: this.form.endTime,
+        validFrom: this.form.validFrom?.trim() || null,
+        validUntil: this.form.validUntil?.trim() || null,
+      },
+      this.existingSlots,
+      this.editSlot?.id
+    );
+  }
+
+  private emitTeacherConflicts(): void {
+    if (!this.open) return;
+    const ids = this.teacherConflictSlots().map((s) => s.id);
+    const key = ids.slice().sort().join(',');
+    if (key === this.lastConflictIdsKey) return;
+    this.lastConflictIdsKey = key;
+    this.teacherConflictSlotIdsChange.emit(ids);
   }
 
   private buildSubjectsForTeacher(teacher: SchoolTeacher): SchoolSubject[] {
@@ -173,6 +221,9 @@ export class UpsertScheduleModalComponent implements OnChanges {
   }
 
   submit(): void {
+    if (this.teacherConflictSlots().length > 0) {
+      return;
+    }
     const subjectTrim = this.form.subjectId?.trim();
     this.submitted.emit({
       groupId: this.form.groupId.trim(),

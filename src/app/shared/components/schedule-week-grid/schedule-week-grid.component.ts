@@ -32,6 +32,8 @@ export class ScheduleWeekGridComponent {
    * Teacher/student views omit this.
    */
   @Input() weekStartMonday: string | null = null;
+  /** When the admin modal flags conflicting slots, those cards get a distinct style. */
+  @Input() highlightedSlotIds: ReadonlySet<string> | null = null;
 
   @Output() readonly editSlot = new EventEmitter<ScheduleSlot>();
   @Output() readonly deleteSlot = new EventEmitter<ScheduleSlot>();
@@ -48,5 +50,9 @@ export class ScheduleWeekGridComponent {
     return this.slots
       .filter((s) => s.dayOfWeek === d)
       .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }
+
+  slotIsConflictHighlighted(slot: ScheduleSlot): boolean {
+    return !!this.highlightedSlotIds?.has(slot.id);
   }
 }

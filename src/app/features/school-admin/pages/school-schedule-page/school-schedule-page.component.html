@@ -101,7 +101,7 @@
                         [weekStartMonday]="weekMondayFor(section.group.id)"
                         [readOnly]="false"
                         [hideGroupName]="true"
-                        [highlightedSlotIds]="modalConflictSlotIds()"
+                        [highlightedSlotIds]="scheduleGridHighlightIds()"
                         (editSlot)="openEdit($event)"
                         (deleteSlot)="onDelete($event)"
                       />
@@ -174,7 +174,7 @@
                         [weekStartMonday]="weekMondayTeacherPanel()"
                         [readOnly]="false"
                         [hideGroupName]="false"
-                        [highlightedSlotIds]="modalConflictSlotIds()"
+                        [highlightedSlotIds]="scheduleGridHighlightIds()"
                         (editSlot)="openEdit($event)"
                         (deleteSlot)="onDelete($event)"
                       />
@@ -201,5 +201,5 @@
   [existingSlots]="slots()"
   (closeRequested)="closeModal()"
   (submitted)="onSubmit($event)"
-  (teacherConflictSlotIdsChange)="onModalTeacherConflictSlotIds($event)"
+  (scheduleConflictSlotIdsChange)="onModalScheduleConflictSlotIds($event)"
 />

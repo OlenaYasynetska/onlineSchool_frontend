@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -28,6 +28,7 @@ import {
   isoDateMondayOfWeek,
   slotVisibleOnCalendarDay,
 } from '../../../../shared/utils/schedule-week-dates';
+import { allStoredScheduleConflictSlotIds } from '../../utils/schedule-teacher-conflict.util';
 
 @Component({
   selector: 'app-school-schedule-page',
@@ -67,6 +68,20 @@ export class SchoolSchedulePageComponent implements OnInit {
   teacherFilterId = signal<string>('');
   /** Outlined in week grids while the modal detects a teacher/time overlap. */
   modalConflictSlotIds = signal<ReadonlySet<string>>(new Set());
+
+  /** Overlaps already stored (teacher or class), full school list. */
+  dataConflictSlotIds = computed(() =>
+    allStoredScheduleConflictSlotIds(this.slots())
+  );
+
+  /** Union: persisted problems + current modal draft conflicts. */
+  scheduleGridHighlightIds = computed(() => {
+    const out = new Set(this.dataConflictSlotIds());
+    for (const id of this.modalConflictSlotIds()) {
+      out.add(id);
+    }
+    return out;
+  });
 
   private static readonly RE_APP_ENTWICKLUNG = /app\s+entwicklung/i;
 
@@ -160,7 +175,7 @@ export class SchoolSchedulePageComponent implements OnInit {
     this.modalConflictSlotIds.set(new Set());
   }
 
-  onModalTeacherConflictSlotIds(ids: string[]): void {
+  onModalScheduleConflictSlotIds(ids: string[]): void {
     this.modalConflictSlotIds.set(new Set(ids));
   }
 

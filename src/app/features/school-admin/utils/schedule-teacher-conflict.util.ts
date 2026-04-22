@@ -57,6 +57,15 @@ export interface DraftSlotLike {
   validUntil?: string | null;
 }
 
+export interface GroupDraftLike {
+  groupId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  validFrom?: string | null;
+  validUntil?: string | null;
+}
+
 /** Slots that share teacher, day, overlapping time & validity with the draft (excluding `excludeSlotId`). */
 export function findTeacherScheduleConflicts(
   draft: DraftSlotLike,
@@ -91,4 +100,84 @@ export function findTeacherScheduleConflicts(
     }
     return true;
   });
+}
+
+/** Same class (group) cannot have two lessons at once — different teachers still conflict. */
+export function findGroupScheduleConflicts(
+  draft: GroupDraftLike,
+  existing: readonly ScheduleSlot[],
+  excludeSlotId?: string | null
+): ScheduleSlot[] {
+  const gid = draft.groupId?.trim();
+  if (!gid) return [];
+  return existing.filter((s) => {
+    if (excludeSlotId && s.id === excludeSlotId) return false;
+    if (s.groupId !== gid) return false;
+    if (s.dayOfWeek !== draft.dayOfWeek) return false;
+    if (
+      !scheduleTimeRangesOverlap(
+        s.startTime,
+        s.endTime,
+        draft.startTime,
+        draft.endTime
+      )
+    ) {
+      return false;
+    }
+    if (
+      !scheduleValidityRangesOverlap(
+        s.validFrom,
+        s.validUntil,
+        draft.validFrom,
+        draft.validUntil
+      )
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
+/**
+ * Every slot id that participates in at least one overlap (same teacher OR same group,
+ * same weekday, overlapping time & validity). Used to highlight bad data already in DB.
+ */
+export function allStoredScheduleConflictSlotIds(
+  slots: readonly ScheduleSlot[]
+): Set<string> {
+  const ids = new Set<string>();
+  for (let i = 0; i < slots.length; i++) {
+    for (let j = i + 1; j < slots.length; j++) {
+      const a = slots[i];
+      const b = slots[j];
+      if (a.dayOfWeek !== b.dayOfWeek) continue;
+      if (
+        !scheduleTimeRangesOverlap(
+          a.startTime,
+          a.endTime,
+          b.startTime,
+          b.endTime
+        )
+      ) {
+        continue;
+      }
+      if (
+        !scheduleValidityRangesOverlap(
+          a.validFrom,
+          a.validUntil,
+          b.validFrom,
+          b.validUntil
+        )
+      ) {
+        continue;
+      }
+      const teacherOverlap = a.teacherId === b.teacherId;
+      const groupOverlap = a.groupId === b.groupId;
+      if (teacherOverlap || groupOverlap) {
+        ids.add(a.id);
+        ids.add(b.id);
+      }
+    }
+  }
+  return ids;
 }

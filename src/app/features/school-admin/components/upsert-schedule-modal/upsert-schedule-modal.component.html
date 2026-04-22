@@ -39,6 +39,7 @@
               id="sch-group"
               name="groupId"
               [(ngModel)]="form.groupId"
+              (ngModelChange)="onConflictRelevantFieldChange()"
               required
               class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
             >
@@ -221,6 +222,30 @@
           </div>
         }
 
+        @if (groupConflictSlots().length > 0) {
+          <div
+            class="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-900"
+            role="alert"
+          >
+            <p class="font-semibold">This class already has a lesson at this time.</p>
+            <p class="mt-1 text-xs text-red-800">
+              Two different teachers cannot teach the same group in overlapping slots.
+              Change the time, day, group, or validity dates.
+            </p>
+            <ul class="mt-2 list-inside list-disc space-y-0.5 text-xs text-red-900">
+              @for (c of groupConflictSlots(); track c.id) {
+                <li>
+                  {{ c.startTime }}–{{ c.endTime }}
+                  · {{ c.teacherDisplayName }}
+                  @if (c.subjectTitle) {
+                    · {{ c.subjectTitle }}
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
         <div class="flex flex-wrap justify-end gap-2 border-t border-slate-100 pt-4">
           <button
             type="button"
@@ -231,7 +256,7 @@
           </button>
           <button
             type="submit"
-            [disabled]="teacherConflictSlots().length > 0"
+            [disabled]="hasBlockingConflicts()"
             class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {{ editSlot ? 'Save' : 'Create' }}

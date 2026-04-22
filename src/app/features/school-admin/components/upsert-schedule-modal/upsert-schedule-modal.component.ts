@@ -14,7 +14,10 @@ import type {
   SchoolSubject,
   SchoolTeacher,
 } from '../../models/school-admin-dashboard.model';
-import { findTeacherScheduleConflicts } from '../../utils/schedule-teacher-conflict.util';
+import {
+  findGroupScheduleConflicts,
+  findTeacherScheduleConflicts,
+} from '../../utils/schedule-teacher-conflict.util';
 
 export type { UpsertSchedulePayload };
 
@@ -49,8 +52,8 @@ export class UpsertScheduleModalComponent implements OnChanges {
 
   @Output() readonly closeRequested = new EventEmitter<void>();
   @Output() readonly submitted = new EventEmitter<UpsertSchedulePayload>();
-  /** Id слотів, що перетинаються з чернеткою (для підсвітки в сітці). */
-  @Output() readonly teacherConflictSlotIdsChange = new EventEmitter<string[]>();
+  /** Id слотів, що перетинаються з чернеткою (учитель або клас). */
+  @Output() readonly scheduleConflictSlotIdsChange = new EventEmitter<string[]>();
 
   readonly dayOptions = DAYS;
 
@@ -72,7 +75,7 @@ export class UpsertScheduleModalComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['open'] && !this.open) {
       this.lastConflictIdsKey = '';
-      this.teacherConflictSlotIdsChange.emit([]);
+      this.scheduleConflictSlotIdsChange.emit([]);
       return;
     }
     if (!this.open) return;
@@ -92,7 +95,7 @@ export class UpsertScheduleModalComponent implements OnChanges {
           notes: s.notes ?? '',
           room: s.room ?? '',
         };
-        this.emitTeacherConflicts();
+        this.emitScheduleConflicts();
       }
     } else if (
       changes['open']?.currentValue ||
@@ -102,11 +105,11 @@ export class UpsertScheduleModalComponent implements OnChanges {
       changes['defaultGroupId']
     ) {
       this.resetForm();
-      this.emitTeacherConflicts();
+      this.emitScheduleConflicts();
     }
 
     if (this.open && changes['existingSlots']) {
-      this.emitTeacherConflicts();
+      this.emitScheduleConflicts();
     }
   }
 
@@ -150,11 +153,11 @@ export class UpsertScheduleModalComponent implements OnChanges {
     if (sid && !allowed.some((s) => s.id === sid)) {
       this.form.subjectId = '';
     }
-    this.emitTeacherConflicts();
+    this.emitScheduleConflicts();
   }
 
   onConflictRelevantFieldChange(): void {
-    this.emitTeacherConflicts();
+    this.emitScheduleConflicts();
   }
 
   teacherConflictSlots(): ScheduleSlot[] {
@@ -173,13 +176,41 @@ export class UpsertScheduleModalComponent implements OnChanges {
     );
   }
 
-  private emitTeacherConflicts(): void {
+  groupConflictSlots(): ScheduleSlot[] {
+    if (!this.open) return [];
+    return findGroupScheduleConflicts(
+      {
+        groupId: this.form.groupId,
+        dayOfWeek: this.form.dayOfWeek,
+        startTime: this.form.startTime,
+        endTime: this.form.endTime,
+        validFrom: this.form.validFrom?.trim() || null,
+        validUntil: this.form.validUntil?.trim() || null,
+      },
+      this.existingSlots,
+      this.editSlot?.id
+    );
+  }
+
+  hasBlockingConflicts(): boolean {
+    return (
+      this.teacherConflictSlots().length > 0 ||
+      this.groupConflictSlots().length > 0
+    );
+  }
+
+  private emitScheduleConflicts(): void {
     if (!this.open) return;
-    const ids = this.teacherConflictSlots().map((s) => s.id);
-    const key = ids.slice().sort().join(',');
+    const ids = [
+      ...new Set([
+        ...this.teacherConflictSlots().map((s) => s.id),
+        ...this.groupConflictSlots().map((s) => s.id),
+      ]),
+    ].sort();
+    const key = ids.join(',');
     if (key === this.lastConflictIdsKey) return;
     this.lastConflictIdsKey = key;
-    this.teacherConflictSlotIdsChange.emit(ids);
+    this.scheduleConflictSlotIdsChange.emit(ids);
   }
 
   private buildSubjectsForTeacher(teacher: SchoolTeacher): SchoolSubject[] {
@@ -221,7 +252,7 @@ export class UpsertScheduleModalComponent implements OnChanges {
   }
 
   submit(): void {
-    if (this.teacherConflictSlots().length > 0) {
+    if (this.hasBlockingConflicts()) {
       return;
     }
     const subjectTrim = this.form.subjectId?.trim();

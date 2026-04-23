@@ -1,30 +1,26 @@
-@switch (step()) {
-  @case ('success') {
-    <app-registration-success
-      [organizationName]="successOrganizationName()"
-      (close)="backToHome()"
-      (goDashboard)="goToDashboard()"
-    />
-  }
-  @case ('payment') {
-    <app-payment-form
-      [form]="paymentForm"
-      [loading]="paymentLoading()"
-      (submit)="onPaymentSubmit()"
-      (close)="closePaymentModal()"
-    />
-  }
-  @default {
-    <app-register-form
-      #registerFormRef
-      [form]="form"
-      [loading]="loading()"
-      [submitAttempted]="submitAttempted()"
-      [errorMessage]="submitErrorMessage()"
-      [planOptions]="planOptions"
-      [paymentOptions]="paymentOptions"
-      (submit)="onRegisterSubmit()"
-      (closeRequested)="closeRequested.emit()"
-    />
-  }
+@if (registrationSuccess()) {
+  <app-registration-success
+    [organizationName]="successOrganizationName()"
+    (close)="backToHome()"
+    (goDashboard)="goToDashboard()"
+  />
+} @else if (showPaymentStep()) {
+  <app-payment-form
+    [form]="paymentForm"
+    [loading]="paymentLoading()"
+    (submit)="onPaymentSubmit()"
+    (close)="closePaymentModal()"
+  />
+} @else {
+  <app-register-form
+    #registerFormRef
+    [form]="form"
+    [loading]="loading()"
+    [submitAttempted]="submitAttempted()"
+    [errorMessage]="submitErrorMessage()"
+    [planOptions]="planOptions"
+    [paymentOptions]="paymentOptions"
+    (submit)="onRegisterSubmit()"
+    (closeRequested)="closeRequested.emit()"
+  />
 }

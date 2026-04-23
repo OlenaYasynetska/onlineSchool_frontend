@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RegisterModalComponent } from '../../components/register-modal/register-modal.component';
 import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop/auth-plans-backdrop.component';
+import { REGISTER_AUTH_SHELL_CLASS } from '../../register-auth-shell';
 
 @Component({
   selector: 'app-register',
@@ -11,11 +12,12 @@ import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop
   template: `
     <app-auth-plans-backdrop
       ariaLabelledBy="register-title"
+      [shellClass]="registerAuthShellClass"
       (backdropClick)="close()"
     >
-      <div class="container">
-        <!-- Центрируем карточку регистрации; на md+ делаем контейнер 50% -->
-        <div class="relative mx-auto w-full max-w-[520px] md:w-1/2">
+      <div class="container px-2 sm:px-4">
+        <!-- Та сама схема, що на логіні: 3 плани на фоні, модалка поверх -->
+        <div class="relative mx-auto w-full max-w-[520px]">
           <div class="relative z-10 w-full">
             <app-register-modal
               class="relative block w-full"
@@ -42,6 +44,8 @@ import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop
   `,
 })
 export class RegisterComponent implements OnInit, OnDestroy {
+  readonly registerAuthShellClass = REGISTER_AUTH_SHELL_CLASS;
+
   planFromRoute: string | null = null;
 
   constructor(

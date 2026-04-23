@@ -20,7 +20,8 @@ import { PlanCardComponent } from './plan-card.component';
         {{ title }}
       </p>
       <div
-        class="grid h-[min(58vh,480px)] w-full grid-cols-3 gap-1.5 sm:gap-3 md:gap-5"
+        class="grid h-[min(46vh,380px)] min-h-[200px] w-full grid-cols-3 items-stretch gap-1.5 sm:gap-3 md:gap-5 sm:min-h-[240px] sm:h-[min(50vh,420px)]"
+        [style.grid-template-rows]="'minmax(0, 1fr)'"
       >
         @for (plan of plans; track plan.id; let i = $index) {
           <app-plan-card [plan]="plan" [bgClass]="columnClasses[i]" />

@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   EventEmitter,
   inject,
   Input,
@@ -50,6 +51,8 @@ export class RegisterModalComponent implements OnInit, OnChanges {
   @ViewChild('registerFormRef') private registerFormRef?: RegisterFormComponent;
 
   readonly step = signal<RegistrationStep>('register');
+  readonly registrationSuccess = computed(() => this.step() === 'success');
+  readonly showPaymentStep = computed(() => this.step() === 'payment');
   readonly successOrganizationName = signal('');
   readonly paymentLoading = signal(false);
 

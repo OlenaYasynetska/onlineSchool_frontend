@@ -11,9 +11,12 @@ import type { PlanCard } from '../../../landing/hooks/use-plans.hook';
   standalone: true,
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    class: 'block h-full min-h-[200px]',
+  },
   template: `
     <div
-      class="relative min-h-0 overflow-hidden rounded-2xl shadow-md ring-1 ring-orange-200/50 md:rounded-3xl"
+      class="relative h-full w-full min-h-[inherit] overflow-hidden rounded-2xl shadow-md ring-1 ring-orange-200/50 md:rounded-3xl"
       [ngClass]="bgClass"
     >
       <img

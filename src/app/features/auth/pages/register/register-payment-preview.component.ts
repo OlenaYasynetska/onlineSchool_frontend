@@ -2,6 +2,8 @@ import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RegisterModalComponent } from '../../components/register-modal/register-modal.component';
+import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop/auth-plans-backdrop.component';
+import { REGISTER_AUTH_SHELL_CLASS } from '../../register-auth-shell';
 
 /**
  * Демо-маршрут: одразу показує вікно оплати без реєстрації.
@@ -10,20 +12,24 @@ import { RegisterModalComponent } from '../../components/register-modal/register
 @Component({
   selector: 'app-register-payment-preview',
   standalone: true,
-  imports: [CommonModule, RegisterModalComponent],
+  imports: [CommonModule, RegisterModalComponent, AuthPlansBackdropComponent],
   template: `
-    <div
-      class="fixed inset-0 z-[100] isolate flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#FFF8EC] via-[#FDF6E9] to-[#FBE8D4] p-3 sm:p-4"
-      role="dialog"
-      aria-modal="true"
+    <app-auth-plans-backdrop
+      ariaLabelledBy="payment-modal-title"
+      [shellClass]="registerAuthShellClass"
+      (backdropClick)="close()"
     >
-      <div class="relative z-20 w-full max-w-[min(100%,560px)]" (click)="$event.stopPropagation()">
-        <app-register-modal (closeRequested)="close()" />
+      <div class="container px-2 sm:px-4">
+        <div class="relative z-10 mx-auto w-full max-w-[min(100%,520px)]">
+          <app-register-modal (closeRequested)="close()" />
+        </div>
       </div>
-    </div>
+    </app-auth-plans-backdrop>
   `,
 })
 export class RegisterPaymentPreviewComponent implements OnInit, OnDestroy {
+  readonly registerAuthShellClass = REGISTER_AUTH_SHELL_CLASS;
+
   constructor(private readonly router: Router) {}
 
   ngOnInit(): void {

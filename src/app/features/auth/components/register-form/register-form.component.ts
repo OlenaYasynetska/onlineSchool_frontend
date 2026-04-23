@@ -40,7 +40,7 @@ export class RegisterFormComponent {
   emailFieldShowError(): boolean {
     if (!this.form) return false;
     const c = this.form.controls['email'];
-    return !!(c && c.invalid && c.touched);
+    return !!(c && c.invalid && (c.dirty || c.touched));
   }
 
   /** Викликає батьківський контейнер після невалідного сабміту. */

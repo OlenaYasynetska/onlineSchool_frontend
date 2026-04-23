@@ -31,19 +31,7 @@ import { useLandingSections } from '../../../landing/hooks/use-landing-sections.
       ></div>
 
       <div
-        class="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center px-2 py-16 sm:px-4 md:px-8"
-        aria-hidden="true"
-      >
-        <app-plans-grid [title]="sections.plansTitle" [plans]="plans()" />
-      </div>
-
-      <div
-        class="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(ellipse_at_center,transparent_0%,#FDF6E9/90_100%)]"
-        aria-hidden="true"
-      ></div>
-
-      <div
-        class="pointer-events-none absolute bottom-0 left-0 right-0 z-[3] h-16 overflow-hidden sm:h-20"
+        class="pointer-events-none absolute bottom-0 left-0 right-0 z-[1] h-16 overflow-hidden sm:h-20"
         aria-hidden="true"
       >
         <svg
@@ -61,6 +49,24 @@ import { useLandingSections } from '../../../landing/hooks/use-landing-sections.
           />
         </svg>
       </div>
+
+      <div
+        class="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(ellipse_100%_85%_at_50%_45%,transparent_0%,transparent_70%,rgba(253,246,233,0.14)_100%)]"
+        aria-hidden="true"
+      ></div>
+
+      @if (showBackdropPlans) {
+        <div
+          class="pointer-events-none absolute inset-0 z-[3] flex items-center justify-center px-2 py-8 sm:px-4 sm:py-10 md:px-8"
+          aria-hidden="true"
+        >
+          <div
+            class="w-full max-w-[min(100%,1180px)] -translate-y-[min(7vh,56px)] sm:-translate-y-[min(5vh,48px)]"
+          >
+            <app-plans-grid [title]="sections.plansTitle" [plans]="plans()" />
+          </div>
+        </div>
+      }
 
       <div
         class="absolute inset-0 z-[15] cursor-default bg-transparent"
@@ -88,6 +94,9 @@ export class AuthPlansBackdropComponent {
    */
   @Input() shellClass =
     'max-w-[min(100%,980px)] items-center justify-center overflow-visible pb-8 sm:pb-10';
+
+  /** Якщо false — абсолютна сітка планів не ренериться (плани можна показати в потоці контенту). */
+  @Input() showBackdropPlans = true;
 
   @Output() readonly backdropClick = new EventEmitter<void>();
 

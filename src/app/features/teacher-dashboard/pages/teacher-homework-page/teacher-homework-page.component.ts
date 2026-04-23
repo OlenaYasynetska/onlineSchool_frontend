@@ -111,7 +111,7 @@ export class TeacherHomeworkPageComponent implements OnInit {
           } else if (body && typeof body === 'object' && 'message' in body) {
             msg = String((body as { message?: string }).message);
           }
-          this.gradeError = msg || err.message || 'Не удалось сохранить оценку.';
+          this.gradeError = msg || err.message || 'Could not save the grade.';
         },
       });
   }

@@ -23,38 +23,66 @@
     }
     @if (!loading && !noProfile && !error) {
       <div class="space-y-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900">
-            My schedule · {{ displayName }}
-          </h1>
-          <p class="mt-1 text-sm text-slate-600">
-            Weekly lesson slots for your groups (read-only).
-          </p>
-        </div>
         <div
-          class="flex flex-wrap items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm"
+          class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6"
         >
-          <button
-            type="button"
-            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
-            (click)="shiftWeek(-1)"
-            aria-label="Previous week"
+          <div class="min-w-0 flex-1">
+            <h1 class="text-2xl font-bold text-slate-900">
+              My schedule · {{ displayName }}
+            </h1>
+            <p class="mt-1 text-sm text-slate-600">
+              Weekly lesson slots for your groups (read-only).
+            </p>
+          </div>
+          <div
+            class="flex w-full shrink-0 flex-wrap items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 shadow-sm sm:max-w-md lg:w-auto lg:min-w-[17.5rem]"
+            role="group"
+            aria-label="Week navigation"
           >
-            ←
-          </button>
-          <span
-            class="min-w-[min(100%,14rem)] flex-1 text-center text-sm font-medium text-slate-800"
-          >
-            {{ weekRangeLabel() }}
-          </span>
-          <button
-            type="button"
-            class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-lg text-slate-700 transition hover:bg-slate-50"
-            (click)="shiftWeek(1)"
-            aria-label="Next week"
-          >
-            →
-          </button>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50"
+              (click)="shiftWeek(-1)"
+              aria-label="Previous week"
+            >
+              <svg
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+            <span
+              class="min-w-0 flex-1 text-center text-sm font-medium text-slate-800"
+            >
+              {{ weekRangeLabel() }}
+            </span>
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-700 transition hover:bg-slate-50"
+              (click)="shiftWeek(1)"
+              aria-label="Next week"
+            >
+              <svg
+                class="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
         <app-schedule-week-grid
           [slots]="slotsForWeek()"

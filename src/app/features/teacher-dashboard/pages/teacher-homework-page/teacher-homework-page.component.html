@@ -5,8 +5,9 @@
     <div>
       <h1 class="text-2xl font-bold text-slate-900">Homework inbox</h1>
       <p class="mt-1 text-sm text-slate-600">
-        Скачайте файл при необходимости, нажмите «Оценить», выберите от 1 до 3 звёзд и при желании
-        напишите отзыв — ученик увидит оценку в разделе «My submissions».
+        Download the file if you need to, click <span class="font-medium text-slate-800">Grade</span>,
+        choose 1 to 3 stars, and add optional feedback — the student will see the grade in
+        <span class="font-medium text-slate-800">My submissions</span>.
       </p>
     </div>
 
@@ -178,7 +179,7 @@
     >
       <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
         <h2 id="grade-dialog-title" class="text-lg font-bold text-slate-900">
-          Оценка домашнего задания
+          Grade homework
         </h2>
         <p class="mt-1 text-sm text-slate-600">
           <span class="font-medium text-slate-800">{{ gradingSubmission.studentName }}</span>
@@ -190,10 +191,10 @@
             <span class="font-medium text-slate-700">{{ gradingSubmission.homeworkNumber }}</span>
           </p>
         }
-        <p class="mt-1 text-xs text-slate-500">Звёзды: 1 — слабо, 3 — отлично</p>
+        <p class="mt-1 text-xs text-slate-500">Stars: 1 — weak, 3 — excellent</p>
 
         <div class="mt-4">
-          <p class="mb-2 text-sm font-medium text-slate-700">Звёзды (1–3)</p>
+          <p class="mb-2 text-sm font-medium text-slate-700">Stars (1–3)</p>
           <div class="flex gap-2">
             @for (n of starChoices; track n) {
               <button
@@ -217,7 +218,7 @@
           <label
             for="grade-feedback"
             class="mb-1 block text-sm font-medium text-slate-700"
-            >Отзыв (по желанию)</label
+            >Feedback (optional)</label
           >
           <textarea
             id="grade-feedback"
@@ -225,7 +226,7 @@
             [(ngModel)]="gradeFeedback"
             rows="3"
             class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
-            placeholder="Комментарий для ученика"
+            placeholder="Comment for the student"
           ></textarea>
         </div>
 
@@ -240,7 +241,7 @@
             [disabled]="gradingBusy"
             class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            Отмена
+            Cancel
           </button>
           <button
             type="button"
@@ -248,7 +249,7 @@
             [disabled]="gradingBusy"
             class="rounded-xl bg-slate-700 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
           >
-            {{ gradingBusy ? 'Сохранение…' : 'Сохранить оценку' }}
+            {{ gradingBusy ? 'Saving…' : 'Save grade' }}
           </button>
         </div>
       </div>

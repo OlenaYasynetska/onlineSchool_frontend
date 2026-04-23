@@ -1,0 +1,24 @@
+/* Спільні стилі полів оплати (як у register-form). */
+.input-payment {
+  --sm: 0 1px 2px rgb(0 0 0 / 0.05);
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: #fff;
+  border: 1px solid;
+  border-radius: 0.5rem;
+  box-shadow: var(--sm);
+  border-color: rgb(186 230 253 / 0.9);
+}
+
+.input-payment::placeholder {
+  color: #94a3b8;
+}
+
+.input-payment:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: var(--sm), 0 0 0 2px rgb(186 230 253 / 0.7);
+}

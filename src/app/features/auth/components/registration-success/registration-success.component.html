@@ -1,0 +1,58 @@
+<div
+  class="relative flex w-full max-w-[580px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl shadow-slate-900/20 ring-1 ring-orange-200/40"
+  (click)="$event.stopPropagation()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="registration-success-title"
+>
+  <button
+    type="button"
+    class="absolute right-2 top-2 z-20 rounded-full p-2 text-slate-500 transition hover:bg-white/60 hover:text-slate-800"
+    (click)="close.emit()"
+    aria-label="Close"
+  >
+    <span class="block text-2xl leading-none">&times;</span>
+  </button>
+
+  <div
+    class="flex flex-col gap-6 px-5 pb-6 pt-10 sm:flex-row sm:items-center sm:gap-8 sm:px-7 sm:pb-7 sm:pt-11"
+  >
+    <div class="min-w-0 flex-1 space-y-4">
+      <h1
+        id="registration-success-title"
+        class="text-xl font-bold leading-snug text-[#213855] sm:text-2xl"
+      >
+        Registration successful
+      </h1>
+      <p class="text-sm leading-relaxed text-slate-700 sm:text-[15px]">
+        You have successfully registered as the admin of the educational institution
+        <span class="font-semibold text-[#213855]">&lsquo;{{ organizationName }}&rsquo;</span>.
+      </p>
+      <div class="flex flex-col gap-3 pt-2">
+        <button
+          type="button"
+          (click)="close.emit()"
+          class="w-full rounded-lg bg-slate-700 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-slate-800"
+        >
+          Back to home
+        </button>
+        <button
+          type="button"
+          (click)="goDashboard.emit()"
+          class="w-full rounded-lg bg-[#FF7A18] py-3 text-sm font-semibold text-white shadow-md transition hover:bg-orange-600"
+        >
+          Go to dashboard
+        </button>
+      </div>
+    </div>
+    <div class="flex shrink-0 justify-center sm:w-[min(44%,200px)]">
+      <img
+        src="/assets/images/owl_get_started.png"
+        alt=""
+        class="h-auto w-full max-w-[180px] object-contain drop-shadow-md sm:max-w-[200px]"
+        width="200"
+        height="200"
+      />
+    </div>
+  </div>
+</div>

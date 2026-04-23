@@ -1,0 +1,211 @@
+<div
+  class="relative flex w-full max-w-[540px] flex-col overflow-hidden rounded-2xl bg-[#E8EEF5] shadow-2xl shadow-slate-900/20 ring-1 ring-slate-300/40"
+  (click)="$event.stopPropagation()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="payment-modal-title"
+>
+  <button
+    type="button"
+    class="absolute right-2 top-2 z-20 rounded-md bg-slate-800 p-1.5 text-white transition hover:bg-slate-900"
+    (click)="close.emit()"
+    aria-label="Close"
+  >
+    <span class="block text-lg leading-none">&times;</span>
+  </button>
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="submit.emit()"
+    class="px-5 pb-6 pt-10 sm:px-7 sm:pb-7 sm:pt-11"
+  >
+    <h1
+      id="payment-modal-title"
+      class="mb-6 text-center text-xl font-bold text-[#1a2f4a] sm:text-2xl"
+    >
+      Payment successful
+    </h1>
+
+    <div class="mb-5 space-y-4 rounded-xl bg-[#D6E8FA]/90 p-4 ring-1 ring-sky-200/60">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-first"
+            >First name</label
+          >
+          <input
+            id="pay-first"
+            formControlName="firstName"
+            class="input-payment"
+            autocomplete="given-name"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-last"
+            >Last name</label
+          >
+          <input
+            id="pay-last"
+            formControlName="lastName"
+            class="input-payment"
+            autocomplete="family-name"
+          />
+        </div>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-email"
+          >Email address</label
+        >
+        <input
+          id="pay-email"
+          type="email"
+          formControlName="email"
+          class="input-payment"
+          autocomplete="email"
+        />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-country"
+          >Country / Region</label
+        >
+        <div class="relative">
+          <select
+            id="pay-country"
+            formControlName="countryRegion"
+            class="input-payment appearance-none pr-10"
+          >
+            @for (c of countryOptions; track c.value) {
+              <option [value]="c.value">{{ c.label }}</option>
+            }
+          </select>
+          <span
+            class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+            >⌄</span
+          >
+        </div>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-city"
+          >City / Town</label
+        >
+        <input id="pay-city" formControlName="city" class="input-payment" />
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-phone"
+          >Phone number</label
+        >
+        <input
+          id="pay-phone"
+          type="tel"
+          formControlName="phone"
+          class="input-payment"
+          autocomplete="tel"
+        />
+      </div>
+    </div>
+
+    <div class="space-y-4 rounded-xl bg-[#D6E8FA]/90 p-4 ring-1 ring-sky-200/60">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-sm font-semibold text-[#1a2f4a]">Pay with</span>
+        <span class="text-xs font-medium text-slate-600"
+          >PayPal &middot; Mastercard &middot; Visa</span
+        >
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-method"
+          >Payment method</label
+        >
+        <div class="relative">
+          <select
+            id="pay-method"
+            formControlName="paymentMethod"
+            class="input-payment appearance-none pr-10"
+          >
+            <option value="card">Credit card or debit card</option>
+            <option value="paypal">PayPal</option>
+          </select>
+          <span
+            class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+            >⌄</span
+          >
+        </div>
+      </div>
+      <div>
+        <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-card"
+          >Card number</label
+        >
+        <input
+          id="pay-card"
+          formControlName="cardNumber"
+          class="input-payment"
+          inputmode="numeric"
+          autocomplete="cc-number"
+          placeholder="Card number"
+        />
+      </div>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-[1fr_1fr_auto]">
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-mm">MM</label>
+          <div class="relative">
+            <select
+              id="pay-mm"
+              formControlName="expMonth"
+              class="input-payment appearance-none pr-8"
+            >
+              <option value="" disabled>MM</option>
+              @for (m of monthNumbers; track m) {
+                <option [value]="m">{{ m }}</option>
+              }
+            </select>
+            <span
+              class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500"
+              >⌄</span
+            >
+          </div>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-yy">YY</label>
+          <div class="relative">
+            <select
+              id="pay-yy"
+              formControlName="expYear"
+              class="input-payment appearance-none pr-8"
+            >
+              <option value="" disabled>YY</option>
+              @for (y of yearNumbers; track y) {
+                <option [value]="y">{{ y }}</option>
+              }
+            </select>
+            <span
+              class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-500"
+              >⌄</span
+            >
+          </div>
+        </div>
+        <div class="col-span-2 sm:col-span-1">
+          <label class="mb-1 block text-xs font-medium text-[#1a2f4a]" for="pay-cvv"
+            >CVV</label
+          >
+          <input
+            id="pay-cvv"
+            formControlName="cvv"
+            class="input-payment"
+            inputmode="numeric"
+            autocomplete="cc-csc"
+            maxlength="4"
+          />
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <span class="text-xs font-medium text-orange-600">Your card is safe</span>
+      </div>
+    </div>
+
+    <button
+      type="submit"
+      [disabled]="form.invalid || loading"
+      class="mt-6 w-full rounded-xl bg-slate-800 py-3.5 text-sm font-semibold text-white shadow-md transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {{ loading ? 'Please wait…' : 'Pay Now' }}
+    </button>
+  </form>
+</div>

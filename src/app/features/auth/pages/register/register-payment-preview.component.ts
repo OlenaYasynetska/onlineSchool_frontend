@@ -1,7 +1,7 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { RegisterFormComponent } from '../../components/register-form/register-form.component';
+import { RegisterModalComponent } from '../../components/register-modal/register-modal.component';
 
 /**
  * Демо-маршрут: одразу показує вікно оплати без реєстрації.
@@ -10,7 +10,7 @@ import { RegisterFormComponent } from '../../components/register-form/register-f
 @Component({
   selector: 'app-register-payment-preview',
   standalone: true,
-  imports: [CommonModule, RegisterFormComponent],
+  imports: [CommonModule, RegisterModalComponent],
   template: `
     <div
       class="fixed inset-0 z-[100] isolate flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#FFF8EC] via-[#FDF6E9] to-[#FBE8D4] p-3 sm:p-4"
@@ -18,7 +18,7 @@ import { RegisterFormComponent } from '../../components/register-form/register-f
       aria-modal="true"
     >
       <div class="relative z-20 w-full max-w-[min(100%,560px)]" (click)="$event.stopPropagation()">
-        <app-register-form (closeRequested)="close()" />
+        <app-register-modal (closeRequested)="close()" />
       </div>
     </div>
   `,

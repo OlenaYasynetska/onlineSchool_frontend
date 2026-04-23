@@ -1,5 +1,5 @@
-.input-register,
-.input-payment {
+/* Поля тільки форми реєстрації; оплата — у payment-form.component.scss */
+.input-register {
   --sm: 0 1px 2px rgb(0 0 0 / 0.05);
   display: block;
   width: 100%;
@@ -10,29 +10,15 @@
   border: 1px solid;
   border-radius: 0.5rem;
   box-shadow: var(--sm);
-}
-
-.input-register::placeholder,
-.input-payment::placeholder {
-  color: #94a3b8;
-}
-
-.input-register {
   border-color: rgb(254 215 170 / 0.9);
 }
 
-.input-payment {
-  border-color: rgb(186 230 253 / 0.9);
+.input-register::placeholder {
+  color: #94a3b8;
 }
 
 .input-register:focus {
   outline: none;
   border-color: #fb923c;
   box-shadow: var(--sm), 0 0 0 2px rgb(254 215 170 / 0.7);
-}
-
-.input-payment:focus {
-  outline: none;
-  border-color: #38bdf8;
-  box-shadow: var(--sm), 0 0 0 2px rgb(186 230 253 / 0.7);
 }

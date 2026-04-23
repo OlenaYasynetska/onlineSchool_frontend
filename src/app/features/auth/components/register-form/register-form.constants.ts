@@ -28,3 +28,6 @@ export const PAYMENT_OPTIONS = [
   { value: 'yearly', label: 'Yearly' },
   { value: 'quarterly', label: 'Quarterly' },
 ] as const;
+
+export type PlanOption = (typeof PLAN_OPTIONS)[number];
+export type PaymentOption = (typeof PAYMENT_OPTIONS)[number];

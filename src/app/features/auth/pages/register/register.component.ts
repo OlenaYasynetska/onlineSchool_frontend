@@ -1,13 +1,13 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RegisterFormComponent } from '../../components/register-form/register-form.component';
+import { RegisterModalComponent } from '../../components/register-modal/register-modal.component';
 import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop/auth-plans-backdrop.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, RegisterFormComponent, AuthPlansBackdropComponent],
+  imports: [CommonModule, RegisterModalComponent, AuthPlansBackdropComponent],
   template: `
     <app-auth-plans-backdrop
       ariaLabelledBy="register-title"
@@ -17,7 +17,7 @@ import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop
         <!-- Центрируем карточку регистрации; на md+ делаем контейнер 50% -->
         <div class="relative mx-auto w-full max-w-[520px] md:w-1/2">
           <div class="relative z-10 w-full">
-            <app-register-form
+            <app-register-modal
               class="relative block w-full"
               [initialPlan]="planFromRoute"
               (closeRequested)="close()"

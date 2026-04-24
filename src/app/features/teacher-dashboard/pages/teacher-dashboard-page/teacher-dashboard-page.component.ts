@@ -34,6 +34,7 @@ import {
   APEX_LINE_YAXIS_DEFAULT,
   createApexLineChart,
 } from '../../../../shared/charts/apex-line-chart-student-style';
+import { homeworkStarsChartSparseDayAxis } from '../../../../shared/charts/homework-stars-chart-xaxis.util';
 
 const SUBJECT_LINE_COLORS = [
   '#2563eb',
@@ -93,16 +94,36 @@ export class TeacherDashboardPageComponent implements OnInit {
 
   readonly groupTrendPlotOptions: ApexPlotOptions = APEX_LINE_PLOT_OPTIONS;
 
-  readonly groupTrendXaxis = computed<ApexXAxis>(() => ({
-    categories: this.trendLabels(),
-    labels: {
-      style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
-      rotate: this.trendLabels().length > 14 ? -45 : 0,
-      maxHeight: 52,
-    },
-    axisBorder: { show: false },
-    axisTicks: { show: false },
-  }));
+  readonly groupTrendXaxis = computed<ApexXAxis>(() => {
+    const labels = this.trendLabels();
+    const { sparse, tickIndices } = homeworkStarsChartSparseDayAxis(
+      labels,
+      this.trendDateFrom(),
+      this.trendDateTo(),
+      2
+    );
+    const rotate = sparse ? 0 : labels.length > 14 ? -45 : 0;
+    return {
+      categories: labels,
+      labels: {
+        style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
+        rotate,
+        maxHeight: rotate ? 52 : sparse ? 36 : undefined,
+        hideOverlappingLabels: sparse ? false : undefined,
+        formatter: sparse
+            ? (value: string, _ts?: number, opts?: { index?: number; i?: number }) => {
+                let i: number | undefined = opts?.index;
+                if (typeof i !== 'number') i = opts?.i;
+                if (typeof i !== 'number') i = labels.indexOf(value);
+                if (i < 0 || !tickIndices.has(i)) return '';
+                return value;
+              }
+            : undefined,
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    };
+  });
 
   readonly groupTrendLegend = APEX_LINE_LEGEND;
 

@@ -20,6 +20,9 @@ const loadStudentSchedulePage = () =>
     (m) => m.StudentSchedulePageComponent
   );
 
+const loadChatPage = () =>
+  import('../chat/chat-page.component').then((m) => m.ChatPageComponent);
+
 export const STUDENT_DASHBOARD_ROUTES: Routes = [
   {
     path: '',
@@ -30,6 +33,7 @@ export const STUDENT_DASHBOARD_ROUTES: Routes = [
       { path: 'groups', loadComponent: loadPage },
       { path: 'schedule', loadComponent: loadStudentSchedulePage },
       { path: 'homework', loadComponent: loadHomework },
+      { path: 'chat', loadComponent: loadChatPage },
     ],
   },
 ];

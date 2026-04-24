@@ -190,6 +190,28 @@
         </a>
       }
     </nav>
+    @if (showChatFab()) {
+      <div
+        class="mt-auto flex shrink-0 flex-col items-center border-t border-slate-200/80 px-2 pb-3 pt-2 dark:border-gray-700/80"
+      >
+        <a
+          [routerLink]="chatPath()"
+          routerLinkActive="ring-2 ring-sky-500/60"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200/90 bg-white shadow-md transition hover:border-sky-300/60 hover:shadow-lg dark:border-gray-600 dark:bg-slate-800/95 dark:hover:border-sky-500/40"
+          aria-label="Open chat"
+        >
+          <img
+            class="h-7 w-7 object-contain"
+            src="assets/icons/sidebar/chat.png"
+            width="28"
+            height="28"
+            alt=""
+            aria-hidden="true"
+          />
+        </a>
+      </div>
+    }
     @if (auth.currentUser()?.role === 'ADMIN_SCHOOL') {
       <div
         class="mx-2 mb-3 mt-auto shrink-0 rounded-xl bg-slate-800/85 px-3 py-3 text-left shadow-sm ring-1 ring-white/10"

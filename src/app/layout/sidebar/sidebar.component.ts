@@ -224,4 +224,21 @@ export class SidebarComponent implements OnInit {
       path.startsWith('/super-admin') || path.startsWith('/schools')
     );
   }
+
+  /** Chat FAB: teacher & student only (compact cabinet sidebar). */
+  protected showChatFab(): boolean {
+    const r = this.auth.currentUser()?.role;
+    return r === 'TEACHER' || r === 'STUDENT';
+  }
+
+  protected chatPath(): string {
+    const r = this.auth.currentUser()?.role;
+    if (r === 'TEACHER') {
+      return '/teacher/chat';
+    }
+    if (r === 'STUDENT') {
+      return '/student/chat';
+    }
+    return '/';
+  }
 }

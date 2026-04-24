@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,25 +16,10 @@ import {
   TeacherDashboardService,
   type TeacherActivityEntry,
 } from '../../services/teacher-dashboard.service';
-import { NgApexchartsModule } from 'ng-apexcharts';
 import { EmailLinkComponent } from '../../../../shared/components/email-link/email-link.component';
-import type {
-  ApexAxisChartSeries,
-  ApexChart,
-  ApexPlotOptions,
-  ApexXAxis,
-  ApexYAxis,
-} from 'ng-apexcharts';
-import {
-  APEX_LINE_GRID,
-  APEX_LINE_LEGEND,
-  APEX_LINE_PLOT_OPTIONS,
-  APEX_LINE_STROKE,
-  APEX_LINE_TOOLTIP,
-  APEX_LINE_YAXIS_DEFAULT,
-  createApexLineChart,
-} from '../../../../shared/charts/apex-line-chart-student-style';
-import { homeworkStarsChartSparseDayAxis } from '../../../../shared/charts/homework-stars-chart-xaxis.util';
+import type { ApexAxisChartSeries, ApexYAxis } from 'ng-apexcharts';
+import { APEX_LINE_YAXIS_DEFAULT } from '../../../../shared/charts/apex-line-chart-student-style';
+import { StarsBySubjectOverTimeSectionComponent } from '../../../../shared/components/stars-by-subject-over-time-section/stars-by-subject-over-time-section.component';
 
 const SUBJECT_LINE_COLORS = [
   '#2563eb',
@@ -49,7 +34,13 @@ const SUBJECT_LINE_COLORS = [
 @Component({
   selector: 'app-teacher-dashboard-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, NgApexchartsModule, EmailLinkComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    EmailLinkComponent,
+    StarsBySubjectOverTimeSectionComponent,
+  ],
   templateUrl: './teacher-dashboard-page.component.html',
 })
 export class TeacherDashboardPageComponent implements OnInit {
@@ -80,56 +71,6 @@ export class TeacherDashboardPageComponent implements OnInit {
   readonly trendChartError = signal<string | null>(null);
   readonly trendChartColors = signal<string[]>([...SUBJECT_LINE_COLORS]);
   readonly trendChartYaxis = signal<ApexYAxis>(APEX_LINE_YAXIS_DEFAULT);
-
-  readonly groupTrendSeries = computed<ApexAxisChartSeries>(() =>
-    this.trendChartSeries()
-  );
-
-  /** Той самий `ApexChart`, що й у учня (`shared/charts/apex-line-chart-student-style`). */
-  readonly groupTrendChartConfig: ApexChart = createApexLineChart(
-    'teacher-dashboard-group-trends'
-  );
-
-  readonly groupTrendStroke = APEX_LINE_STROKE;
-
-  readonly groupTrendPlotOptions: ApexPlotOptions = APEX_LINE_PLOT_OPTIONS;
-
-  readonly groupTrendXaxis = computed<ApexXAxis>(() => {
-    const labels = this.trendLabels();
-    const { sparse, tickIndices } = homeworkStarsChartSparseDayAxis(
-      labels,
-      this.trendDateFrom(),
-      this.trendDateTo(),
-      2
-    );
-    const rotate = sparse ? 0 : labels.length > 14 ? -45 : 0;
-    return {
-      categories: labels,
-      labels: {
-        style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
-        rotate,
-        maxHeight: rotate ? 52 : sparse ? 36 : undefined,
-        hideOverlappingLabels: sparse ? false : undefined,
-        formatter: sparse
-            ? (value: string, _ts?: number, opts?: { index?: number; i?: number }) => {
-                let i: number | undefined = opts?.index;
-                if (typeof i !== 'number') i = opts?.i;
-                if (typeof i !== 'number') i = labels.indexOf(value);
-                if (i < 0 || !tickIndices.has(i)) return '';
-                return value;
-              }
-            : undefined,
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    };
-  });
-
-  readonly groupTrendLegend = APEX_LINE_LEGEND;
-
-  readonly groupTrendGrid = APEX_LINE_GRID;
-
-  readonly groupTrendTooltip = APEX_LINE_TOOLTIP;
 
   constructor() {
     this.router.events

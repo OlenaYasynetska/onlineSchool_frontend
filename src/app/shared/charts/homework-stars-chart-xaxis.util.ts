@@ -1,7 +1,9 @@
 /**
- * X-axis tick thinning for teacher homework stars chart (daily buckets from API).
- * When the range spans several months, show only 1st, 10th, 20th, and last day of each month.
+ * X-axis tick thinning for homework stars charts (daily buckets from API).
+ * When the range spans several months, show only the 1st, 10th, and 20th of each month.
  */
+
+import type { ApexXAxis } from 'ng-apexcharts';
 
 function parseIsoLocal(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number);
@@ -35,8 +37,7 @@ export function sparseHomeworkStarsDayTickIndices(
     const d = new Date(base);
     d.setDate(d.getDate() + i);
     const dom = d.getDate();
-    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    if (dom === 1 || dom === 10 || dom === 20 || dom === lastDay) {
+    if (dom === 1 || dom === 10 || dom === 20) {
       set.add(i);
     }
   }
@@ -59,5 +60,42 @@ export function homeworkStarsChartSparseDayAxis(
   return {
     sparse: true,
     tickIndices: sparseHomeworkStarsDayTickIndices(fromIso, labels.length),
+  };
+}
+
+/** Full Apex X-axis for category charts (teacher/student stars-over-time). */
+export function buildHomeworkStarsChartXAxis(
+  labels: string[],
+  fromIso: string,
+  toIso: string,
+  minCalendarMonths = 2
+): ApexXAxis {
+  const cats = labels.length > 0 ? labels : ['—'];
+  const { sparse, tickIndices } = homeworkStarsChartSparseDayAxis(
+    cats,
+    fromIso,
+    toIso,
+    minCalendarMonths
+  );
+  const rotate = sparse ? 0 : cats.length > 14 ? -45 : 0;
+  return {
+    categories: cats,
+    labels: {
+      style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
+      rotate,
+      maxHeight: rotate ? 52 : sparse ? 36 : undefined,
+      hideOverlappingLabels: sparse ? false : undefined,
+      formatter: sparse
+        ? (value: string, _ts?: number, opts?: { index?: number; i?: number }) => {
+            let i: number | undefined = opts?.index;
+            if (typeof i !== 'number') i = opts?.i;
+            if (typeof i !== 'number') i = cats.indexOf(value);
+            if (i < 0 || !tickIndices.has(i)) return '';
+            return value;
+          }
+        : undefined,
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false },
   };
 }

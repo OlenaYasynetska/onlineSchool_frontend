@@ -11,15 +11,7 @@ import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-import { NgApexchartsModule } from 'ng-apexcharts';
-
-import type {
-  ApexAxisChartSeries,
-  ApexChart,
-  ApexPlotOptions,
-  ApexXAxis,
-  ApexYAxis,
-} from 'ng-apexcharts';
+import type { ApexAxisChartSeries, ApexYAxis } from 'ng-apexcharts';
 
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -32,23 +24,8 @@ import type {
   SubjectHomeworkProgressRow,
 } from '../../models/student-homework.model';
 
-import {
-
-  APEX_LINE_GRID,
-
-  APEX_LINE_LEGEND,
-
-  APEX_LINE_PLOT_OPTIONS,
-
-  APEX_LINE_STROKE,
-
-  APEX_LINE_TOOLTIP,
-
-  APEX_LINE_YAXIS_DEFAULT,
-
-  createApexLineChart,
-
-} from '../../../../shared/charts/apex-line-chart-student-style';
+import { APEX_LINE_YAXIS_DEFAULT } from '../../../../shared/charts/apex-line-chart-student-style';
+import { StarsBySubjectOverTimeSectionComponent } from '../../../../shared/components/stars-by-subject-over-time-section/stars-by-subject-over-time-section.component';
 
 
 
@@ -88,7 +65,12 @@ export type StudentSubjectRow = {
 
   standalone: true,
 
-  imports: [CommonModule, FormsModule, NgApexchartsModule, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    StarsBySubjectOverTimeSectionComponent,
+  ],
 
   templateUrl: './student-dashboard-page.component.html',
 
@@ -151,63 +133,14 @@ export class StudentDashboardPageComponent implements OnInit {
 
   groupStatsSeries: ApexAxisChartSeries = [];
 
-
-
   private readonly subjectLineColors = ['#2563eb', '#16a34a', '#d97706', '#9333ea'];
-
-
 
   groupStatsColors: string[] = [];
 
-
-
-  readonly groupStatsChart: ApexChart = createApexLineChart(
-
-    'student-dashboard-stars-time'
-
-  );
-
-
-
-  readonly groupStatsStroke = APEX_LINE_STROKE;
-
-
-
-  readonly groupStatsPlotOptions: ApexPlotOptions = APEX_LINE_PLOT_OPTIONS;
-
-
-
-  groupStatsXaxis: ApexXAxis = {
-
-    categories: [],
-
-    labels: {
-
-      style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
-
-    },
-
-    axisBorder: { show: false },
-
-    axisTicks: { show: false },
-
-  };
-
-
+  /** Bucket labels from API (same order as series points) — drives shared chart x-axis. */
+  readonly chartBucketLabels = signal<string[]>([]);
 
   groupStatsYaxis: ApexYAxis = APEX_LINE_YAXIS_DEFAULT;
-
-
-
-  readonly groupStatsLegend = APEX_LINE_LEGEND;
-
-
-
-  readonly groupStatsGrid = APEX_LINE_GRID;
-
-
-
-  readonly groupStatsTooltip = APEX_LINE_TOOLTIP;
 
 
 
@@ -417,6 +350,8 @@ export class StudentDashboardPageComponent implements OnInit {
 
     const labels = data.chartMonthLabels ?? [];
 
+    this.chartBucketLabels.set(labels.length > 0 ? labels : ['—']);
+
     const seriesMap = data.starsBySubjectChartSeries ?? {};
 
     const keys = Object.keys(seriesMap).sort((a, b) =>
@@ -444,32 +379,6 @@ export class StudentDashboardPageComponent implements OnInit {
       (_, i) => this.subjectLineColors[i % this.subjectLineColors.length]
 
     );
-
-
-
-    const rotate = labels.length > 14 ? -45 : 0;
-
-    this.groupStatsXaxis = {
-
-      ...this.groupStatsXaxis,
-
-      categories: labels.length > 0 ? labels : ['—'],
-
-      labels: {
-
-        ...this.groupStatsXaxis.labels,
-
-        style: { colors: '#64748b', fontSize: '11px', fontWeight: 500 },
-
-        rotate,
-
-        maxHeight: rotate ? 52 : undefined,
-
-      },
-
-    };
-
-
 
     this.groupStatsYaxis = this.computeYaxisForSeries(this.groupStatsSeries);
 

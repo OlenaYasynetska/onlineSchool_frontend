@@ -93,18 +93,19 @@ export class SidebarComponent implements OnInit {
       icon: 'envelope',
       fragment: 'teacher-homework',
     },
-    {
-      path: '/teacher/activity',
-      label: 'My activity',
-      icon: 'clipboard',
-      fragment: 'teacher-activity',
-    },
-    {
-      path: '/teacher/group-stats',
-      label: 'Groups stars',
-      icon: 'lineChart',
-      fragment: 'teacher-group-stats',
-    },
+    // Hidden: direct navigation disabled for teachers.
+    // {
+    //   path: '/teacher/activity',
+    //   label: 'My activity',
+    //   icon: 'clipboard',
+    //   fragment: 'teacher-activity',
+    // },
+    // {
+    //   path: '/teacher/group-stats',
+    //   label: 'Groups stars',
+    //   icon: 'lineChart',
+    //   fragment: 'teacher-group-stats',
+    // },
   ];
 
   readonly schoolAdminNav: CompactNavItem[] = [

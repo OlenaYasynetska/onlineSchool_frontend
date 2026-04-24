@@ -23,7 +23,7 @@ export const SCHOOL_ADMIN_ROUTES: Routes = [
     children: [
       { path: '', loadComponent: loadSchoolAdminPage },
       { path: 'groups', loadComponent: loadSchoolAdminPage },
-      { path: 'employees', loadComponent: loadSchoolAdminPage },
+      { path: 'employees', redirectTo: '/404', pathMatch: 'full' },
       { path: 'teachers', loadComponent: loadSchoolAdminPage },
       { path: 'students', loadComponent: loadSchoolAdminPage },
       { path: 'schedule', loadComponent: loadSchoolSchedulePage },

@@ -179,6 +179,7 @@
               name="room"
               type="text"
               [(ngModel)]="form.room"
+              (ngModelChange)="onConflictRelevantFieldChange()"
               class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
             />
           </div>
@@ -239,6 +240,34 @@
                   · {{ c.teacherDisplayName }}
                   @if (c.subjectTitle) {
                     · {{ c.subjectTitle }}
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (roomConflictSlots().length > 0) {
+          <div
+            class="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-900"
+            role="alert"
+          >
+            <p class="font-semibold">This room is already booked at this time.</p>
+            <p class="mt-1 text-xs text-red-800">
+              Another lesson uses the same room with overlapping hours. Change room, time,
+              day, or validity dates. (Empty room is not checked.)
+            </p>
+            <ul class="mt-2 list-inside list-disc space-y-0.5 text-xs text-red-900">
+              @for (c of roomConflictSlots(); track c.id) {
+                <li>
+                  <span class="font-medium">{{ c.groupName }}</span>
+                  · {{ c.startTime }}–{{ c.endTime }}
+                  · {{ c.teacherDisplayName }}
+                  @if (c.subjectTitle) {
+                    · {{ c.subjectTitle }}
+                  }
+                  @if (c.room) {
+                    · Room: {{ c.room }}
                   }
                 </li>
               }

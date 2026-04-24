@@ -16,6 +16,7 @@ import type {
 } from '../../models/school-admin-dashboard.model';
 import {
   findGroupScheduleConflicts,
+  findRoomScheduleConflicts,
   findTeacherScheduleConflicts,
 } from '../../utils/schedule-teacher-conflict.util';
 
@@ -52,7 +53,7 @@ export class UpsertScheduleModalComponent implements OnChanges {
 
   @Output() readonly closeRequested = new EventEmitter<void>();
   @Output() readonly submitted = new EventEmitter<UpsertSchedulePayload>();
-  /** Id слотів, що перетинаються з чернеткою (учитель або клас). */
+  /** Id слотів, що перетинаються з чернеткою (учитель, клас або кімната). */
   @Output() readonly scheduleConflictSlotIdsChange = new EventEmitter<string[]>();
 
   readonly dayOptions = DAYS;
@@ -192,10 +193,27 @@ export class UpsertScheduleModalComponent implements OnChanges {
     );
   }
 
+  roomConflictSlots(): ScheduleSlot[] {
+    if (!this.open) return [];
+    return findRoomScheduleConflicts(
+      {
+        room: this.form.room?.trim() || null,
+        dayOfWeek: this.form.dayOfWeek,
+        startTime: this.form.startTime,
+        endTime: this.form.endTime,
+        validFrom: this.form.validFrom?.trim() || null,
+        validUntil: this.form.validUntil?.trim() || null,
+      },
+      this.existingSlots,
+      this.editSlot?.id
+    );
+  }
+
   hasBlockingConflicts(): boolean {
     return (
       this.teacherConflictSlots().length > 0 ||
-      this.groupConflictSlots().length > 0
+      this.groupConflictSlots().length > 0 ||
+      this.roomConflictSlots().length > 0
     );
   }
 
@@ -205,6 +223,7 @@ export class UpsertScheduleModalComponent implements OnChanges {
       ...new Set([
         ...this.teacherConflictSlots().map((s) => s.id),
         ...this.groupConflictSlots().map((s) => s.id),
+        ...this.roomConflictSlots().map((s) => s.id),
       ]),
     ].sort();
     const key = ids.join(',');

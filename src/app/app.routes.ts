@@ -103,6 +103,13 @@ export const routes: Routes = [
           ),
       },
       {
+        path: '404',
+        loadComponent: () =>
+          import('./features/errors/pages/not-found/not-found.component').then(
+            (m) => m.NotFoundComponent
+          ),
+      },
+      {
         path: '**',
         loadComponent: () =>
           import('./features/errors/pages/not-found/not-found.component').then(

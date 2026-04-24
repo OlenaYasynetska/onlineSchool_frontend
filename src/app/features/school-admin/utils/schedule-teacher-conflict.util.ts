@@ -30,6 +30,15 @@ export function scheduleTimeRangesOverlap(
  * Whether two optional validity ranges can both apply on at least one calendar day.
  * Empty bounds are treated as open-ended (`yyyy-MM-dd` string order).
  */
+/** Trim, collapse spaces, lower-case — for comparing room labels. */
+export function normalizeScheduleRoomKey(
+  room: string | null | undefined
+): string | null {
+  const t = room?.trim().replace(/\s+/g, ' ');
+  if (!t) return null;
+  return t.toLowerCase();
+}
+
 export function scheduleValidityRangesOverlap(
   aFrom: string | null | undefined,
   aUntil: string | null | undefined,
@@ -59,6 +68,15 @@ export interface DraftSlotLike {
 
 export interface GroupDraftLike {
   groupId: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  validFrom?: string | null;
+  validUntil?: string | null;
+}
+
+export interface RoomDraftLike {
+  room: string | null | undefined;
   dayOfWeek: number;
   startTime: string;
   endTime: string;
@@ -138,8 +156,44 @@ export function findGroupScheduleConflicts(
   });
 }
 
+/** Same physical room cannot host two lessons at once (only when `room` is set on both sides). */
+export function findRoomScheduleConflicts(
+  draft: RoomDraftLike,
+  existing: readonly ScheduleSlot[],
+  excludeSlotId?: string | null
+): ScheduleSlot[] {
+  const roomKey = normalizeScheduleRoomKey(draft.room);
+  if (!roomKey) return [];
+  return existing.filter((s) => {
+    if (excludeSlotId && s.id === excludeSlotId) return false;
+    if (normalizeScheduleRoomKey(s.room) !== roomKey) return false;
+    if (s.dayOfWeek !== draft.dayOfWeek) return false;
+    if (
+      !scheduleTimeRangesOverlap(
+        s.startTime,
+        s.endTime,
+        draft.startTime,
+        draft.endTime
+      )
+    ) {
+      return false;
+    }
+    if (
+      !scheduleValidityRangesOverlap(
+        s.validFrom,
+        s.validUntil,
+        draft.validFrom,
+        draft.validUntil
+      )
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
 /**
- * Every slot id that participates in at least one overlap (same teacher OR same group,
+ * Every slot id that participates in at least one overlap (same teacher OR same group OR same room,
  * same weekday, overlapping time & validity). Used to highlight bad data already in DB.
  */
 export function allStoredScheduleConflictSlotIds(
@@ -173,7 +227,10 @@ export function allStoredScheduleConflictSlotIds(
       }
       const teacherOverlap = a.teacherId === b.teacherId;
       const groupOverlap = a.groupId === b.groupId;
-      if (teacherOverlap || groupOverlap) {
+      const ka = normalizeScheduleRoomKey(a.room);
+      const kb = normalizeScheduleRoomKey(b.room);
+      const roomOverlap = ka !== null && kb !== null && ka === kb;
+      if (teacherOverlap || groupOverlap || roomOverlap) {
         ids.add(a.id);
         ids.add(b.id);
       }

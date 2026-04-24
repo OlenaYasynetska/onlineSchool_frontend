@@ -156,10 +156,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.loginError.set('Please enter your email and password.');
+      return;
+    }
     this.loginError.set(null);
     const raw = this.form.getRawValue();
-    const email = raw.roleIdentifier.trim();
+    const email = raw.roleIdentifier.trim().toLowerCase();
     const password = (raw.password ?? '').trim();
     if (this.auth.loginAsSuperAdminIfValid(email, password)) {
       void this.router.navigate(['/super-admin']);
@@ -202,13 +206,13 @@ export class LoginComponent implements OnInit, OnDestroy {
       if (err.status === 0) {
         return 'Cannot reach the server. Start the backend (e.g. Spring on http://localhost:8080) and check the API URL in environment.';
       }
-      const body = err.error;
-      if (body && typeof body === 'object' && 'message' in body) {
-        const m = (body as { message?: unknown }).message;
-        if (typeof m === 'string' && m.trim()) return m;
-      }
+      const fromBody = this.apiErrorMessage(err.error);
+      if (fromBody) return fromBody;
       if (err.status === 401) {
-        return 'Invalid email or password.';
+        return (
+          'Invalid email or password. If you use the deployed site: this account must exist in the ' +
+          'production database with this exact email, and the password must match what was set in the invitation or by your admin.'
+        );
       }
       if (err.status === 405) {
         if (environment.production) {
@@ -227,5 +231,16 @@ export class LoginComponent implements OnInit, OnDestroy {
       return `Login failed (${err.status}).`;
     }
     return 'Login failed. Please try again.';
+  }
+
+  /** Spring `ApiErrorResponse`: `{ message, error, status, ... }` or plain string. */
+  private apiErrorMessage(body: unknown): string | null {
+    if (body == null) return null;
+    if (typeof body === 'string' && body.trim()) return body.trim();
+    if (typeof body === 'object' && body !== null && 'message' in body) {
+      const m = (body as { message?: unknown }).message;
+      if (typeof m === 'string' && m.trim()) return m.trim();
+    }
+    return null;
   }
 }

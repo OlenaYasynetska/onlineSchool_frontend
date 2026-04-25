@@ -31,19 +31,19 @@ import type { SchoolDashboardStats } from '../../../school-admin/models/school-a
       }
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <app-card>
-          <p class="text-sm text-gray-500">Учні</p>
+          <p class="text-sm text-gray-500">Students</p>
           <p class="text-2xl font-semibold">{{ statStudents() }}</p>
         </app-card>
         <app-card>
-          <p class="text-sm text-gray-500">Вчителі</p>
+          <p class="text-sm text-gray-500">Teachers</p>
           <p class="text-2xl font-semibold">{{ statTeachers() }}</p>
         </app-card>
         <app-card>
-          <p class="text-sm text-gray-500">Школи</p>
+          <p class="text-sm text-gray-500">Schools</p>
           <p class="text-2xl font-semibold">{{ statSchools() }}</p>
         </app-card>
         <app-card>
-          <p class="text-sm text-gray-500">Курси</p>
+          <p class="text-sm text-gray-500">Courses</p>
           <p class="text-2xl font-semibold">{{ statCourses() }}</p>
         </app-card>
       </div>

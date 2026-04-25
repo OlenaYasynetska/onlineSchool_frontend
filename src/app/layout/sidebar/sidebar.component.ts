@@ -241,4 +241,32 @@ export class SidebarComponent implements OnInit {
     }
     return '/';
   }
+
+  /** Поточний URL без query — для порівняння з маршрутом чату. */
+  private currentPathNoQuery(): string {
+    return this.router.url.split('?')[0].replace(/\/$/, '') || '/';
+  }
+
+  /** Відповідає routerLinkActive exact для FAB чату. */
+  protected isChatFabRouteActive(): boolean {
+    const p = this.currentPathNoQuery();
+    return p === '/student/chat' || p === '/teacher/chat';
+  }
+
+  protected chatFabAriaLabel(): string {
+    return this.isChatFabRouteActive() ? 'Back to dashboard' : 'Open chat';
+  }
+
+  protected onChatFabClick(): void {
+    const p = this.currentPathNoQuery();
+    if (p === '/student/chat' || p.startsWith('/student/chat/')) {
+      void this.router.navigate(['/student']);
+      return;
+    }
+    if (p === '/teacher/chat' || p.startsWith('/teacher/chat/')) {
+      void this.router.navigate(['/teacher']);
+      return;
+    }
+    void this.router.navigateByUrl(this.chatPath());
+  }
 }

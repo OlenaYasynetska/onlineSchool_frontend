@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
 import { LandingHeroHeaderComponent } from './features/landing/components/landing-hero-header/landing-hero-header.component';
 import type { LandingHeaderLayout } from './features/landing/components/landing-hero-header/landing-hero-header.component';
+import { AnalyticsService } from './services/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -25,7 +26,10 @@ import type { LandingHeaderLayout } from './features/landing/components/landing-
 export class AppComponent {
   readonly brand = 'Owl Tracker';
 
-  constructor(private readonly router: Router) {}
+  constructor(
+    private readonly router: Router,
+    private readonly analytics: AnalyticsService,
+  ) {}
 
   headerLayout(): LandingHeaderLayout {
     const path = this.router.url.split('?')[0];

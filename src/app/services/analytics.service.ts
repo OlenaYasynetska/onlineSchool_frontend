@@ -24,11 +24,16 @@ export class AnalyticsService {
   }
 
   trackPage(url: string): void {
-    if (typeof gtag !== 'undefined') {
-      gtag('config', this.measurementId, {
-        page_path: url,
-      });
+    if (typeof gtag === 'undefined') {
+      return;
     }
+    const pagePath = url || '/';
+    const pageLocation = new URL(pagePath, window.location.origin).href;
+    gtag('config', this.measurementId, {
+      page_path: pagePath,
+      page_location: pageLocation,
+      page_title: document.title,
+    });
   }
 
   trackEvent(action: string, category: string, label?: string, value?: number): void {

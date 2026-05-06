@@ -110,6 +110,48 @@ export class StudyMaterialsService {
     );
   }
 
+  patchTeacherSet(
+    userId: string,
+    setId: string,
+    body: { title: string; description: string | null }
+  ): Observable<StudyMaterialSetDto> {
+    const params = new HttpParams().set('userId', userId);
+    return this.http.patch<StudyMaterialSetDto>(
+      `${environment.apiUrl}/teacher/study-materials/sets/${encodeURIComponent(setId)}`,
+      body,
+      { params }
+    );
+  }
+
+  patchTeacherLesson(
+    userId: string,
+    lessonId: string,
+    body: { title: string }
+  ): Observable<StudyMaterialLessonDto> {
+    const params = new HttpParams().set('userId', userId);
+    return this.http.patch<StudyMaterialLessonDto>(
+      `${environment.apiUrl}/teacher/study-materials/lessons/${encodeURIComponent(lessonId)}`,
+      body,
+      { params }
+    );
+  }
+
+  deleteTeacherSet(userId: string, setId: string): Observable<void> {
+    const params = new HttpParams().set('userId', userId);
+    return this.http.delete<void>(
+      `${environment.apiUrl}/teacher/study-materials/sets/${encodeURIComponent(setId)}`,
+      { params }
+    );
+  }
+
+  deleteTeacherLesson(userId: string, lessonId: string): Observable<void> {
+    const params = new HttpParams().set('userId', userId);
+    return this.http.delete<void>(
+      `${environment.apiUrl}/teacher/study-materials/lessons/${encodeURIComponent(lessonId)}`,
+      { params }
+    );
+  }
+
   /** Student */
   listStudentSets(userId: string): Observable<StudyMaterialSetDto[]> {
     return this.http.get<StudyMaterialSetDto[]>(

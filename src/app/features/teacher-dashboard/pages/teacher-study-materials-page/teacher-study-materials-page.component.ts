@@ -53,6 +53,17 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
   pdfTitle = '';
   safePdfUrl: SafeResourceUrl | null = null;
 
+  editSetOpen = false;
+  editSetTitle = '';
+  editSetDescription = '';
+  editingSetId: string | null = null;
+  editSetBusy = false;
+
+  editLessonOpen = false;
+  editLessonTitle = '';
+  editingLessonId: string | null = null;
+  editLessonBusy = false;
+
   constructor() {
     this.reload();
   }
@@ -354,6 +365,135 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
       }
     }
     return out;
+  }
+
+  openEditSet(row: StudyMaterialSetDto, ev?: Event): void {
+    ev?.stopPropagation?.();
+    this.editingSetId = row.id;
+    this.editSetTitle = row.title;
+    this.editSetDescription = row.description ?? '';
+    this.editSetOpen = true;
+  }
+
+  closeEditSet(): void {
+    if (this.editSetBusy) {
+      return;
+    }
+    this.editSetOpen = false;
+    this.editingSetId = null;
+  }
+
+  submitEditSet(): void {
+    const u = this.auth.currentUser();
+    const id = this.editingSetId;
+    const title = this.editSetTitle.trim();
+    if (!u?.id || !id || !title || this.editSetBusy) {
+      return;
+    }
+    this.editSetBusy = true;
+    this.api
+      .patchTeacherSet(u.id, id, {
+        title,
+        description: this.editSetDescription.trim() || null,
+      })
+      .subscribe({
+        next: (updated) => {
+          this.editSetBusy = false;
+          this.closeEditSet();
+          if (this.selectedSet?.id === updated.id) {
+            this.selectedSet = updated;
+          }
+          this.reload();
+        },
+        error: () => {
+          this.editSetBusy = false;
+          window.alert('Could not update set.');
+        },
+      });
+  }
+
+  confirmDeleteSet(row: StudyMaterialSetDto, ev?: Event): void {
+    ev?.stopPropagation?.();
+    if (
+      !window.confirm(
+        `Delete “${row.title}” and all ${row.lessonCount} lesson(s)? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    const u = this.auth.currentUser();
+    if (!u?.id) {
+      return;
+    }
+    this.api.deleteTeacherSet(u.id, row.id).subscribe({
+      next: () => {
+        if (this.selectedSet?.id === row.id) {
+          this.selectedSet = null;
+          this.lessons = [];
+        }
+        this.reload();
+      },
+      error: () => window.alert('Could not delete set.'),
+    });
+  }
+
+  openEditLesson(lesson: StudyMaterialLessonDto): void {
+    this.editingLessonId = lesson.id;
+    this.editLessonTitle = lesson.title;
+    this.editLessonOpen = true;
+  }
+
+  closeEditLesson(): void {
+    if (this.editLessonBusy) {
+      return;
+    }
+    this.editLessonOpen = false;
+    this.editingLessonId = null;
+  }
+
+  submitEditLesson(): void {
+    const u = this.auth.currentUser();
+    const id = this.editingLessonId;
+    const title = this.editLessonTitle.trim();
+    if (!u?.id || !id || !title || this.editLessonBusy) {
+      return;
+    }
+    this.editLessonBusy = true;
+    this.api.patchTeacherLesson(u.id, id, { title }).subscribe({
+      next: () => {
+        this.editLessonBusy = false;
+        this.closeEditLesson();
+        const sel = this.selectedSet;
+        this.reload();
+        if (sel) {
+          queueMicrotask(() => this.selectSet(sel));
+        }
+      },
+      error: () => {
+        this.editLessonBusy = false;
+        window.alert('Could not update lesson.');
+      },
+    });
+  }
+
+  confirmDeleteLesson(lesson: StudyMaterialLessonDto): void {
+    if (!window.confirm(`Delete lesson “${lesson.title}”?`)) {
+      return;
+    }
+    const u = this.auth.currentUser();
+    if (!u?.id) {
+      return;
+    }
+    this.api.deleteTeacherLesson(u.id, lesson.id).subscribe({
+      next: () => {
+        const sel = this.selectedSet;
+        this.reload();
+        if (sel) {
+          queueMicrotask(() => this.selectSet(sel));
+        }
+      },
+      error: () => window.alert('Could not delete lesson.'),
+    });
   }
 
   closePdf(): void {

@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { concat } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
@@ -404,9 +405,21 @@ export class TeacherStudyMaterialsPageComponent {
           }
           this.reload();
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
           this.editSetBusy = false;
-          window.alert('Could not update set.');
+          const raw = err.error;
+          const apiMsg =
+            raw &&
+            typeof raw === 'object' &&
+            'message' in raw &&
+            typeof (raw as { message: unknown }).message === 'string'
+              ? (raw as { message: string }).message
+              : null;
+          window.alert(
+            apiMsg?.trim()
+              ? `Could not update set: ${apiMsg}`
+              : `Could not update set. (${err.status || 'network'})`
+          );
         },
       });
   }

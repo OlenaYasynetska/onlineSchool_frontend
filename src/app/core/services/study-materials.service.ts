@@ -117,7 +117,7 @@ export class StudyMaterialsService {
     body: { title: string; description: string | null }
   ): Observable<StudyMaterialSetDto> {
     const params = new HttpParams().set('userId', userId);
-    return this.http.patch<StudyMaterialSetDto>(
+    return this.http.put<StudyMaterialSetDto>(
       `${environment.apiUrl}/teacher/study-materials/sets/${encodeURIComponent(setId)}`,
       body,
       { params }
@@ -130,7 +130,7 @@ export class StudyMaterialsService {
     body: { title: string; issuuEmbedUrl: string | null }
   ): Observable<StudyMaterialLessonDto> {
     const params = new HttpParams().set('userId', userId);
-    return this.http.patch<StudyMaterialLessonDto>(
+    return this.http.put<StudyMaterialLessonDto>(
       `${environment.apiUrl}/teacher/study-materials/lessons/${encodeURIComponent(lessonId)}`,
       body,
       { params }

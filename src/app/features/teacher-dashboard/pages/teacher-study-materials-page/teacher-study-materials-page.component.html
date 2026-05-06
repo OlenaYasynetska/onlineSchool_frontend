@@ -127,13 +127,14 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
+    <div class="w-full max-w-md max-h-[min(90vh,640px)] overflow-y-auto rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
       <h3 class="text-lg font-bold text-slate-900">New material set</h3>
       <div class="mt-4 space-y-3">
         <label class="block text-xs font-semibold uppercase text-slate-600">Subject</label>
         <select
           [(ngModel)]="newSubjectId"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          [disabled]="createBusy"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
         >
           @for (sub of subjects; track sub.id) {
             <option [ngValue]="sub.id">{{ sub.title }}</option>
@@ -142,26 +143,65 @@
         <label class="block text-xs font-semibold uppercase text-slate-600">Title</label>
         <input
           [(ngModel)]="newTitle"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          [disabled]="createBusy"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
         />
         <label class="block text-xs font-semibold uppercase text-slate-600">Description (optional)</label>
         <textarea
           [(ngModel)]="newDescription"
+          [disabled]="createBusy"
           rows="3"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
         ></textarea>
+        <label class="block text-xs font-semibold uppercase text-slate-600">PDF lessons (optional)</label>
+        <p class="text-xs text-slate-500">
+          You can attach one or more PDFs now; each file becomes a lesson (title from the file name). Max 30 files.
+        </p>
+        <input
+          type="file"
+          multiple
+          accept=".pdf,application/pdf"
+          [disabled]="createBusy"
+          (change)="onCreatePdfFilesChange($event)"
+          class="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-violet-800 hover:file:bg-violet-100 disabled:opacity-60"
+        />
+        @if (createPdfFiles.length > 0) {
+          <ul class="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50/80 px-2 py-2 text-sm">
+            @for (f of createPdfFiles; track $index) {
+              <li class="flex items-center justify-between gap-2 py-0.5 text-slate-800">
+                <span class="min-w-0 truncate" [title]="f.name">{{ f.name }}</span>
+                <button
+                  type="button"
+                  [disabled]="createBusy"
+                  (click)="removeCreatePdfAt($index)"
+                  class="shrink-0 text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  Remove
+                </button>
+              </li>
+            }
+          </ul>
+        }
+        @if (createError) {
+          <p class="text-xs text-red-600">{{ createError }}</p>
+        }
       </div>
       <div class="mt-6 flex justify-end gap-2">
-        <button type="button" (click)="closeCreate()" class="rounded-lg border px-3 py-2 text-sm">
+        <button
+          type="button"
+          (click)="closeCreate()"
+          [disabled]="createBusy"
+          class="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
+        >
           Cancel
         </button>
         <button
           type="button"
           (click)="submitCreate()"
-          [disabled]="!newTitle.trim() || !newSubjectId"
+          [disabled]="!newTitle.trim() || !newSubjectId || createBusy"
           class="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
-          Create
+          {{ createBusy ? (createPdfFiles.length ? 'Creating & uploading…' : 'Creating…') : 'Create' }}
         </button>
       </div>
     </div>
@@ -177,13 +217,42 @@
     <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
       <h3 class="text-lg font-bold text-slate-900">Add PDF lesson</h3>
       <div class="mt-4 space-y-3">
-        <label class="block text-xs font-semibold uppercase text-slate-600">Lesson title</label>
+        <label class="block text-xs font-semibold uppercase text-slate-600">
+          Lesson title (optional if one file — uses file name)
+        </label>
         <input
           [(ngModel)]="lessonTitle"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+          [disabled]="uploadBusy"
+          placeholder="Applied to single file, or prefix when several files"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
         />
-        <label class="block text-xs font-semibold uppercase text-slate-600">PDF file</label>
-        <input type="file" accept=".pdf,application/pdf" (change)="onLessonFile($event)" class="text-sm" />
+        <label class="block text-xs font-semibold uppercase text-slate-600">PDF files</label>
+        <p class="text-xs text-slate-500">Select one or more PDFs (max 30). Multiple files: titles become “Your title (1)”, “(2)”… or file names if empty.</p>
+        <input
+          type="file"
+          multiple
+          accept=".pdf,application/pdf"
+          [disabled]="uploadBusy"
+          (change)="onLessonFilesChange($event)"
+          class="block w-full text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-violet-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-violet-800 hover:file:bg-violet-100 disabled:opacity-60"
+        />
+        @if (lessonFiles.length > 0) {
+          <ul class="max-h-40 space-y-1 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50/80 px-2 py-2 text-sm">
+            @for (f of lessonFiles; track $index) {
+              <li class="flex items-center justify-between gap-2 py-0.5 text-slate-800">
+                <span class="min-w-0 truncate" [title]="f.name">{{ f.name }}</span>
+                <button
+                  type="button"
+                  [disabled]="uploadBusy"
+                  (click)="removeLessonFileAt($index)"
+                  class="shrink-0 text-xs font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  Remove
+                </button>
+              </li>
+            }
+          </ul>
+        }
         @if (uploadError) {
           <p class="text-xs text-red-600">{{ uploadError }}</p>
         }
@@ -193,17 +262,17 @@
           type="button"
           (click)="closeAddLesson()"
           [disabled]="uploadBusy"
-          class="rounded-lg border px-3 py-2 text-sm"
+          class="rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="button"
           (click)="submitLesson()"
-          [disabled]="uploadBusy || !lessonTitle.trim() || !lessonFile"
+          [disabled]="uploadBusy || lessonFiles.length === 0"
           class="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
-          {{ uploadBusy ? 'Uploading…' : 'Upload' }}
+          {{ uploadBusy ? 'Uploading…' : lessonFiles.length > 1 ? 'Upload all' : 'Upload' }}
         </button>
       </div>
     </div>

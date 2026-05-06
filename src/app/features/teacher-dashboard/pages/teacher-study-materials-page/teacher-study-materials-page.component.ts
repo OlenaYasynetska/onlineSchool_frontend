@@ -2,6 +2,7 @@ import { Component, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { concat } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   StudyMaterialsService,
@@ -37,10 +38,15 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
   newTitle = '';
   newDescription = '';
   newSubjectId = '';
+  /** PDF-файли, додаються до набору одразу після створення (один або кілька). */
+  createPdfFiles: File[] = [];
+  createBusy = false;
+  createError: string | null = null;
 
   addLessonOpen = false;
   lessonTitle = '';
-  lessonFile: File | null = null;
+  /** Один файл (зворотна сумісність) або кілька — через multiple input. */
+  lessonFiles: File[] = [];
   uploadBusy = false;
   uploadError: string | null = null;
 
@@ -117,17 +123,40 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
     this.newTitle = '';
     this.newDescription = '';
     this.newSubjectId = this.subjects[0]?.id ?? '';
+    this.createPdfFiles = [];
+    this.createError = null;
   }
 
   closeCreate(): void {
+    if (this.createBusy) {
+      return;
+    }
     this.createOpen = false;
+    this.createPdfFiles = [];
+    this.createError = null;
+  }
+
+  onCreatePdfFilesChange(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    this.createPdfFiles = this.collectPdfFilesFromInput(input);
+    if (input.files && input.files.length > 0 && this.createPdfFiles.length === 0) {
+      this.createError = 'Only PDF files are accepted.';
+    } else {
+      this.createError = null;
+    }
+  }
+
+  removeCreatePdfAt(index: number): void {
+    this.createPdfFiles = this.createPdfFiles.filter((_, i) => i !== index);
   }
 
   submitCreate(): void {
     const u = this.auth.currentUser();
-    if (!u?.id || !this.newTitle.trim() || !this.newSubjectId) {
+    if (!u?.id || !this.newTitle.trim() || !this.newSubjectId || this.createBusy) {
       return;
     }
+    this.createBusy = true;
+    this.createError = null;
     this.api
       .createTeacherSet(u.id, {
         title: this.newTitle.trim(),
@@ -135,11 +164,50 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
         teacherSubjectId: this.newSubjectId,
       })
       .subscribe({
-        next: () => {
-          this.closeCreate();
-          this.reload();
+        next: (created) => {
+          const files = [...this.createPdfFiles];
+          if (files.length === 0) {
+            this.createBusy = false;
+            this.closeCreate();
+            this.reload();
+            queueMicrotask(() => this.selectSet(created));
+            return;
+          }
+          const uploads = files.map((file) =>
+            this.api.uploadTeacherLessonPdf(
+              u.id,
+              created.id,
+              this.lessonTitleFromFileName(file.name),
+              file
+            )
+          );
+          concat(...uploads).subscribe({
+            complete: () => {
+              this.createBusy = false;
+              this.closeCreate();
+              this.reload();
+              queueMicrotask(() => this.selectSet(created));
+            },
+            error: (err: { error?: { message?: string } | string; message?: string }) => {
+              this.createBusy = false;
+              const msg =
+                (typeof err?.error === 'object' && err?.error?.message) ||
+                (typeof err?.error === 'string' ? err.error : null) ||
+                err?.message ||
+                'Upload failed';
+              window.alert(
+                `Set was created, but uploading PDFs failed: ${msg}\nYou can add files with “Add PDF lesson”.`
+              );
+              this.createOpen = false;
+              this.createPdfFiles = [];
+              this.createError = null;
+              this.reload();
+              queueMicrotask(() => this.selectSet(created));
+            },
+          });
         },
         error: (err: { error?: { message?: string }; message?: string }) => {
+          this.createBusy = false;
           window.alert(
             `Could not create set: ${err?.error?.message ?? err?.message ?? 'error'}`
           );
@@ -150,31 +218,60 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
   openAddLesson(): void {
     this.addLessonOpen = true;
     this.lessonTitle = '';
-    this.lessonFile = null;
+    this.lessonFiles = [];
     this.uploadError = null;
   }
 
   closeAddLesson(): void {
+    if (this.uploadBusy) {
+      return;
+    }
     this.addLessonOpen = false;
+    this.lessonFiles = [];
   }
 
-  onLessonFile(ev: Event): void {
+  onLessonFilesChange(ev: Event): void {
     const input = ev.target as HTMLInputElement;
-    const f = input.files?.[0];
-    this.lessonFile = f ?? null;
+    this.lessonFiles = this.collectPdfFilesFromInput(input);
+    if (input.files && input.files.length > 0 && this.lessonFiles.length === 0) {
+      this.uploadError = 'Only PDF files are accepted.';
+    } else {
+      this.uploadError = null;
+    }
+  }
+
+  removeLessonFileAt(index: number): void {
+    this.lessonFiles = this.lessonFiles.filter((_, i) => i !== index);
   }
 
   submitLesson(): void {
     const u = this.auth.currentUser();
     const setId = this.selectedSet?.id;
-    if (!u?.id || !setId || !this.lessonTitle.trim() || !this.lessonFile) {
-      this.uploadError = 'Title and PDF file are required.';
+    const files = [...this.lessonFiles];
+    if (!u?.id || !setId) {
+      this.uploadError = 'Missing set or user.';
       return;
     }
+    if (files.length === 0) {
+      this.uploadError = 'Choose at least one PDF file.';
+      return;
+    }
+    const baseTitle = this.lessonTitle.trim();
     this.uploadBusy = true;
     this.uploadError = null;
-    this.api.uploadTeacherLessonPdf(u.id, setId, this.lessonTitle.trim(), this.lessonFile).subscribe({
-      next: () => {
+
+    const uploads = files.map((file, i) => {
+      const title =
+        files.length === 1 && baseTitle
+          ? baseTitle
+          : baseTitle
+            ? `${baseTitle} (${i + 1})`
+            : this.lessonTitleFromFileName(file.name);
+      return this.api.uploadTeacherLessonPdf(u.id, setId, title, file);
+    });
+
+    concat(...uploads).subscribe({
+      complete: () => {
         this.uploadBusy = false;
         const sel = this.selectedSet;
         this.closeAddLesson();
@@ -182,7 +279,7 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
           this.selectSet(sel);
         }
         this.reload();
-     },
+      },
       error: (err: { error?: { message?: string } | string; message?: string }) => {
         this.uploadBusy = false;
         this.uploadError =
@@ -192,6 +289,44 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
           'Upload failed';
       },
     });
+  }
+
+  private lessonTitleFromFileName(name: string): string {
+    const n = name.trim();
+    if (!n) {
+      return 'Lesson';
+    }
+    const lower = n.toLowerCase();
+    if (lower.endsWith('.pdf')) {
+      const t = n.slice(0, -4).trim();
+      return t || 'Lesson';
+    }
+    return n;
+  }
+
+  private isPdfFile(file: File): boolean {
+    const ct = (file.type || '').toLowerCase();
+    if (ct.includes('pdf')) {
+      return true;
+    }
+    return file.name.toLowerCase().endsWith('.pdf');
+  }
+
+  /** Щонайбільше 30 файлів за один раз (захист від випадково великого вибору). */
+  private collectPdfFilesFromInput(input: HTMLInputElement): File[] {
+    const list = input.files;
+    const out: File[] = [];
+    if (!list?.length) {
+      return out;
+    }
+    const max = Math.min(list.length, 30);
+    for (let i = 0; i < max; i++) {
+      const f = list.item(i);
+      if (f && this.isPdfFile(f)) {
+        out.push(f);
+      }
+    }
+    return out;
   }
 
   closePdf(): void {

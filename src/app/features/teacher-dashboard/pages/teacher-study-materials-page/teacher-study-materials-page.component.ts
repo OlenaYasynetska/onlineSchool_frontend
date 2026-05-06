@@ -120,9 +120,11 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
 
   openCreate(): void {
     this.createOpen = true;
-    this.newTitle = '';
     this.newDescription = '';
     this.newSubjectId = this.subjects[0]?.id ?? '';
+    this.newTitle = this.newSubjectId
+      ? this.suggestedSetTitleForSubjectId(this.newSubjectId)
+      : '';
     this.createPdfFiles = [];
     this.createError = null;
   }
@@ -150,16 +152,23 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
     this.createPdfFiles = this.createPdfFiles.filter((_, i) => i !== index);
   }
 
+  onCreateSubjectSelected(): void {
+    if (!this.newTitle.trim()) {
+      this.newTitle = this.suggestedSetTitleForSubjectId(this.newSubjectId);
+    }
+  }
+
   submitCreate(): void {
     const u = this.auth.currentUser();
-    if (!u?.id || !this.newTitle.trim() || !this.newSubjectId || this.createBusy) {
+    const title = this.resolveCreateTitle().trim();
+    if (!u?.id || !this.newSubjectId || !title || this.createBusy) {
       return;
     }
     this.createBusy = true;
     this.createError = null;
     this.api
       .createTeacherSet(u.id, {
-        title: this.newTitle.trim(),
+        title,
         description: this.newDescription.trim() || null,
         teacherSubjectId: this.newSubjectId,
       })
@@ -289,6 +298,24 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
           'Upload failed';
       },
     });
+  }
+
+  private suggestedSetTitleForSubjectId(subjectId: string): string {
+    const sub = this.subjects.find((s) => s.id === subjectId);
+    const name = sub?.title?.trim();
+    return name ? `${name} — materials` : 'Study materials';
+  }
+
+  /** Заголовок набору: поле Title, або перший PDF, або «Предмет — materials». */
+  private resolveCreateTitle(): string {
+    const manual = this.newTitle.trim();
+    if (manual) {
+      return manual;
+    }
+    if (this.createPdfFiles.length > 0) {
+      return this.lessonTitleFromFileName(this.createPdfFiles[0].name);
+    }
+    return this.suggestedSetTitleForSubjectId(this.newSubjectId);
   }
 
   private lessonTitleFromFileName(name: string): string {

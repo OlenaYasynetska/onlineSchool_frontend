@@ -15,6 +15,11 @@ const loadSchoolSchedulePage = () =>
     (m) => m.SchoolSchedulePageComponent
   );
 
+const loadSchoolMaterialsPage = () =>
+  import('./pages/school-admin-study-materials-page/school-admin-study-materials-page.component').then(
+    (m) => m.SchoolAdminStudyMaterialsPageComponent
+  );
+
 /** Вкладені маршрути: при зміні сегмента контент перестворюється (як у super admin). */
 export const SCHOOL_ADMIN_ROUTES: Routes = [
   {
@@ -26,6 +31,7 @@ export const SCHOOL_ADMIN_ROUTES: Routes = [
       { path: 'employees', redirectTo: '/404', pathMatch: 'full' },
       { path: 'teachers', loadComponent: loadSchoolAdminPage },
       { path: 'students', loadComponent: loadSchoolAdminPage },
+      { path: 'materials', loadComponent: loadSchoolMaterialsPage },
       { path: 'schedule', loadComponent: loadSchoolSchedulePage },
     ],
   },

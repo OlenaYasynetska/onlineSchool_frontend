@@ -30,6 +30,11 @@ const loadTeacherSchedulePage = () =>
     (m) => m.TeacherSchedulePageComponent
   );
 
+const loadStudyMaterials = () =>
+  import('./pages/teacher-study-materials-page/teacher-study-materials-page.component').then(
+    (m) => m.TeacherStudyMaterialsPageComponent
+  );
+
 const loadChatPage = () =>
   import('../chat/chat-page.component').then((m) => m.ChatPageComponent);
 
@@ -43,6 +48,7 @@ export const TEACHER_DASHBOARD_ROUTES: Routes = [
       { path: 'groups', loadComponent: loadPage },
       { path: 'students', loadComponent: loadPage },
       { path: 'homework', loadComponent: loadHomework },
+      { path: 'materials', loadComponent: loadStudyMaterials },
       { path: 'activity', loadComponent: loadPage },
       { path: 'group-stats', loadComponent: loadGroupStats },
       { path: 'schedule', loadComponent: loadTeacherSchedulePage },

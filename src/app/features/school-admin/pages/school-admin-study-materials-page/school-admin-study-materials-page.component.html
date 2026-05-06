@@ -1,0 +1,98 @@
+<div class="min-h-0 min-w-0 space-y-6 bg-slate-100/80 px-4 pb-8 pt-6 sm:px-6 lg:px-8">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Study materials</h1>
+    <p class="mt-1 text-sm text-slate-600">View PDF sets published by teachers in your school (read-only).</p>
+  </div>
+
+  @if (loading) {
+    <p class="text-sm text-slate-600">Loading…</p>
+  }
+
+  @if (!loading && noSchool) {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+      School id is missing. Reload or log in again.
+    </div>
+  }
+
+  @if (!loading && !noSchool) {
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <section class="space-y-3">
+        <h2 class="text-lg font-bold text-slate-900">All sets</h2>
+        @if (sets.length === 0) {
+          <p class="text-sm text-slate-600">No material sets yet.</p>
+        } @else {
+          <ul class="space-y-2">
+            @for (s of sets; track s.id) {
+              <li>
+                <button
+                  type="button"
+                  (click)="selectSet(s)"
+                  [class.ring-2]="selectedSet?.id === s.id"
+                  [class.ring-violet-400]="selectedSet?.id === s.id"
+                  class="w-full rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-violet-200"
+                >
+                  <p class="font-semibold text-slate-900">{{ s.title }}</p>
+                  @if (s.teacherSubjectTitle) {
+                    <p class="mt-1 text-xs font-medium text-violet-700">{{ s.teacherSubjectTitle }}</p>
+                  }
+                  <p class="mt-2 text-xs text-slate-500">{{ s.lessonCount }} lesson(s)</p>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+      <section class="min-h-[min(70vh,520px)] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        @if (!selectedSet) {
+          <p class="text-sm text-slate-600">Select a set to view lessons.</p>
+        } @else {
+          <h2 class="text-lg font-bold text-slate-900">{{ selectedSet.title }}</h2>
+          @if (lessonsLoading) {
+            <p class="mt-4 text-sm text-slate-600">Loading…</p>
+          } @else if (lessonsError) {
+            <p class="mt-4 text-sm text-red-600">{{ lessonsError }}</p>
+          } @else if (lessons.length === 0) {
+            <p class="mt-4 text-sm text-slate-600">No lessons in this set.</p>
+          } @else {
+            <ul class="mt-4 divide-y divide-slate-100">
+              @for (l of lessons; track l.id) {
+                <li class="flex flex-wrap items-center justify-between gap-2 py-3">
+                  <span class="font-medium text-slate-900">{{ l.title }}</span>
+                  <button
+                    type="button"
+                    (click)="openPdf(l)"
+                    class="text-sm font-semibold text-violet-700 hover:text-violet-900"
+                  >
+                    Open PDF
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </section>
+    </div>
+  }
+</div>
+
+@if (safePdfUrl) {
+  <div
+    class="fixed inset-0 z-[110] flex flex-col bg-slate-900/60 p-2 sm:p-4"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2">
+        <p class="truncate text-sm font-semibold text-slate-900">{{ pdfTitle }}</p>
+        <button
+          type="button"
+          (click)="closePdf()"
+          class="rounded-lg px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+        >
+          Close
+        </button>
+      </div>
+      <iframe [src]="safePdfUrl" class="min-h-0 flex-1 w-full border-0" title="PDF preview"></iframe>
+    </div>
+  </div>
+}

@@ -14,7 +14,8 @@ export type SidebarNavIcon =
   | 'building'
   | 'clipboard'
   | 'lineChart'
-  | 'calendar';
+  | 'calendar'
+  | 'book';
 
 export type CompactNavItem = {
   path: string;
@@ -93,6 +94,12 @@ export class SidebarComponent implements OnInit {
       icon: 'envelope',
       fragment: 'teacher-homework',
     },
+    {
+      path: '/teacher/materials',
+      label: 'Materials',
+      icon: 'book',
+      fragment: 'teacher-materials',
+    },
     // Hidden: direct navigation disabled for teachers.
     // {
     //   path: '/teacher/activity',
@@ -146,6 +153,12 @@ export class SidebarComponent implements OnInit {
       icon: 'graduate',
       fragment: 'school-admin-students',
     },
+    {
+      path: '/school-admin/materials',
+      label: 'Materials',
+      icon: 'book',
+      fragment: 'school-admin-materials',
+    },
   ];
 
   readonly superAdminNav: CompactNavItem[] = [
@@ -185,6 +198,12 @@ export class SidebarComponent implements OnInit {
       label: 'Submit homework',
       icon: 'clipboard',
       fragment: 'student-homework',
+    },
+    {
+      path: '/student/materials',
+      label: 'Materials',
+      icon: 'book',
+      fragment: 'student-materials',
     },
     {
       path: '/student/group-stats',

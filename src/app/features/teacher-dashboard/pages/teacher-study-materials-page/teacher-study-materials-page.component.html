@@ -1,0 +1,233 @@
+<div class="min-h-0 min-w-0 space-y-6 bg-slate-100/80 px-4 pb-8 pt-6 sm:px-6 lg:px-8">
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Study materials</h1>
+      <p class="mt-1 max-w-2xl text-sm text-slate-600">
+        Group PDF lessons by subject. Students in your school can open them read-only.
+      </p>
+    </div>
+    <button
+      type="button"
+      [disabled]="noProfile || loading || subjects.length === 0"
+      (click)="openCreate()"
+      class="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      New material set
+    </button>
+  </div>
+
+  @if (loading) {
+    <p class="text-sm text-slate-600">Loading…</p>
+  }
+
+  @if (!loading && noProfile) {
+    <div
+      class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+      role="status"
+    >
+      No teacher profile is linked to this account. Ask your school administrator to add you, or use
+      “Add teacher” → “Existing login” if you already have an account.
+    </div>
+  }
+
+  @if (!loading && !noProfile && subjects.length === 0) {
+    <div
+      class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+      role="status"
+    >
+      No subjects on your teacher profile. Ask your school admin to assign subjects before you can create
+      material sets.
+    </div>
+  }
+
+  @if (!loading && !noProfile) {
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+      <section class="space-y-3">
+        <h2 class="text-lg font-bold text-slate-900">Your sets</h2>
+        @if (sets.length === 0) {
+          <p class="text-sm text-slate-600">No material sets yet. Create one to add PDF lessons.</p>
+        } @else {
+          <ul class="space-y-2">
+            @for (s of sets; track s.id) {
+              <li>
+                <button
+                  type="button"
+                  (click)="selectSet(s)"
+                  [class.ring-2]="selectedSet?.id === s.id"
+                  [class.ring-violet-400]="selectedSet?.id === s.id"
+                  class="w-full rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:border-violet-200"
+                >
+                  <p class="font-semibold text-slate-900">{{ s.title }}</p>
+                  @if (s.teacherSubjectTitle) {
+                    <p class="mt-1 text-xs font-medium text-violet-700">{{ s.teacherSubjectTitle }}</p>
+                  }
+                  <p class="mt-2 text-xs text-slate-500">
+                    {{ s.lessonCount }} lesson(s) · updated {{ s.updatedAt | date : 'mediumDate' }}
+                  </p>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section
+        class="min-h-[min(70vh,520px)] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+      >
+        @if (!selectedSet) {
+          <p class="text-sm text-slate-600">Select a material set to view lessons and upload PDFs.</p>
+        } @else {
+          <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">{{ selectedSet.title }}</h2>
+              @if (selectedSet.description) {
+                <p class="mt-1 text-sm text-slate-600">{{ selectedSet.description }}</p>
+              }
+            </div>
+            <button
+              type="button"
+              (click)="openAddLesson()"
+              class="shrink-0 rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-700"
+            >
+              Add PDF lesson
+            </button>
+          </div>
+
+          @if (lessonsLoading) {
+            <p class="text-sm text-slate-600">Loading lessons…</p>
+          } @else if (lessonsError) {
+            <p class="text-sm text-red-600">{{ lessonsError }}</p>
+          } @else if (lessons.length === 0) {
+            <p class="text-sm text-slate-600">No lessons in this set yet.</p>
+          } @else {
+            <ul class="divide-y divide-slate-100">
+              @for (l of lessons; track l.id) {
+                <li class="flex flex-wrap items-center justify-between gap-2 py-3">
+                  <span class="font-medium text-slate-900">{{ l.title }}</span>
+                  <button
+                    type="button"
+                    (click)="openPdf(l)"
+                    class="text-sm font-semibold text-violet-700 hover:text-violet-900"
+                  >
+                    Open PDF
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        }
+      </section>
+    </div>
+  }
+</div>
+
+@if (createOpen) {
+  <div
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
+      <h3 class="text-lg font-bold text-slate-900">New material set</h3>
+      <div class="mt-4 space-y-3">
+        <label class="block text-xs font-semibold uppercase text-slate-600">Subject</label>
+        <select
+          [(ngModel)]="newSubjectId"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        >
+          @for (sub of subjects; track sub.id) {
+            <option [ngValue]="sub.id">{{ sub.title }}</option>
+          }
+        </select>
+        <label class="block text-xs font-semibold uppercase text-slate-600">Title</label>
+        <input
+          [(ngModel)]="newTitle"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        />
+        <label class="block text-xs font-semibold uppercase text-slate-600">Description (optional)</label>
+        <textarea
+          [(ngModel)]="newDescription"
+          rows="3"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        ></textarea>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button type="button" (click)="closeCreate()" class="rounded-lg border px-3 py-2 text-sm">
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="submitCreate()"
+          [disabled]="!newTitle.trim() || !newSubjectId"
+          class="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (addLessonOpen) {
+  <div
+    class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 p-4"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
+      <h3 class="text-lg font-bold text-slate-900">Add PDF lesson</h3>
+      <div class="mt-4 space-y-3">
+        <label class="block text-xs font-semibold uppercase text-slate-600">Lesson title</label>
+        <input
+          [(ngModel)]="lessonTitle"
+          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+        />
+        <label class="block text-xs font-semibold uppercase text-slate-600">PDF file</label>
+        <input type="file" accept=".pdf,application/pdf" (change)="onLessonFile($event)" class="text-sm" />
+        @if (uploadError) {
+          <p class="text-xs text-red-600">{{ uploadError }}</p>
+        }
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button
+          type="button"
+          (click)="closeAddLesson()"
+          [disabled]="uploadBusy"
+          class="rounded-lg border px-3 py-2 text-sm"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          (click)="submitLesson()"
+          [disabled]="uploadBusy || !lessonTitle.trim() || !lessonFile"
+          class="rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+        >
+          {{ uploadBusy ? 'Uploading…' : 'Upload' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (safePdfUrl) {
+  <div
+    class="fixed inset-0 z-[110] flex flex-col bg-slate-900/60 p-2 sm:p-4"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-xl">
+      <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2">
+        <p class="truncate text-sm font-semibold text-slate-900">{{ pdfTitle }}</p>
+        <button
+          type="button"
+          (click)="closePdf()"
+          class="rounded-lg px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+        >
+          Close
+        </button>
+      </div>
+      <iframe [src]="safePdfUrl" class="min-h-0 flex-1 w-full border-0" title="PDF preview"></iframe>
+    </div>
+  </div>
+}

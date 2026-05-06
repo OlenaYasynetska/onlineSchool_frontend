@@ -30,7 +30,10 @@
           <app-homework-search-field
             placeholder="Search group"
             [value]="inboxSearchQuery"
-            (valueChange)="inboxSearchQuery = $event"
+            (valueChange)="
+              inboxSearchQuery = $event;
+              onInboxSearchChange()
+            "
           />
         </div>
       }
@@ -60,7 +63,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (s of filteredPending; track s.id) {
+                @for (s of pagedPending; track s.id) {
                   <tr class="border-b border-slate-100 last:border-0">
                     <td class="py-3 pr-3 font-medium text-slate-900">
                       {{ s.studentName }}
@@ -115,6 +118,41 @@
               </tbody>
             </table>
           </div>
+          @if (pendingTotalPages > 1) {
+            <div
+              class="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <p class="text-sm text-slate-600">
+                Showing
+                <span class="font-medium text-slate-800">{{ pendingRangeStart }}</span>
+                –
+                <span class="font-medium text-slate-800">{{ pendingRangeEnd }}</span>
+                of
+                <span class="font-medium text-slate-800">{{ filteredPending.length }}</span>
+              </p>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="prevPendingPage()"
+                  [disabled]="pendingPageIndex === 0"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span class="text-sm tabular-nums text-slate-600">
+                  Page {{ pendingPageIndex + 1 }} / {{ pendingTotalPages }}
+                </span>
+                <button
+                  type="button"
+                  (click)="nextPendingPage()"
+                  [disabled]="pendingPageIndex >= pendingTotalPages - 1"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          }
         }
       </section>
 
@@ -142,7 +180,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (s of filteredGraded; track s.id) {
+                @for (s of pagedGraded; track s.id) {
                   <tr class="border-b border-slate-100 last:border-0">
                     <td class="py-2.5 pr-3 font-medium text-slate-900">
                       {{ s.studentName }}
@@ -165,6 +203,41 @@
               </tbody>
             </table>
           </div>
+          @if (gradedTotalPages > 1) {
+            <div
+              class="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <p class="text-sm text-slate-600">
+                Showing
+                <span class="font-medium text-slate-800">{{ gradedRangeStart }}</span>
+                –
+                <span class="font-medium text-slate-800">{{ gradedRangeEnd }}</span>
+                of
+                <span class="font-medium text-slate-800">{{ filteredGraded.length }}</span>
+              </p>
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="prevGradedPage()"
+                  [disabled]="gradedPageIndex === 0"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span class="text-sm tabular-nums text-slate-600">
+                  Page {{ gradedPageIndex + 1 }} / {{ gradedTotalPages }}
+                </span>
+                <button
+                  type="button"
+                  (click)="nextGradedPage()"
+                  [disabled]="gradedPageIndex >= gradedTotalPages - 1"
+                  class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          }
         }
       </section>
     }

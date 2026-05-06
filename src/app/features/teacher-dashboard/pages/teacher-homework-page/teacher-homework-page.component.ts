@@ -27,6 +27,11 @@ export class TeacherHomeworkPageComponent implements OnInit {
   /** Фільтр для обох таблиць (учень, група, предмет, файл, повідомлення…). */
   inboxSearchQuery = '';
 
+  /** Клієнтська пагінація таблиць (як у учня на «My submissions»). */
+  readonly homeworkTablePageSize = 10;
+  pendingPageIndex = 0;
+  gradedPageIndex = 0;
+
   /** Запись, для которой открыта оценка (звёзды + отзыв). */
   gradingSubmission: HomeworkSubmission | null = null;
   gradeStars = 2;
@@ -51,14 +56,19 @@ export class TeacherHomeworkPageComponent implements OnInit {
     this.api.listPending(userId).subscribe({
       next: (p) => {
         this.pending = p;
+        this.clampPendingPage();
         this.api.listGraded(userId).subscribe({
           next: (g) => {
             this.graded = g;
             this.loading = false;
+            this.clampPendingPage();
+            this.clampGradedPage();
           },
           error: () => {
             this.graded = [];
             this.loading = false;
+            this.clampPendingPage();
+            this.clampGradedPage();
           },
         });
       },
@@ -66,6 +76,8 @@ export class TeacherHomeworkPageComponent implements OnInit {
         this.loading = false;
         this.pending = [];
         this.graded = [];
+        this.pendingPageIndex = 0;
+        this.gradedPageIndex = 0;
         if (err?.status === 404) {
           this.noProfile = true;
         }
@@ -172,6 +184,113 @@ export class TeacherHomeworkPageComponent implements OnInit {
       return this.graded;
     }
     return this.graded.filter((s) => this.inboxRowMatches(s, q));
+  }
+
+  get pagedPending(): HomeworkSubmission[] {
+    const list = this.filteredPending;
+    const start = this.pendingPageIndex * this.homeworkTablePageSize;
+    return list.slice(start, start + this.homeworkTablePageSize);
+  }
+
+  get pendingTotalPages(): number {
+    const n = this.filteredPending.length;
+    if (n === 0) {
+      return 0;
+    }
+    return Math.ceil(n / this.homeworkTablePageSize);
+  }
+
+  get pendingRangeStart(): number {
+    const n = this.filteredPending.length;
+    if (n === 0) {
+      return 0;
+    }
+    return this.pendingPageIndex * this.homeworkTablePageSize + 1;
+  }
+
+  get pendingRangeEnd(): number {
+    const n = this.filteredPending.length;
+    return Math.min(n, (this.pendingPageIndex + 1) * this.homeworkTablePageSize);
+  }
+
+  get pagedGraded(): HomeworkSubmission[] {
+    const list = this.filteredGraded;
+    const start = this.gradedPageIndex * this.homeworkTablePageSize;
+    return list.slice(start, start + this.homeworkTablePageSize);
+  }
+
+  get gradedTotalPages(): number {
+    const n = this.filteredGraded.length;
+    if (n === 0) {
+      return 0;
+    }
+    return Math.ceil(n / this.homeworkTablePageSize);
+  }
+
+  get gradedRangeStart(): number {
+    const n = this.filteredGraded.length;
+    if (n === 0) {
+      return 0;
+    }
+    return this.gradedPageIndex * this.homeworkTablePageSize + 1;
+  }
+
+  get gradedRangeEnd(): number {
+    const n = this.filteredGraded.length;
+    return Math.min(n, (this.gradedPageIndex + 1) * this.homeworkTablePageSize);
+  }
+
+  onInboxSearchChange(): void {
+    this.pendingPageIndex = 0;
+    this.gradedPageIndex = 0;
+    this.clampPendingPage();
+    this.clampGradedPage();
+  }
+
+  prevPendingPage(): void {
+    if (this.pendingPageIndex > 0) {
+      this.pendingPageIndex--;
+    }
+  }
+
+  nextPendingPage(): void {
+    if (this.pendingPageIndex < this.pendingTotalPages - 1) {
+      this.pendingPageIndex++;
+    }
+  }
+
+  prevGradedPage(): void {
+    if (this.gradedPageIndex > 0) {
+      this.gradedPageIndex--;
+    }
+  }
+
+  nextGradedPage(): void {
+    if (this.gradedPageIndex < this.gradedTotalPages - 1) {
+      this.gradedPageIndex++;
+    }
+  }
+
+  private clampPendingPage(): void {
+    const totalPages = this.pendingTotalPages;
+    if (totalPages === 0) {
+      this.pendingPageIndex = 0;
+      return;
+    }
+    if (this.pendingPageIndex >= totalPages) {
+      this.pendingPageIndex = totalPages - 1;
+    }
+  }
+
+  private clampGradedPage(): void {
+    const totalPages = this.gradedTotalPages;
+    if (totalPages === 0) {
+      this.gradedPageIndex = 0;
+      return;
+    }
+    if (this.gradedPageIndex >= totalPages) {
+      this.gradedPageIndex = totalPages - 1;
+    }
   }
 
   private inboxRowMatches(s: HomeworkSubmission, q: string): boolean {

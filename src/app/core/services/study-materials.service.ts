@@ -23,6 +23,7 @@ export interface StudyMaterialLessonDto {
   title: string;
   sortOrder: number;
   fileName: string;
+  issuuEmbedUrl: string | null;
 }
 
 export interface CreateStudyMaterialSetBody {
@@ -126,7 +127,7 @@ export class StudyMaterialsService {
   patchTeacherLesson(
     userId: string,
     lessonId: string,
-    body: { title: string }
+    body: { title: string; issuuEmbedUrl: string | null }
   ): Observable<StudyMaterialLessonDto> {
     const params = new HttpParams().set('userId', userId);
     return this.http.patch<StudyMaterialLessonDto>(

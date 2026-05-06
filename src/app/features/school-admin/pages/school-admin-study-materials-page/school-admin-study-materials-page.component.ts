@@ -1,6 +1,5 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   StudyMaterialsService,
@@ -11,19 +10,19 @@ import {
   normalizeSchoolId,
   SESSION_STORAGE_SCHOOL_ID_KEY,
 } from '../../../school-admin/utils/school-id.util';
+import { StudyMaterialPdfViewerComponent } from '../../../../shared/components/study-material-pdf-viewer/study-material-pdf-viewer.component';
+import { IssuuEmbedFrameComponent } from '../../../../shared/components/issuu-embed-frame/issuu-embed-frame.component';
+import { normalizeIssuuEmbedUrl } from '../../../../shared/utils/issuu-embed-url.util';
 
 @Component({
   selector: 'app-school-admin-study-materials-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StudyMaterialPdfViewerComponent, IssuuEmbedFrameComponent],
   templateUrl: './school-admin-study-materials-page.component.html',
 })
-export class SchoolAdminStudyMaterialsPageComponent implements OnInit, OnDestroy {
+export class SchoolAdminStudyMaterialsPageComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly api = inject(StudyMaterialsService);
-  private readonly sanitizer = inject(DomSanitizer);
-
-  private rawPdfObjectUrl: string | null = null;
 
   loading = true;
   noSchool = false;
@@ -35,7 +34,9 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit, OnDestroy
   lessonsError: string | null = null;
 
   pdfTitle = '';
-  safePdfUrl: SafeResourceUrl | null = null;
+  pdfBlob: Blob | null = null;
+  pdfDownloadName = 'lesson.pdf';
+  issuuReaderEmbedUrl: string | null = null;
 
   ngOnInit(): void {
     const fromAuth = normalizeSchoolId(this.auth.currentUser()?.schoolId);
@@ -61,16 +62,13 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit, OnDestroy
     });
   }
 
-  ngOnDestroy(): void {
-    this.revokePdf();
-  }
-
-  private revokePdf(): void {
-    if (this.rawPdfObjectUrl) {
-      URL.revokeObjectURL(this.rawPdfObjectUrl);
-      this.rawPdfObjectUrl = null;
-    }
-    this.safePdfUrl = null;
+  private sanitizeDownloadFileName(title: string): string {
+    const base = title
+      .trim()
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_')
+      .replace(/\s+/g, ' ')
+      .slice(0, 120);
+    return `${base || 'lesson'}.pdf`;
   }
 
   selectSet(row: StudyMaterialSetDto): void {
@@ -95,21 +93,32 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit, OnDestroy
   }
 
   closePdf(): void {
-    this.revokePdf();
+    this.pdfBlob = null;
+    this.issuuReaderEmbedUrl = null;
     this.pdfTitle = '';
+  }
+
+  openIssuuReader(lesson: StudyMaterialLessonDto): void {
+    const n = normalizeIssuuEmbedUrl(lesson.issuuEmbedUrl);
+    if (!n) {
+      return;
+    }
+    this.pdfBlob = null;
+    this.pdfTitle = lesson.title;
+    this.issuuReaderEmbedUrl = n;
   }
 
   openPdf(lesson: StudyMaterialLessonDto): void {
     if (!this.schoolId) {
       return;
     }
-    this.revokePdf();
+    this.pdfBlob = null;
+    this.issuuReaderEmbedUrl = null;
     this.pdfTitle = lesson.title;
+    this.pdfDownloadName = this.sanitizeDownloadFileName(lesson.title);
     this.api.getAdminLessonPdfBlob(this.schoolId, lesson.id, true).subscribe({
       next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        this.rawPdfObjectUrl = url;
-        this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        this.pdfBlob = blob;
       },
       error: () => window.alert('Could not open PDF.'),
     });

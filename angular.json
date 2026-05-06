@@ -25,7 +25,12 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "css",
             "assets": [
-              { "glob": "**/*", "input": "src/assets", "output": "/assets" }
+              { "glob": "**/*", "input": "src/assets", "output": "/assets" },
+              {
+                "glob": "**/*",
+                "input": "node_modules/ngx-extended-pdf-viewer/assets",
+                "output": "/assets"
+              }
             ],
             "styles": ["src/styles/style.css"],
             "scripts": []
@@ -69,7 +74,14 @@
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "css",
-            "assets": [{ "glob": "**/*", "input": "src/assets", "output": "/assets" }],
+            "assets": [
+              { "glob": "**/*", "input": "src/assets", "output": "/assets" },
+              {
+                "glob": "**/*",
+                "input": "node_modules/ngx-extended-pdf-viewer/assets",
+                "output": "/assets"
+              }
+            ],
             "styles": ["src/styles/style.css"],
              "scripts": []
           }

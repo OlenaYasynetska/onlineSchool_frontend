@@ -172,12 +172,21 @@
                 <li class="flex flex-wrap items-center gap-2 py-3">
                   <span class="min-w-0 flex-1 font-medium text-slate-900">{{ l.title }}</span>
                   <div class="flex flex-wrap items-center gap-1.5">
+                    @if (l.issuuEmbedUrl) {
+                      <button
+                        type="button"
+                        (click)="openIssuuReader(l)"
+                        class="shrink-0 text-sm font-semibold text-sky-600 hover:text-sky-800"
+                      >
+                        Issuu
+                      </button>
+                    }
                     <button
                       type="button"
                       (click)="openPdf(l)"
                       class="shrink-0 text-sm font-semibold text-violet-700 hover:text-violet-900"
                     >
-                      Open PDF
+                      PDF
                     </button>
                     <button
                       type="button"
@@ -441,15 +450,33 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
-      <h3 class="text-lg font-bold text-slate-900">Edit lesson title</h3>
-      <div class="mt-4">
-        <label class="block text-xs font-semibold uppercase text-slate-600">Title</label>
-        <input
-          [(ngModel)]="editLessonTitle"
-          [disabled]="editLessonBusy"
-          class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
-        />
+    <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
+      <h3 class="text-lg font-bold text-slate-900">Редагувати урок</h3>
+      <div class="mt-4 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-600">Назва</label>
+          <input
+            [(ngModel)]="editLessonTitle"
+            [disabled]="editLessonBusy"
+            class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-600"
+            >Issuu (URL вбудовування)</label
+          >
+          <textarea
+            [(ngModel)]="editLessonIssuuUrl"
+            [disabled]="editLessonBusy"
+            rows="3"
+            placeholder="https://e.issuu.com/embed.html?d=… або вставте код iframe з Issuu"
+            class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          ></textarea>
+          <p class="mt-1 text-xs text-slate-500">
+            Залиште порожнім, щоб читати лише завантажений PDF. Дозволені лише посилання на
+            <span class="whitespace-nowrap">issuu.com</span> (https).
+          </p>
+        </div>
       </div>
       <div class="mt-6 flex justify-end gap-2">
         <button
@@ -473,24 +500,42 @@
   </div>
 }
 
-@if (safePdfUrl) {
+@if (pdfBlob || issuuReaderEmbedUrl) {
   <div
-    class="fixed inset-0 z-[110] flex flex-col bg-slate-900/60 p-2 sm:p-4"
+    class="fixed inset-0 z-[110] flex flex-col bg-black/80 p-0 sm:p-3"
     role="dialog"
     aria-modal="true"
   >
-    <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-xl">
-      <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2">
-        <p class="truncate text-sm font-semibold text-slate-900">{{ pdfTitle }}</p>
+    <div
+      class="flex min-h-0 flex-1 flex-col overflow-hidden border-0 border-slate-700/60 bg-[#1e1e1e] shadow-2xl sm:rounded-xl sm:border"
+    >
+      <div
+        class="flex shrink-0 items-center justify-between border-b border-slate-700/80 bg-[#2d2d2d] px-3 py-2.5"
+      >
+        <p class="truncate text-sm font-semibold text-slate-100">{{ pdfTitle }}</p>
         <button
           type="button"
           (click)="closePdf()"
-          class="rounded-lg px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          class="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-200 hover:bg-white/10"
         >
-          Close
+          Закрити
         </button>
       </div>
-      <iframe [src]="safePdfUrl" class="min-h-0 flex-1 w-full border-0" title="PDF preview"></iframe>
+      <div class="relative min-h-0 flex-1">
+        @if (pdfBlob) {
+          <app-study-material-pdf-viewer
+            class="absolute inset-0 block"
+            [pdfSrc]="pdfBlob"
+            [allowDownload]="true"
+            [downloadFileName]="pdfDownloadName"
+          />
+        } @else if (issuuReaderEmbedUrl) {
+          <app-issuu-embed-frame
+            class="absolute inset-0 block min-h-0"
+            [embedUrl]="issuuReaderEmbedUrl"
+          />
+        }
+      </div>
     </div>
   </div>
 }

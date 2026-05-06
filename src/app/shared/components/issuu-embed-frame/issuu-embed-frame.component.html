@@ -1,0 +1,12 @@
+@if (trustedUrl) {
+  <iframe
+    [src]="trustedUrl"
+    class="h-full min-h-[70vh] w-full border-0"
+    title="Issuu"
+    allow="fullscreen"
+    loading="lazy"
+    referrerpolicy="strict-origin-when-cross-origin"
+  ></iframe>
+} @else {
+  <p class="p-4 text-sm text-red-600">Некоректне посилання Issuu. Перевірте URL з поля вбудовування.</p>
+}

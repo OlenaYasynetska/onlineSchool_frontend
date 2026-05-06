@@ -58,13 +58,24 @@
               @for (l of lessons; track l.id) {
                 <li class="flex flex-wrap items-center justify-between gap-2 py-3">
                   <span class="font-medium text-slate-900">{{ l.title }}</span>
-                  <button
-                    type="button"
-                    (click)="openPdf(l)"
-                    class="text-sm font-semibold text-sky-700 hover:text-sky-900"
-                  >
-                    Open PDF
-                  </button>
+                  <div class="flex flex-wrap items-center gap-2">
+                    @if (l.issuuEmbedUrl) {
+                      <button
+                        type="button"
+                        (click)="openIssuuReader(l)"
+                        class="text-sm font-semibold text-sky-600 hover:text-sky-800"
+                      >
+                        Issuu
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      (click)="openPdf(l)"
+                      class="text-sm font-semibold text-sky-700 hover:text-sky-900"
+                    >
+                      PDF
+                    </button>
+                  </div>
                 </li>
               }
             </ul>
@@ -75,24 +86,42 @@
   }
 </div>
 
-@if (safePdfUrl) {
+@if (pdfBlob || issuuReaderEmbedUrl) {
   <div
-    class="fixed inset-0 z-[110] flex flex-col bg-slate-900/60 p-2 sm:p-4"
+    class="fixed inset-0 z-[110] flex flex-col bg-black/80 p-0 sm:p-3"
     role="dialog"
     aria-modal="true"
   >
-    <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-white shadow-xl">
-      <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2">
-        <p class="truncate text-sm font-semibold text-slate-900">{{ pdfTitle }}</p>
+    <div
+      class="flex min-h-0 flex-1 flex-col overflow-hidden border-0 border-slate-700/60 bg-[#1e1e1e] shadow-2xl sm:rounded-xl sm:border"
+    >
+      <div
+        class="flex shrink-0 items-center justify-between border-b border-slate-700/80 bg-[#2d2d2d] px-3 py-2.5"
+      >
+        <p class="truncate text-sm font-semibold text-slate-100">{{ pdfTitle }}</p>
         <button
           type="button"
           (click)="closePdf()"
-          class="rounded-lg px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          class="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-200 hover:bg-white/10"
         >
-          Close
+          Закрити
         </button>
       </div>
-      <iframe [src]="safePdfUrl" class="min-h-0 flex-1 w-full border-0" title="PDF preview"></iframe>
+      <div class="relative min-h-0 flex-1">
+        @if (pdfBlob) {
+          <app-study-material-pdf-viewer
+            class="absolute inset-0 block"
+            [pdfSrc]="pdfBlob"
+            [allowDownload]="false"
+            [downloadFileName]="pdfDownloadName"
+          />
+        } @else if (issuuReaderEmbedUrl) {
+          <app-issuu-embed-frame
+            class="absolute inset-0 block min-h-0"
+            [embedUrl]="issuuReaderEmbedUrl"
+          />
+        }
+      </div>
     </div>
   </div>
 }

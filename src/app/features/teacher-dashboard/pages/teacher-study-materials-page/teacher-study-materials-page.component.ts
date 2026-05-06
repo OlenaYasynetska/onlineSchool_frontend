@@ -1,7 +1,6 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { concat } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
@@ -10,19 +9,19 @@ import {
   type StudyMaterialSetDto,
   type TeacherSubjectOption,
 } from '../../../../core/services/study-materials.service';
+import { StudyMaterialPdfViewerComponent } from '../../../../shared/components/study-material-pdf-viewer/study-material-pdf-viewer.component';
+import { IssuuEmbedFrameComponent } from '../../../../shared/components/issuu-embed-frame/issuu-embed-frame.component';
+import { normalizeIssuuEmbedUrl } from '../../../../shared/utils/issuu-embed-url.util';
 
 @Component({
   selector: 'app-teacher-study-materials-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, StudyMaterialPdfViewerComponent, IssuuEmbedFrameComponent],
   templateUrl: './teacher-study-materials-page.component.html',
 })
-export class TeacherStudyMaterialsPageComponent implements OnDestroy {
+export class TeacherStudyMaterialsPageComponent {
   private readonly auth = inject(AuthService);
   private readonly api = inject(StudyMaterialsService);
-  private readonly sanitizer = inject(DomSanitizer);
-
-  private rawPdfObjectUrl: string | null = null;
 
   loading = true;
   noProfile = false;
@@ -51,7 +50,9 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
   uploadError: string | null = null;
 
   pdfTitle = '';
-  safePdfUrl: SafeResourceUrl | null = null;
+  pdfBlob: Blob | null = null;
+  pdfDownloadName = 'lesson.pdf';
+  issuuReaderEmbedUrl: string | null = null;
 
   editSetOpen = false;
   editSetTitle = '';
@@ -61,6 +62,7 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
 
   editLessonOpen = false;
   editLessonTitle = '';
+  editLessonIssuuUrl = '';
   editingLessonId: string | null = null;
   editLessonBusy = false;
 
@@ -68,16 +70,13 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
     this.reload();
   }
 
-  ngOnDestroy(): void {
-    this.revokePdf();
-  }
-
-  private revokePdf(): void {
-    if (this.rawPdfObjectUrl) {
-      URL.revokeObjectURL(this.rawPdfObjectUrl);
-      this.rawPdfObjectUrl = null;
-    }
-    this.safePdfUrl = null;
+  private sanitizeDownloadFileName(title: string): string {
+    const base = title
+      .trim()
+      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_')
+      .replace(/\s+/g, ' ')
+      .slice(0, 120);
+    return `${base || 'lesson'}.pdf`;
   }
 
   reload(): void {
@@ -440,6 +439,7 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
   openEditLesson(lesson: StudyMaterialLessonDto): void {
     this.editingLessonId = lesson.id;
     this.editLessonTitle = lesson.title;
+    this.editLessonIssuuUrl = lesson.issuuEmbedUrl ?? '';
     this.editLessonOpen = true;
   }
 
@@ -449,6 +449,7 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
     }
     this.editLessonOpen = false;
     this.editingLessonId = null;
+    this.editLessonIssuuUrl = '';
   }
 
   submitEditLesson(): void {
@@ -458,8 +459,16 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
     if (!u?.id || !id || !title || this.editLessonBusy) {
       return;
     }
+    const rawIssuu = this.editLessonIssuuUrl.trim();
+    const issuuEmbedUrl = rawIssuu === '' ? null : rawIssuu;
+    if (issuuEmbedUrl !== null && !normalizeIssuuEmbedUrl(issuuEmbedUrl)) {
+      window.alert(
+        'Некоректне посилання Issuu. Вставте https://… з поля Embed на Issuu (або лише атрибут src з iframe).'
+      );
+      return;
+    }
     this.editLessonBusy = true;
-    this.api.patchTeacherLesson(u.id, id, { title }).subscribe({
+    this.api.patchTeacherLesson(u.id, id, { title, issuuEmbedUrl }).subscribe({
       next: () => {
         this.editLessonBusy = false;
         this.closeEditLesson();
@@ -497,8 +506,20 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
   }
 
   closePdf(): void {
-    this.revokePdf();
+    this.pdfBlob = null;
+    this.issuuReaderEmbedUrl = null;
     this.pdfTitle = '';
+  }
+
+  openIssuuReader(lesson: StudyMaterialLessonDto): void {
+    const n = normalizeIssuuEmbedUrl(lesson.issuuEmbedUrl);
+    if (!n) {
+      window.alert('Для цього уроку не задано коректне посилання Issuu. Відредагуйте урок і вставте URL з Issuu.');
+      return;
+    }
+    this.pdfBlob = null;
+    this.pdfTitle = lesson.title;
+    this.issuuReaderEmbedUrl = n;
   }
 
   openPdf(lesson: StudyMaterialLessonDto): void {
@@ -506,13 +527,13 @@ export class TeacherStudyMaterialsPageComponent implements OnDestroy {
     if (!u?.id) {
       return;
     }
-    this.revokePdf();
+    this.pdfBlob = null;
+    this.issuuReaderEmbedUrl = null;
     this.pdfTitle = lesson.title;
+    this.pdfDownloadName = this.sanitizeDownloadFileName(lesson.title);
     this.api.getTeacherLessonPdfBlob(u.id, lesson.id, true).subscribe({
       next: (blob) => {
-        const url = URL.createObjectURL(blob);
-        this.rawPdfObjectUrl = url;
-        this.safePdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        this.pdfBlob = blob;
       },
       error: () => window.alert('Could not open PDF.'),
     });

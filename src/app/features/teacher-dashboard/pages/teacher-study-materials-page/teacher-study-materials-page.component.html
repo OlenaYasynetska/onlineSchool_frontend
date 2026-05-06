@@ -286,8 +286,10 @@
 
         <label class="block text-xs font-semibold uppercase text-slate-600">Title</label>
         <p class="text-xs text-slate-500">
-          Pre-filled from the subject; edit freely. If you clear it, the first PDF file name or
-          <span class="whitespace-nowrap">«Subject — materials»</span> is used.
+          Pre-filled from the subject. Changing <strong>Subject</strong> updates the title when it still looks like
+          <span class="whitespace-nowrap">«any assigned subject — materials»</span>; otherwise your custom title is
+          kept. If you clear the title, the first PDF file name or
+          <span class="whitespace-nowrap">«Subject — materials»</span> is used when creating.
         </p>
         <input
           [(ngModel)]="newTitle"

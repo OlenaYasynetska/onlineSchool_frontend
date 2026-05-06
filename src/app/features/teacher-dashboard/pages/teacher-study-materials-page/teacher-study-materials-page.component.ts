@@ -164,9 +164,27 @@ export class TeacherStudyMaterialsPageComponent {
   }
 
   onCreateSubjectSelected(): void {
-    if (!this.newTitle.trim()) {
-      this.newTitle = this.suggestedSetTitleForSubjectId(this.newSubjectId);
+    const next = this.suggestedSetTitleForSubjectId(this.newSubjectId);
+    const cur = this.newTitle.trim();
+    if (!cur || this.isStandardSubjectMaterialsTitle(cur)) {
+      this.newTitle = next;
     }
+  }
+
+  /**
+   * «Назва предмета — materials» для будь-якого предмета з профілю — можна безпечно замінити при зміні Subject.
+   */
+  private isStandardSubjectMaterialsTitle(title: string): boolean {
+    const m = title.trim().match(/^(.+?)\s*[—-]\s*materials\s*$/i);
+    if (!m) {
+      return false;
+    }
+    const prefix = m[1].trim();
+    if (!prefix) {
+      return false;
+    }
+    const p = prefix.toLowerCase();
+    return this.subjects.some((s) => (s.title?.trim().toLowerCase() ?? '') === p);
   }
 
   submitCreate(): void {

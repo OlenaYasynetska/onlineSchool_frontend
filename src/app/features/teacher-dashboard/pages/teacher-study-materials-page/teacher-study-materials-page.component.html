@@ -49,13 +49,15 @@
         } @else {
           <ul class="space-y-2">
             @for (s of sets; track s.id) {
-              <li class="relative">
+              <li
+                class="flex min-h-[4.5rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-violet-200"
+                [class.ring-2]="selectedSet?.id === s.id"
+                [class.ring-violet-400]="selectedSet?.id === s.id"
+              >
                 <button
                   type="button"
                   (click)="selectSet(s)"
-                  [class.ring-2]="selectedSet?.id === s.id"
-                  [class.ring-violet-400]="selectedSet?.id === s.id"
-                  class="w-full rounded-xl border border-slate-200 bg-white py-4 pl-4 pr-[4.5rem] text-left shadow-sm transition hover:border-violet-200"
+                  class="min-w-0 flex-1 py-4 pl-4 pr-2 text-left"
                 >
                   <p class="font-semibold text-slate-900">{{ s.title }}</p>
                   @if (s.teacherSubjectTitle) {
@@ -66,8 +68,7 @@
                   </p>
                 </button>
                 <div
-                  class="absolute right-2 top-1/2 z-[1] flex -translate-y-1/2 gap-1.5"
-                  (click)="$event.stopPropagation()"
+                  class="flex shrink-0 items-center gap-1.5 border-l border-slate-100 px-2"
                   role="group"
                   aria-label="Set actions"
                 >
@@ -119,7 +120,7 @@
                 <p class="mt-1 text-sm text-slate-600">{{ selectedSet.description }}</p>
               }
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="relative z-10 flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 (click)="openAddLesson()"
@@ -129,7 +130,7 @@
               </button>
               <button
                 type="button"
-                (click)="openEditSet(selectedSet)"
+                (click)="openEditSet(selectedSet!)"
                 class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white shadow-sm transition hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
                 aria-label="Edit material set"
                 title="Edit set"
@@ -144,7 +145,7 @@
               </button>
               <button
                 type="button"
-                (click)="confirmDeleteSet(selectedSet)"
+                (click)="confirmDeleteSet(selectedSet!)"
                 class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-800 text-white shadow-sm transition hover:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-1"
                 aria-label="Delete material set"
                 title="Delete set"

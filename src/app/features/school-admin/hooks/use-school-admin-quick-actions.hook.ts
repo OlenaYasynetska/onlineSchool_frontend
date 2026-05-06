@@ -6,7 +6,10 @@ import type {
 } from '../models/school-admin-dashboard.model';
 import type { AddGroupPayload } from '../components/add-group-modal/add-group-modal.component';
 import type { AddStudentPayload } from '../components/add-student-modal/add-student-modal.component';
-import type { AddTeacherPayload } from '../components/add-teacher-modal/add-teacher-modal.component';
+import type {
+  AddTeacherPayload,
+  LinkExistingTeacherPayload,
+} from '../components/add-teacher-modal/add-teacher-modal.component';
 import { AuthService } from '../../../core/services/auth.service';
 import { SchoolAdminDashboardService } from '../services/school-admin-dashboard.service';
 import {
@@ -155,6 +158,29 @@ export function useSchoolAdminQuickActions(
           (typeof err?.error === 'string' ? err.error : null) ||
           'Unknown error while creating teacher';
         window.alert(`Create teacher failed: ${msg}`);
+      },
+    });
+  }
+
+  function onLinkExistingTeacher(payload: LinkExistingTeacherPayload): void {
+    const schoolId = resolveSchoolIdForActions(auth, dash);
+    if (!schoolId) {
+      window.alert(
+        'School id is missing. Reload the page or log in again.'
+      );
+      console.error('No schoolId for current admin.');
+      return;
+    }
+
+    dashApi.attachExistingTeacher(schoolId, payload).subscribe({
+      next: () => {
+        window.alert('Teacher profile linked to your school. They can refresh their dashboard.');
+        addTeacherOpen.set(false);
+        onTeachersChanged?.();
+      },
+      error: (err) => {
+        console.error(err);
+        window.alert(`Link teacher failed: ${httpErrorMessage(err)}`);
       },
     });
   }
@@ -374,6 +400,7 @@ export function useSchoolAdminQuickActions(
     addTeacherOpen,
     closeAddTeacherModal,
     onCreateTeacher,
+    onLinkExistingTeacher,
 
     addStudentOpen,
     closeAddStudentModal,

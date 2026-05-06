@@ -10,7 +10,10 @@ import type {
 } from '../models/school-admin-dashboard.model';
 import type { AddGroupPayload } from '../components/add-group-modal/add-group-modal.component';
 import type { AddStudentPayload } from '../components/add-student-modal/add-student-modal.component';
-import type { AddTeacherPayload } from '../components/add-teacher-modal/add-teacher-modal.component';
+import type {
+  AddTeacherPayload,
+  LinkExistingTeacherPayload,
+} from '../components/add-teacher-modal/add-teacher-modal.component';
 
 @Injectable({ providedIn: 'root' })
 export class SchoolAdminDashboardService {
@@ -77,6 +80,22 @@ export class SchoolAdminDashboardService {
         subjects: payload.subjects ?? null,
         phone: payload.phone?.trim() ? payload.phone.trim() : null,
         sendInviteEmail: payload.sendInviteEmail,
+      }
+    );
+  }
+
+  /** Рядок у `teachers` для користувача з роллю TEACHER без профілю в цьому `school_id`. */
+  attachExistingTeacher(
+    schoolId: string,
+    payload: LinkExistingTeacherPayload
+  ): Observable<SchoolTeacher> {
+    return this.http.post<SchoolTeacher>(
+      `${environment.apiUrl}/school-admin/teachers/attach-existing?schoolId=${encodeURIComponent(
+        schoolId
+      )}`,
+      {
+        email: payload.email,
+        subjects: payload.subjects ?? null,
       }
     );
   }

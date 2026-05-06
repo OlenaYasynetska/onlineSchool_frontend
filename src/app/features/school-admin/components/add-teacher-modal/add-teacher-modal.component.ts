@@ -24,6 +24,12 @@ export type AddTeacherPayload = {
   phone?: string;
 };
 
+/** Існуючий користувач TEACHER без рядка в `teachers` для цієї школи. */
+export type LinkExistingTeacherPayload = {
+  email: string;
+  subjects?: string[];
+};
+
 @Component({
   selector: 'app-add-teacher-modal',
   standalone: true,
@@ -46,12 +52,51 @@ export type AddTeacherPayload = {
               id="add-teacher-title"
               class="text-xl font-bold leading-snug text-slate-900 sm:text-2xl"
             >
-              Add teacher
+              @if (uiMode === 'create') {
+                Add teacher
+              } @else {
+                Link existing teacher
+              }
             </h1>
-            <p class="mt-1 text-sm text-slate-600">
-              Creates a login account (teacher role). Optionally send an invitation email with the
-              login link and password.
-            </p>
+            @if (uiMode === 'create') {
+              <p class="mt-1 text-sm text-slate-600">
+                Creates a login account (teacher role). Optionally send an invitation email with the
+                login link and password.
+              </p>
+            } @else {
+              <p class="mt-1 text-sm text-slate-600">
+                Use when the person already has a teacher login but is not listed under your school.
+                They keep their current password.
+              </p>
+            }
+            <div
+              class="mt-3 inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-xs font-semibold"
+              role="group"
+              aria-label="How to add this teacher"
+            >
+              <button
+                type="button"
+                [class.bg-white]="uiMode === 'create'"
+                [class.shadow-sm]="uiMode === 'create'"
+                [class.text-slate-900]="uiMode === 'create'"
+                [class.text-slate-500]="uiMode !== 'create'"
+                class="rounded-md px-2.5 py-1.5 transition"
+                (click)="setUiMode('create')"
+              >
+                New account
+              </button>
+              <button
+                type="button"
+                [class.bg-white]="uiMode === 'link'"
+                [class.shadow-sm]="uiMode === 'link'"
+                [class.text-slate-900]="uiMode === 'link'"
+                [class.text-slate-500]="uiMode !== 'link'"
+                class="rounded-md px-2.5 py-1.5 transition"
+                (click)="setUiMode('link')"
+              >
+                Existing login
+              </button>
+            </div>
           </div>
           <button
             type="button"
@@ -69,6 +114,7 @@ export type AddTeacherPayload = {
           (ngSubmit)="submit(teacherForm)"
           class="space-y-4"
         >
+          @if (uiMode === 'create') {
           <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label
@@ -143,6 +189,7 @@ export type AddTeacherPayload = {
               }
             </div>
           </div>
+          }
 
           <div>
             <label
@@ -178,6 +225,7 @@ export type AddTeacherPayload = {
             }
           </div>
 
+          @if (uiMode === 'create') {
           <div>
             <label
               class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
@@ -232,12 +280,17 @@ export type AddTeacherPayload = {
             />
             <p class="mt-1 text-xs text-slate-500">Max 32 characters.</p>
           </div>
+          }
 
           <div>
             <label
               class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600"
               for="teacher-subject"
-              >Subject (optional)</label
+              >@if (uiMode === 'create') {
+                Subject (optional)
+              } @else {
+                Subjects (optional)
+              }</label
             >
             <div class="flex flex-col gap-2">
               @for (line of subjectLines; track $index) {
@@ -288,7 +341,11 @@ export type AddTeacherPayload = {
               type="submit"
               class="inline-flex items-center rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700"
             >
-              Add teacher
+              @if (uiMode === 'create') {
+                Add teacher
+              } @else {
+                Link to school
+              }
             </button>
             <button
               type="button"
@@ -308,8 +365,9 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
   @Output() closeRequested = new EventEmitter<void>();
   /** Не називати `createTeacher` — конфлікт імені з DOM-подією submit. */
   @Output() teacherSubmit = new EventEmitter<AddTeacherPayload>();
+  @Output() linkExistingSubmit = new EventEmitter<LinkExistingTeacherPayload>();
 
-  /** Латиниця, кирилиця, пробіли, дефіс, апостроф. */
+  uiMode: 'create' | 'link' = 'create';
   readonly namePattern = "^[a-zA-Zа-яА-ЯіІїЇєЄґҐёЁ\\s\\-']{2,100}$";
 
   readonly emailPattern = '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$';
@@ -350,6 +408,10 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
     this.subjectLines = this.subjectLines.filter((_, i) => i !== index);
   }
 
+  setUiMode(mode: 'create' | 'link'): void {
+    this.uiMode = mode;
+  }
+
   ngOnInit(): void {
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
@@ -372,6 +434,34 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
       );
       return;
     }
+
+    const parts = this.subjectLines.map((s) => s.trim()).filter((s) => s.length > 0);
+    for (const s of parts) {
+      if (s.length > this.maxTotalSubjectChars) {
+        form.control.markAllAsTouched();
+        window.alert(`Each subject must be at most ${this.maxTotalSubjectChars} characters.`);
+        return;
+      }
+    }
+
+    if (this.uiMode === 'link') {
+      const emailCtl = form.controls['email'];
+      if (emailCtl?.invalid) {
+        form.control.markAllAsTouched();
+        return;
+      }
+      const email = this.form.email.trim().toLowerCase();
+      if (!email) {
+        form.control.markAllAsTouched();
+        return;
+      }
+      this.linkExistingSubmit.emit({
+        email,
+        subjects: parts.length > 0 ? parts : undefined,
+      });
+      return;
+    }
+
     if (form.invalid) {
       form.control.markAllAsTouched();
       return;
@@ -383,14 +473,6 @@ export class AddTeacherModalComponent implements OnInit, OnDestroy {
       return;
     }
     const p = this.form.password ?? '';
-    const parts = this.subjectLines.map((s) => s.trim()).filter((s) => s.length > 0);
-    for (const s of parts) {
-      if (s.length > this.maxTotalSubjectChars) {
-        form.control.markAllAsTouched();
-        window.alert(`Each subject must be at most ${this.maxTotalSubjectChars} characters.`);
-        return;
-      }
-    }
     const phoneTrim = (this.form.phone ?? '').trim();
     const payload: AddTeacherPayload = {
       firstName: first,

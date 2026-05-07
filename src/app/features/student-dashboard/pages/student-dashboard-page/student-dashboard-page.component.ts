@@ -31,6 +31,8 @@ import { StarsBySubjectOverTimeSectionComponent } from '../../../../shared/compo
 
 export type StudentRewardRow = {
 
+  id: string;
+
   date: string;
 
   teacher: string;
@@ -124,6 +126,11 @@ export class StudentDashboardPageComponent implements OnInit {
 
 
   rewardLog: StudentRewardRow[] = [];
+
+  /** Zero-based page index for {@link rewardLog} table. */
+  rewardLogPage = 0;
+
+  readonly rewardLogPageSize = 10;
 
 
 
@@ -384,7 +391,9 @@ export class StudentDashboardPageComponent implements OnInit {
 
 
 
-    this.rewardLog = (data.rewardLog ?? []).map((r) => ({
+    this.rewardLog = (data.rewardLog ?? []).map((r, idx) => ({
+
+      id: `reward-${idx}-${r.gradedAt}`,
 
       date: new Date(r.gradedAt).toLocaleString(),
 
@@ -397,6 +406,8 @@ export class StudentDashboardPageComponent implements OnInit {
       reason: (r.feedback && r.feedback.trim()) || 'Graded homework',
 
     }));
+
+    this.clampRewardLogPage();
 
   }
 
@@ -430,6 +441,45 @@ export class StudentDashboardPageComponent implements OnInit {
 
   awaitingForRow(r: SubjectHomeworkProgressRow): number {
     return Math.max(0, r.submittedCount - r.gradedCount);
+  }
+
+  rewardLogTotalPages(): number {
+    if (this.rewardLog.length === 0) {
+      return 0;
+    }
+    return Math.ceil(this.rewardLog.length / this.rewardLogPageSize);
+  }
+
+  rewardLogPaged(): StudentRewardRow[] {
+    const start = this.rewardLogPage * this.rewardLogPageSize;
+    return this.rewardLog.slice(start, start + this.rewardLogPageSize);
+  }
+
+  rewardLogRangeLabel(): string {
+    const total = this.rewardLog.length;
+    if (total === 0) {
+      return '';
+    }
+    const start = this.rewardLogPage * this.rewardLogPageSize + 1;
+    const end = Math.min(
+      total,
+      (this.rewardLogPage + 1) * this.rewardLogPageSize,
+    );
+    return `${start}–${end} of ${total}`;
+  }
+
+  prevRewardLogPage(): void {
+    this.rewardLogPage = Math.max(0, this.rewardLogPage - 1);
+  }
+
+  nextRewardLogPage(): void {
+    const last = Math.max(0, this.rewardLogTotalPages() - 1);
+    this.rewardLogPage = Math.min(last, this.rewardLogPage + 1);
+  }
+
+  private clampRewardLogPage(): void {
+    const last = Math.max(0, this.rewardLogTotalPages() - 1);
+    this.rewardLogPage = Math.min(this.rewardLogPage, last);
   }
 
   private computeYaxisForSeries(series: ApexAxisChartSeries): ApexYAxis {

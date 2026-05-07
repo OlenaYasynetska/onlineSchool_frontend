@@ -1,15 +1,18 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import { ChatUiService } from '../../core/services/chat-ui.service';
+import { SchoolChatApiService, type ChatMessage } from './school-chat-api.service';
 
 @Component({
   selector: 'app-chat-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './chat-page.component.html',
 })
 export class ChatPageComponent implements OnInit, OnDestroy {
@@ -17,6 +20,7 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
   protected readonly chatUi = inject(ChatUiService);
+  private readonly chatApi = inject(SchoolChatApiService);
 
   private readonly destroy$ = new Subject<void>();
 
@@ -24,29 +28,84 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   peerKind: 'teacher' | 'student' | null = null;
   peerDisplayName = '';
 
+  conversationId: string | null = null;
+  messages: ChatMessage[] = [];
+  draft = '';
+  loading = false;
+  loadError: string | null = null;
+  sendError: string | null = null;
+  sending = false;
+
   ngOnInit(): void {
-    this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const peer = params.get('peer');
-      const kind = params.get('kind');
-      this.peerId = peer?.trim() || null;
-      this.peerKind = kind === 'teacher' || kind === 'student' ? kind : null;
-      const nameQ = params.get('name')?.trim();
-      const rec =
-        this.peerId && this.peerKind
-          ? this.chatUi
-              .readRecent()
-              .find((e) => e.peerId === this.peerId && e.kind === this.peerKind)
-          : undefined;
-      this.peerDisplayName =
-        nameQ ||
-        rec?.displayName ||
-        (this.peerKind === 'teacher' ? 'Teacher' : this.peerKind === 'student' ? 'Student' : '');
-    });
+    this.route.queryParamMap
+      .pipe(
+        switchMap((params) => {
+          const peer = params.get('peer');
+          const kind = params.get('kind');
+          this.peerId = peer?.trim() || null;
+          this.peerKind = kind === 'teacher' || kind === 'student' ? kind : null;
+          const nameQ = params.get('name')?.trim();
+          const rec =
+            this.peerId && this.peerKind
+              ? this.chatUi
+                  .readRecent()
+                  .find((e) => e.peerId === this.peerId && e.kind === this.peerKind)
+              : undefined;
+          this.peerDisplayName =
+            nameQ ||
+            rec?.displayName ||
+            (this.peerKind === 'teacher' ? 'Teacher' : this.peerKind === 'student' ? 'Student' : '');
+
+          return this.loadMessages$();
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private loadMessages$(): Observable<void> {
+    const u = this.auth.currentUser();
+    if (!u?.id || !this.peerId || !this.peerKind) {
+      this.conversationId = null;
+      this.messages = [];
+      this.loading = false;
+      this.loadError = null;
+      return of(undefined);
+    }
+
+    this.loading = true;
+    this.loadError = null;
+    return this.chatApi.openConversation({
+      userId: u.id,
+      peerId: this.peerId,
+      peerKind: this.peerKind,
+    }).pipe(
+      switchMap((open) => {
+        this.conversationId = open.conversationId;
+        return this.chatApi.listMessages({
+          userId: u.id,
+          conversationId: open.conversationId,
+          limit: 80,
+        });
+      }),
+      tap((msgs) => {
+        this.messages = msgs;
+        this.loading = false;
+      }),
+      catchError(() => {
+        this.loadError = 'Could not load chat. Check network and MongoDB configuration on the server.';
+        this.loading = false;
+        this.messages = [];
+        this.conversationId = null;
+        return of(undefined);
+      }),
+      map(() => undefined),
+    );
   }
 
   toggleContacts(): void {
@@ -60,5 +119,35 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     this.peerId = null;
     this.peerKind = null;
     this.peerDisplayName = '';
+    this.conversationId = null;
+    this.messages = [];
+    this.draft = '';
+    this.loadError = null;
+    this.sendError = null;
+  }
+
+  send(): void {
+    const u = this.auth.currentUser();
+    const text = this.draft.trim();
+    this.sendError = null;
+    if (!u?.id || !this.conversationId || !text) return;
+
+    this.sending = true;
+    this.chatApi.sendMessage(u.id, this.conversationId, text).subscribe({
+      next: (m) => {
+        this.messages = [...this.messages, m];
+        this.draft = '';
+        this.sending = false;
+      },
+      error: () => {
+        this.sendError = 'Failed to send.';
+        this.sending = false;
+      },
+    });
+  }
+
+  isMine(m: ChatMessage): boolean {
+    const id = this.auth.currentUser()?.id;
+    return !!id && m.senderUserId === id;
   }
 }

@@ -80,18 +80,36 @@ export class TeacherStudyMaterialsPageComponent {
     return `${base || 'lesson'}.pdf`;
   }
 
-  reload(): void {
+  /**
+   * Reloads sets from the API. After load, re-selects {@code newSelectionId} if passed;
+   * otherwise keeps the set that was selected when reload started (if it still exists).
+   */
+  reload(options?: { newSelectionId?: string }): void {
     const u = this.auth.currentUser();
     if (!u?.id) {
       this.loading = false;
       return;
     }
+    const idToSelectAfter =
+      options?.newSelectionId !== undefined
+        ? options.newSelectionId
+        : (this.selectedSet?.id ?? null);
     this.loading = true;
     this.noProfile = false;
     this.api.listTeacherSets(u.id).subscribe({
       next: (sets) => {
         this.sets = sets;
         this.loading = false;
+        if (idToSelectAfter) {
+          const row = sets.find((s) => s.id === idToSelectAfter);
+          if (row) {
+            this.selectSet(row);
+          } else {
+            this.selectedSet = null;
+            this.lessons = [];
+            this.lessonsError = null;
+          }
+        }
         this.api.listTeacherSubjects(u.id).subscribe({
           next: (s) => (this.subjects = s),
           error: () => (this.subjects = []),
@@ -207,8 +225,7 @@ export class TeacherStudyMaterialsPageComponent {
           if (files.length === 0) {
             this.createBusy = false;
             this.closeCreate();
-            this.reload();
-            queueMicrotask(() => this.selectSet(created));
+            this.reload({ newSelectionId: created.id });
             return;
           }
           const uploads = files.map((file) =>
@@ -223,8 +240,7 @@ export class TeacherStudyMaterialsPageComponent {
             complete: () => {
               this.createBusy = false;
               this.closeCreate();
-              this.reload();
-              queueMicrotask(() => this.selectSet(created));
+              this.reload({ newSelectionId: created.id });
             },
             error: (err: { error?: { message?: string } | string; message?: string }) => {
               this.createBusy = false;
@@ -239,8 +255,7 @@ export class TeacherStudyMaterialsPageComponent {
               this.createOpen = false;
               this.createPdfFiles = [];
               this.createError = null;
-              this.reload();
-              queueMicrotask(() => this.selectSet(created));
+              this.reload({ newSelectionId: created.id });
             },
           });
         },
@@ -311,11 +326,7 @@ export class TeacherStudyMaterialsPageComponent {
     concat(...uploads).subscribe({
       complete: () => {
         this.uploadBusy = false;
-        const sel = this.selectedSet;
         this.closeAddLesson();
-        if (sel) {
-          this.selectSet(sel);
-        }
         this.reload();
       },
       error: (err: { error?: { message?: string } | string; message?: string }) => {
@@ -415,13 +426,11 @@ export class TeacherStudyMaterialsPageComponent {
         description: this.editSetDescription.trim() || null,
       })
       .subscribe({
-        next: (updated) => {
+        next: (_updated) => {
           this.editSetBusy = false;
+          const editedId = id;
           this.closeEditSet();
-          if (this.selectedSet?.id === updated.id) {
-            this.selectedSet = updated;
-          }
-          this.reload();
+          this.reload({ newSelectionId: editedId });
         },
         error: (err: HttpErrorResponse) => {
           this.editSetBusy = false;
@@ -503,11 +512,7 @@ export class TeacherStudyMaterialsPageComponent {
       next: () => {
         this.editLessonBusy = false;
         this.closeEditLesson();
-        const sel = this.selectedSet;
         this.reload();
-        if (sel) {
-          queueMicrotask(() => this.selectSet(sel));
-        }
       },
       error: () => {
         this.editLessonBusy = false;
@@ -526,11 +531,7 @@ export class TeacherStudyMaterialsPageComponent {
     }
     this.api.deleteTeacherLesson(u.id, lesson.id).subscribe({
       next: () => {
-        const sel = this.selectedSet;
         this.reload();
-        if (sel) {
-          queueMicrotask(() => this.selectSet(sel));
-        }
       },
       error: () => window.alert('Could not delete lesson.'),
     });

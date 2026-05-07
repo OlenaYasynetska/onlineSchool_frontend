@@ -1,4 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 /** Роль співрозмовника в чаті (не поточного користувача). */
 export type ChatPeerKind = 'teacher' | 'student';
@@ -33,9 +35,34 @@ function safeParse(raw: string | null): ChatRecentEntry[] {
   }
 }
 
+function normalizePath(url: string): string {
+  return url.split('?')[0].replace(/\/$/, '') || '/';
+}
+
+function isChatRoutePath(path: string): boolean {
+  return (
+    path === '/student/chat' ||
+    path.startsWith('/student/chat/') ||
+    path === '/teacher/chat' ||
+    path.startsWith('/teacher/chat/')
+  );
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatUiService {
   readonly contactsPanelOpen = signal(false);
+
+  private readonly router = inject(Router);
+
+  constructor() {
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => {
+        if (!isChatRoutePath(normalizePath(this.router.url))) {
+          this.closeContactsPanel();
+        }
+      });
+  }
 
   openContactsPanel(): void {
     this.contactsPanelOpen.set(true);

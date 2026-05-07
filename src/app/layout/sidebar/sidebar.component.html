@@ -1,22 +1,28 @@
 @if (compactSidebar(); as compact) {
   <aside
     class="flex h-full min-h-0 shrink-0 flex-col border-r border-slate-200/90 bg-[#f6f8fb] dark:border-gray-700 dark:bg-gray-900"
-    [ngClass]="isSchoolAdminLayout() ? 'w-[13.8rem]' : 'w-[15.5rem]'"
+    [ngClass]="
+      isSchoolAdminLayout()
+        ? 'w-[13.8rem] max-md:w-[4.25rem]'
+        : 'w-[15.5rem] max-md:w-[4.25rem]'
+    "
   >
     <nav
-      class="flex flex-1 flex-col gap-0.5 overflow-y-auto px-1.5 pb-2 pt-4"
+      class="flex flex-1 flex-col gap-0.5 overflow-y-auto px-1.5 pb-2 pt-4 max-md:px-1"
       [attr.aria-label]="compact.ariaLabel"
     >
       @for (item of compact.items; track item.path) {
         <a
           [routerLink]="item.path"
+          [fragment]="item.fragment ?? undefined"
           routerLinkActive="school-admin-nav-active"
           [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
           class="school-admin-nav-link group flex rounded-xl transition-colors"
+          [attr.title]="item.label"
           [ngClass]="
             isSchoolAdminLayout()
-              ? 'min-h-[2.75rem] flex-col items-center gap-1 px-1 py-2.5 text-center'
-              : 'min-h-[3rem] flex-row items-center gap-2 px-2 py-2.5 text-left'
+              ? 'min-h-[2.75rem] flex-col items-center gap-1 px-1 py-2.5 text-center max-md:min-h-0 max-md:justify-center max-md:py-2.5'
+              : 'min-h-[3rem] flex-row items-center gap-2 px-2 py-2.5 text-left max-md:justify-center max-md:px-1.5 max-md:py-2.5'
           "
         >
           @switch (item.icon) {
@@ -194,11 +200,11 @@
             }
           }
           <span
-            class="font-medium tracking-tight text-current"
+            class="font-medium tracking-tight text-current max-md:sr-only"
             [ngClass]="
               isSchoolAdminLayout()
-                ? 'max-w-[10.8rem] text-[10px] leading-tight'
-                : 'min-w-0 flex-1 text-[15px] leading-snug sm:text-base'
+                ? 'max-w-[10.8rem] text-[10px] leading-tight md:max-w-[10.8rem]'
+                : 'min-w-0 flex-1 text-[15px] leading-snug sm:text-base md:min-w-0 md:flex-1'
             "
             >{{ item.label }}</span
           >
@@ -207,7 +213,7 @@
     </nav>
     @if (showChatFab()) {
       <div
-        class="relative z-10 mt-auto flex shrink-0 flex-col items-center border-t border-slate-200/80 px-2 pb-4 pt-3 dark:border-gray-700/80"
+        class="relative z-10 mt-auto flex shrink-0 flex-col items-center border-t border-slate-200/80 px-2 pb-4 pt-3 max-md:px-1 max-md:pb-3 max-md:pt-2 dark:border-gray-700/80"
       >
         <button
           type="button"
@@ -217,7 +223,7 @@
               ? '!ring-2 !ring-sky-500/70 !ring-offset-2 !ring-offset-[#f6f8fb] dark:!ring-offset-gray-900'
               : ''
           "
-          class="sidebar-chat-fab group relative inline-flex h-[3.75rem] w-[3.75rem] cursor-pointer items-center justify-center rounded-full border-2 border-sky-200/90 bg-gradient-to-b from-white to-slate-50/95 p-1.5 shadow-[0_6px_20px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:border-sky-300 hover:shadow-[0_10px_28px_rgba(2,132,199,0.18),0_4px_10px_rgba(15,23,42,0.1)] active:translate-y-0 active:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f8fb] dark:border-sky-500/35 dark:from-slate-800 dark:to-slate-800/90 dark:shadow-[0_6px_24px_rgba(0,0,0,0.35)] dark:hover:border-sky-400/50 dark:hover:shadow-[0_12px_32px_rgba(14,116,194,0.25)] dark:focus-visible:ring-offset-gray-900"
+          class="sidebar-chat-fab group relative inline-flex h-[3.25rem] w-[3.25rem] cursor-pointer items-center justify-center rounded-full border-2 border-sky-200/90 bg-gradient-to-b from-white to-slate-50/95 p-1.5 shadow-[0_6px_20px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:border-sky-300 hover:shadow-[0_10px_28px_rgba(2,132,199,0.18),0_4px_10px_rgba(15,23,42,0.1)] active:translate-y-0 active:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f8fb] md:h-[3.75rem] md:w-[3.75rem] dark:border-sky-500/35 dark:from-slate-800 dark:to-slate-800/90 dark:shadow-[0_6px_24px_rgba(0,0,0,0.35)] dark:hover:border-sky-400/50 dark:hover:shadow-[0_12px_32px_rgba(14,116,194,0.25)] dark:focus-visible:ring-offset-gray-900"
           [attr.aria-label]="chatFabAriaLabel()"
         >
           <span
@@ -237,7 +243,7 @@
     }
     @if (auth.currentUser()?.role === 'ADMIN_SCHOOL') {
       <div
-        class="mx-2 mb-3 mt-auto shrink-0 rounded-xl bg-slate-800/85 px-3 py-3 text-left shadow-sm ring-1 ring-white/10"
+        class="mx-2 mb-3 mt-auto hidden max-w-[12rem] shrink-0 rounded-xl bg-slate-800/85 px-3 py-3 text-left shadow-sm ring-1 ring-white/10 md:block"
       >
         <div class="flex items-center justify-between gap-2">
           <p class="text-[11px] font-medium text-white/70">Tarif:</p>

@@ -9,7 +9,7 @@ import { useSchoolAdminCabinetSegment } from '../../hooks/use-school-admin-cabin
 import { useSchoolAdminDashboard } from '../../hooks/use-school-admin-dashboard.hook';
 import { useSchoolAdminGroups } from '../../hooks/use-school-admin-groups.hook';
 import { useSchoolAdminQuickActions } from '../../hooks/use-school-admin-quick-actions.hook';
-import { useSchoolAdminSortedStudents } from '../../hooks/use-school-admin-sorted-students.hook';
+import { useSchoolAdminStudentsFilter } from '../../hooks/use-school-admin-students-filter.hook';
 import { useSchoolAdminTeachersFilter } from '../../hooks/use-school-admin-teachers-filter.hook';
 import { SchoolAdminDashboardService } from '../../services/school-admin-dashboard.service';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -52,7 +52,10 @@ export class SchoolAdminPageComponent implements OnInit {
   );
   teachers: SchoolTeacher[] = [];
   readonly teachersVm = useSchoolAdminTeachersFilter(() => this.teachers);
-  readonly studentsVm = useSchoolAdminSortedStudents(() => this.dash.students);
+  readonly studentsVm = useSchoolAdminStudentsFilter(() => ({
+    students: this.dash.students,
+    groups: this.dash.groups,
+  }));
   loading = true;
   noSchoolAssigned = false;
   /**

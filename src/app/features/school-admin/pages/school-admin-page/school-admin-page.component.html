@@ -512,39 +512,104 @@
       id="school-admin-students"
       class="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
     >
-      <div
-        class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-      >
-        <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
-          <img
-            src="/assets/icons/sidebar/graduation-cap.svg"
-            alt=""
-            width="24"
-            height="24"
-            class="h-6 w-6 shrink-0 object-contain"
-            aria-hidden="true"
-          />
-          Students
-        </h2>
-        <div class="relative max-w-md flex-1 sm:ml-auto">
-          <input
-            type="search"
-            placeholder="Search student"
-            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
-          />
-          <span
-            class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
-            aria-hidden="true"
-          >
+      <div class="mb-4 flex flex-col gap-4">
+        <div
+          class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
             <img
-              src="/assets/icons/about/loupe.svg"
+              src="/assets/icons/sidebar/graduation-cap.svg"
               alt=""
-              width="16"
-              height="16"
-              class="h-4 w-4 shrink-0 object-contain"
+              width="24"
+              height="24"
+              class="h-6 w-6 shrink-0 object-contain"
               aria-hidden="true"
             />
-          </span>
+            Students
+          </h2>
+        </div>
+        <div
+          class="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end"
+        >
+          <div class="flex w-full min-w-[10rem] flex-col gap-1 sm:w-auto sm:max-w-[12rem]">
+            <label
+              for="school-admin-students-group"
+              class="text-xs font-medium text-slate-600"
+              >Group</label
+            >
+            <select
+              id="school-admin-students-group"
+              (change)="studentsVm.onGroupFilterChange($event)"
+              class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            >
+              <option value="">All groups</option>
+              @for (g of studentsVm.groupFilterOptions; track g) {
+                <option [value]="g">{{ g }}</option>
+              }
+            </select>
+          </div>
+          <div
+            class="flex w-full flex-col gap-1 sm:w-auto sm:min-w-0 sm:flex-row sm:items-end sm:gap-2"
+          >
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+              <label
+                for="school-admin-students-joined-from"
+                class="text-xs font-medium text-slate-600"
+                >Joined from</label
+              >
+              <input
+                id="school-admin-students-joined-from"
+                type="date"
+                (input)="studentsVm.onJoinedFromInput($event)"
+                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+              <label
+                for="school-admin-students-joined-to"
+                class="text-xs font-medium text-slate-600"
+                >Joined to</label
+              >
+              <input
+                id="school-admin-students-joined-to"
+                type="date"
+                (input)="studentsVm.onJoinedToInput($event)"
+                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          </div>
+          <div
+            class="flex w-full min-w-0 flex-1 flex-col gap-1 sm:max-w-md sm:min-w-[12rem]"
+          >
+            <label
+              for="school-admin-students-search"
+              class="text-xs font-medium text-slate-600"
+              >Search</label
+            >
+            <div class="relative">
+              <input
+                id="school-admin-students-search"
+                type="search"
+                placeholder="Search student"
+                autocomplete="off"
+                (input)="studentsVm.onStudentSearchInput($event)"
+                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+              <span
+                class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
+                aria-hidden="true"
+              >
+                <img
+                  src="/assets/icons/about/loupe.svg"
+                  alt=""
+                  width="16"
+                  height="16"
+                  class="h-4 w-4 shrink-0 object-contain"
+                  aria-hidden="true"
+                />
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -562,8 +627,30 @@
             </tr>
           </thead>
           <tbody>
-            @if (dash.students.length > 0) {
-              @for (row of studentsVm.sortedStudents; track row.id; let i = $index) {
+            @if (dash.students.length === 0) {
+              <tr>
+                <td
+                  colspan="5"
+                  class="px-3 py-10 text-center text-sm text-slate-500"
+                >
+                  No students yet.
+                </td>
+              </tr>
+            } @else if (studentsVm.filteredStudents.length === 0) {
+              <tr>
+                <td
+                  colspan="5"
+                  class="px-3 py-10 text-center text-sm text-slate-500"
+                >
+                  No students match your filters.
+                </td>
+              </tr>
+            } @else {
+              @for (
+                row of studentsVm.filteredStudents;
+                track row.id;
+                let i = $index
+              ) {
                 <tr class="border-b border-slate-100 hover:bg-slate-50/80">
                   <td class="px-3 py-3 font-semibold text-slate-900">
                     {{ i + 1 }}
@@ -582,15 +669,6 @@
                   <td class="px-3 py-3 text-slate-600">{{ row.joinedAt }}</td>
                 </tr>
               }
-            } @else {
-              <tr>
-                <td
-                  colspan="5"
-                  class="px-3 py-10 text-center text-sm text-slate-500"
-                >
-                  No students yet.
-                </td>
-              </tr>
             }
           </tbody>
         </table>

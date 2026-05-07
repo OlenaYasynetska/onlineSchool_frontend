@@ -99,7 +99,7 @@ export class SidebarComponent implements OnInit {
     {
       path: '/teacher/homework',
       label: 'Homework',
-      icon: 'envelope',
+      icon: 'clipboard',
       fragment: 'teacher-homework',
     },
     // Hidden: direct navigation disabled for teachers.
@@ -241,7 +241,7 @@ export class SidebarComponent implements OnInit {
     );
   }
 
-  /** Chat FAB: teacher & student only (compact cabinet sidebar). */
+  /** FAB чату для учнів / викладачів (компактний сайдбар). */
   protected showChatFab(): boolean {
     const r = this.auth.currentUser()?.role;
     return r === 'TEACHER' || r === 'STUDENT';
@@ -286,16 +286,5 @@ export class SidebarComponent implements OnInit {
       return;
     }
     void this.router.navigateByUrl(this.chatPath());
-  }
-
-  /** Відкрити / закрити панель контактів (чат) — лише за явним натиском. */
-  protected toggleContactsPanel(): void {
-    this.chatUi.toggleContactsPanel();
-  }
-
-  protected contactsToggleAriaLabel(): string {
-    return this.chatUi.contactsPanelOpen()
-      ? 'Hide contacts panel'
-      : 'Open contacts panel';
   }
 }

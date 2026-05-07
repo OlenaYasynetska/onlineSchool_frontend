@@ -1,3 +1,5 @@
+@import './chat-contacts-scrollbar.css';
+
 * {
   box-sizing: border-box;
 }

@@ -23,12 +23,10 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="flex min-h-0 w-full min-w-0 flex-1 overflow-hidden">
       @if (shouldShowSidebar()) {
-        <div class="relative flex h-full min-h-0 shrink-0">
-          <app-sidebar />
-          @if (showChatContactsPanel()) {
-            <app-chat-contacts-panel />
-          }
-        </div>
+        <app-sidebar />
+        @if (showChatContactsPanel()) {
+          <app-chat-contacts-panel />
+        }
       }
       <main
         class="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-slate-100"

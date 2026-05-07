@@ -18,40 +18,47 @@ import type { StudentRow } from '../../features/school-admin/models/school-admin
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './chat-contacts-panel.component.html',
+  host: {
+    class:
+      'border-r border-slate-200/90 bg-slate-50/90 dark:border-gray-700 dark:bg-gray-900',
+  },
   styles: [
     `
       :host {
-        position: absolute;
-        left: 100%;
-        top: 0;
-        bottom: 0;
         display: flex;
         flex-direction: column;
-        width: min(20rem, calc(100vw - 4.5rem));
-        max-width: 20rem;
-        z-index: 40;
-        transform: translateX(-100%);
+        flex-shrink: 0;
+        min-height: 0;
+        height: 100%;
+        width: min(20rem, calc(100vw - 4.25rem - 12px));
+        max-width: 0;
+        min-width: 0;
+        overflow: hidden;
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
         transition:
-          transform 300ms ease-out,
+          max-width 300ms ease-out,
           opacity 200ms ease-out,
           visibility 0s linear 300ms;
-      }
-      :host(.is-open) {
-        transform: translateX(0);
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-        transition:
-          transform 300ms ease-out,
-          opacity 200ms ease-out,
-          visibility 0s linear 0s;
       }
       @media (min-width: 768px) {
         :host {
           width: 20rem;
+        }
+      }
+      :host(.is-open) {
+        max-width: min(20rem, calc(100vw - 4.25rem - 12px));
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transition:
+          max-width 300ms ease-out,
+          opacity 200ms ease-out,
+          visibility 0s linear 0s;
+      }
+      @media (min-width: 768px) {
+        :host(.is-open) {
           max-width: 20rem;
         }
       }

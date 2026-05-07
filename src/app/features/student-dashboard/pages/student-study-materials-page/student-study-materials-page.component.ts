@@ -32,6 +32,8 @@ export class StudentStudyMaterialsPageComponent {
   pdfBlob: Blob | null = null;
   pdfDownloadName = 'lesson.pdf';
   issuuReaderEmbedUrl: string | null = null;
+  /** Inline preview in card vs fullscreen overlay. */
+  pdfFullscreen = false;
 
   constructor() {
     const u = this.auth.currentUser();
@@ -56,6 +58,9 @@ export class StudentStudyMaterialsPageComponent {
   }
 
   selectSet(row: StudyMaterialSetDto): void {
+    if (this.selectedSet?.id !== row.id) {
+      this.closePdf();
+    }
     this.selectedSet = row;
     this.lessons = [];
     this.lessonsError = null;
@@ -90,6 +95,15 @@ export class StudentStudyMaterialsPageComponent {
     this.pdfBlob = null;
     this.issuuReaderEmbedUrl = null;
     this.pdfTitle = '';
+    this.pdfFullscreen = false;
+  }
+
+  togglePdfFullscreen(): void {
+    this.pdfFullscreen = !this.pdfFullscreen;
+  }
+
+  minimizePdfFullscreen(): void {
+    this.pdfFullscreen = false;
   }
 
   openIssuuReader(lesson: StudyMaterialLessonDto): void {
@@ -100,6 +114,7 @@ export class StudentStudyMaterialsPageComponent {
     this.pdfBlob = null;
     this.pdfTitle = lesson.title;
     this.issuuReaderEmbedUrl = n;
+    this.pdfFullscreen = false;
   }
 
   openPdf(lesson: StudyMaterialLessonDto): void {
@@ -111,6 +126,7 @@ export class StudentStudyMaterialsPageComponent {
     this.issuuReaderEmbedUrl = null;
     this.pdfTitle = lesson.title;
     this.pdfDownloadName = this.sanitizeDownloadFileName(lesson.title);
+    this.pdfFullscreen = false;
     this.api.getStudentLessonPdfBlob(u.id, lesson.id, true).subscribe({
       next: (blob) => {
         this.pdfBlob = blob;

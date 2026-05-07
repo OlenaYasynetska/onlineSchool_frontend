@@ -42,86 +42,137 @@
           </ul>
         }
       </section>
-      <section class="min-h-[min(70vh,520px)] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <section class="flex min-h-[min(70vh,520px)] flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
         @if (!selectedSet) {
           <p class="text-sm text-slate-600">Select a set to view lessons.</p>
         } @else {
-          <h2 class="text-lg font-bold text-slate-900">{{ selectedSet.title }}</h2>
-          @if (lessonsLoading) {
-            <p class="mt-4 text-sm text-slate-600">Loading…</p>
-          } @else if (lessonsError) {
-            <p class="mt-4 text-sm text-red-600">{{ lessonsError }}</p>
-          } @else if (lessons.length === 0) {
-            <p class="mt-4 text-sm text-slate-600">No lessons in this set.</p>
-          } @else {
-            <ul class="mt-4 divide-y divide-slate-100">
-              @for (l of lessons; track l.id) {
-                <li class="flex flex-wrap items-center justify-between gap-2 py-3">
-                  <span class="font-medium text-slate-900">{{ l.title }}</span>
-                  <div class="flex flex-wrap items-center gap-2">
-                    @if (l.issuuEmbedUrl) {
+          <div class="flex shrink-0 flex-col">
+            <h2 class="text-lg font-bold text-slate-900">{{ selectedSet.title }}</h2>
+            @if (lessonsLoading) {
+              <p class="mt-4 text-sm text-slate-600">Loading…</p>
+            } @else if (lessonsError) {
+              <p class="mt-4 text-sm text-red-600">{{ lessonsError }}</p>
+            } @else if (lessons.length === 0) {
+              <p class="mt-4 text-sm text-slate-600">No lessons in this set.</p>
+            } @else {
+              <ul class="mt-4 divide-y divide-slate-100">
+                @for (l of lessons; track l.id) {
+                  <li class="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <span class="font-medium text-slate-900">{{ l.title }}</span>
+                    <div class="flex flex-wrap items-center gap-2">
+                      @if (l.issuuEmbedUrl) {
+                        <button
+                          type="button"
+                          (click)="openIssuuReader(l)"
+                          class="text-sm font-semibold text-sky-600 hover:text-sky-800"
+                        >
+                          Issuu
+                        </button>
+                      }
                       <button
                         type="button"
-                        (click)="openIssuuReader(l)"
-                        class="text-sm font-semibold text-sky-600 hover:text-sky-800"
+                        (click)="openPdf(l)"
+                        class="text-sm font-semibold text-sky-700 hover:text-sky-900"
                       >
-                        Issuu
+                        PDF
                       </button>
-                    }
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </div>
+
+          @if (pdfBlob || issuuReaderEmbedUrl) {
+            <div
+              role="dialog"
+              [attr.aria-modal]="pdfFullscreen"
+              (click)="pdfFullscreen && minimizePdfFullscreen()"
+              [class]="
+                pdfFullscreen
+                  ? 'fixed inset-0 z-[110] flex flex-col bg-black/80 p-0 sm:p-3'
+                  : 'relative z-0 mt-4 flex min-h-[min(52vh,480px)] min-w-0 flex-1 flex-col'
+              "
+            >
+              <div
+                class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-hidden border border-slate-700/60 bg-[#1e1e1e] shadow-2xl sm:rounded-xl"
+                (click)="$event.stopPropagation()"
+              >
+                <div
+                  class="flex shrink-0 items-center justify-between gap-2 border-b border-slate-700/80 bg-[#2d2d2d] px-3 py-2.5"
+                >
+                  <p class="min-w-0 truncate text-sm font-semibold text-slate-100">{{ pdfTitle }}</p>
+                  <div class="flex shrink-0 items-center gap-1">
                     <button
                       type="button"
-                      (click)="openPdf(l)"
-                      class="text-sm font-semibold text-sky-700 hover:text-sky-900"
+                      (click)="togglePdfFullscreen()"
+                      class="rounded-lg p-2 text-slate-200 hover:bg-white/10"
+                      [attr.aria-label]="pdfFullscreen ? 'Exit fullscreen' : 'Open fullscreen'"
+                      [title]="pdfFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
                     >
-                      PDF
+                      @if (!pdfFullscreen) {
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="h-5 w-5"
+                          aria-hidden="true"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+                          />
+                        </svg>
+                      } @else {
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="h-5 w-5"
+                          aria-hidden="true"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25"
+                          />
+                        </svg>
+                      }
+                    </button>
+                    <button
+                      type="button"
+                      (click)="closePdf()"
+                      class="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-200 hover:bg-white/10"
+                    >
+                      Закрити
                     </button>
                   </div>
-                </li>
-              }
-            </ul>
+                </div>
+                <div class="relative min-h-0 flex-1">
+                  @if (pdfBlob) {
+                    <app-study-material-pdf-viewer
+                      class="absolute inset-0 block"
+                      [pdfSrc]="pdfBlob"
+                      [allowDownload]="false"
+                      [downloadFileName]="pdfDownloadName"
+                    />
+                  } @else if (issuuReaderEmbedUrl) {
+                    <app-issuu-embed-frame
+                      class="absolute inset-0 block min-h-0"
+                      [embedUrl]="issuuReaderEmbedUrl"
+                    />
+                  }
+                </div>
+              </div>
+            </div>
           }
         }
       </section>
     </div>
   }
 </div>
-
-@if (pdfBlob || issuuReaderEmbedUrl) {
-  <div
-    class="fixed inset-0 z-[110] flex flex-col bg-black/80 p-0 sm:p-3"
-    role="dialog"
-    aria-modal="true"
-  >
-    <div
-      class="flex min-h-0 flex-1 flex-col overflow-hidden border-0 border-slate-700/60 bg-[#1e1e1e] shadow-2xl sm:rounded-xl sm:border"
-    >
-      <div
-        class="flex shrink-0 items-center justify-between border-b border-slate-700/80 bg-[#2d2d2d] px-3 py-2.5"
-      >
-        <p class="truncate text-sm font-semibold text-slate-100">{{ pdfTitle }}</p>
-        <button
-          type="button"
-          (click)="closePdf()"
-          class="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-200 hover:bg-white/10"
-        >
-          Закрити
-        </button>
-      </div>
-      <div class="relative min-h-0 flex-1">
-        @if (pdfBlob) {
-          <app-study-material-pdf-viewer
-            class="absolute inset-0 block"
-            [pdfSrc]="pdfBlob"
-            [allowDownload]="false"
-            [downloadFileName]="pdfDownloadName"
-          />
-        } @else if (issuuReaderEmbedUrl) {
-          <app-issuu-embed-frame
-            class="absolute inset-0 block min-h-0"
-            [embedUrl]="issuuReaderEmbedUrl"
-          />
-        }
-      </div>
-    </div>
-  </div>
-}

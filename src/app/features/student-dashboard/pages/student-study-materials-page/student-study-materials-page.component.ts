@@ -8,7 +8,7 @@ import {
 } from '../../../../core/services/study-materials.service';
 import { StudyMaterialPdfViewerComponent } from '../../../../shared/components/study-material-pdf-viewer/study-material-pdf-viewer.component';
 import { IssuuEmbedFrameComponent } from '../../../../shared/components/issuu-embed-frame/issuu-embed-frame.component';
-import { normalizeIssuuEmbedUrl } from '../../../../shared/utils/issuu-embed-url.util';
+import { useStudyMaterialLessonPreview } from '../../../../shared/hooks/use-study-material-lesson-preview.hook';
 
 @Component({
   selector: 'app-student-study-materials-page',
@@ -20,6 +20,13 @@ export class StudentStudyMaterialsPageComponent {
   private readonly auth = inject(AuthService);
   private readonly api = inject(StudyMaterialsService);
 
+  readonly lessonPreview = useStudyMaterialLessonPreview({
+    fetchPdfBlob: (lesson) => {
+      const u = this.auth.currentUser();
+      return u?.id ? this.api.getStudentLessonPdfBlob(u.id, lesson.id, true) : null;
+    },
+  });
+
   loading = true;
   notLinked = false;
   sets: StudyMaterialSetDto[] = [];
@@ -27,13 +34,6 @@ export class StudentStudyMaterialsPageComponent {
   lessons: StudyMaterialLessonDto[] = [];
   lessonsLoading = false;
   lessonsError: string | null = null;
-
-  pdfTitle = '';
-  pdfBlob: Blob | null = null;
-  pdfDownloadName = 'lesson.pdf';
-  issuuReaderEmbedUrl: string | null = null;
-  /** Inline preview in card vs fullscreen overlay. */
-  pdfFullscreen = false;
 
   constructor() {
     const u = this.auth.currentUser();
@@ -59,7 +59,7 @@ export class StudentStudyMaterialsPageComponent {
 
   selectSet(row: StudyMaterialSetDto): void {
     if (this.selectedSet?.id !== row.id) {
-      this.closePdf();
+      this.lessonPreview.closePdf();
     }
     this.selectedSet = row;
     this.lessons = [];
@@ -79,59 +79,6 @@ export class StudentStudyMaterialsPageComponent {
         this.lessonsLoading = false;
         this.lessonsError = 'Could not load lessons.';
       },
-    });
-  }
-
-  private sanitizeDownloadFileName(title: string): string {
-    const base = title
-      .trim()
-      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_')
-      .replace(/\s+/g, ' ')
-      .slice(0, 120);
-    return `${base || 'lesson'}.pdf`;
-  }
-
-  closePdf(): void {
-    this.pdfBlob = null;
-    this.issuuReaderEmbedUrl = null;
-    this.pdfTitle = '';
-    this.pdfFullscreen = false;
-  }
-
-  togglePdfFullscreen(): void {
-    this.pdfFullscreen = !this.pdfFullscreen;
-  }
-
-  minimizePdfFullscreen(): void {
-    this.pdfFullscreen = false;
-  }
-
-  openIssuuReader(lesson: StudyMaterialLessonDto): void {
-    const n = normalizeIssuuEmbedUrl(lesson.issuuEmbedUrl);
-    if (!n) {
-      return;
-    }
-    this.pdfBlob = null;
-    this.pdfTitle = lesson.title;
-    this.issuuReaderEmbedUrl = n;
-    this.pdfFullscreen = false;
-  }
-
-  openPdf(lesson: StudyMaterialLessonDto): void {
-    const u = this.auth.currentUser();
-    if (!u?.id) {
-      return;
-    }
-    this.pdfBlob = null;
-    this.issuuReaderEmbedUrl = null;
-    this.pdfTitle = lesson.title;
-    this.pdfDownloadName = this.sanitizeDownloadFileName(lesson.title);
-    this.pdfFullscreen = false;
-    this.api.getStudentLessonPdfBlob(u.id, lesson.id, true).subscribe({
-      next: (blob) => {
-        this.pdfBlob = blob;
-      },
-      error: () => window.alert('Could not open PDF.'),
     });
   }
 }

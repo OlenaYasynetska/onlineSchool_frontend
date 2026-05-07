@@ -13,6 +13,7 @@ import {
 import { StudyMaterialPdfViewerComponent } from '../../../../shared/components/study-material-pdf-viewer/study-material-pdf-viewer.component';
 import { IssuuEmbedFrameComponent } from '../../../../shared/components/issuu-embed-frame/issuu-embed-frame.component';
 import { normalizeIssuuEmbedUrl } from '../../../../shared/utils/issuu-embed-url.util';
+import { useStudyMaterialLessonPreview } from '../../../../shared/hooks/use-study-material-lesson-preview.hook';
 
 @Component({
   selector: 'app-teacher-study-materials-page',
@@ -23,6 +24,17 @@ import { normalizeIssuuEmbedUrl } from '../../../../shared/utils/issuu-embed-url
 export class TeacherStudyMaterialsPageComponent {
   private readonly auth = inject(AuthService);
   private readonly api = inject(StudyMaterialsService);
+
+  readonly lessonPreview = useStudyMaterialLessonPreview({
+    fetchPdfBlob: (lesson) => {
+      const u = this.auth.currentUser();
+      return u?.id ? this.api.getTeacherLessonPdfBlob(u.id, lesson.id, true) : null;
+    },
+    onInvalidIssuuEmbed: () =>
+      window.alert(
+        'Для цього уроку не задано коректне посилання Issuu. Відредагуйте урок і вставте URL з Issuu.',
+      ),
+  });
 
   loading = true;
   noProfile = false;
@@ -50,12 +62,6 @@ export class TeacherStudyMaterialsPageComponent {
   uploadBusy = false;
   uploadError: string | null = null;
 
-  pdfTitle = '';
-  pdfBlob: Blob | null = null;
-  pdfDownloadName = 'lesson.pdf';
-  issuuReaderEmbedUrl: string | null = null;
-  pdfFullscreen = false;
-
   editSetOpen = false;
   editSetTitle = '';
   editSetDescription = '';
@@ -70,15 +76,6 @@ export class TeacherStudyMaterialsPageComponent {
 
   constructor() {
     this.reload();
-  }
-
-  private sanitizeDownloadFileName(title: string): string {
-    const base = title
-      .trim()
-      .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_')
-      .replace(/\s+/g, ' ')
-      .slice(0, 120);
-    return `${base || 'lesson'}.pdf`;
   }
 
   /**
@@ -128,7 +125,7 @@ export class TeacherStudyMaterialsPageComponent {
 
   selectSet(row: StudyMaterialSetDto): void {
     if (this.selectedSet?.id !== row.id) {
-      this.closePdf();
+      this.lessonPreview.closePdf();
     }
     this.selectedSet = row;
     this.lessons = [];
@@ -538,51 +535,6 @@ export class TeacherStudyMaterialsPageComponent {
         this.reload();
       },
       error: () => window.alert('Could not delete lesson.'),
-    });
-  }
-
-  closePdf(): void {
-    this.pdfBlob = null;
-    this.issuuReaderEmbedUrl = null;
-    this.pdfTitle = '';
-    this.pdfFullscreen = false;
-  }
-
-  togglePdfFullscreen(): void {
-    this.pdfFullscreen = !this.pdfFullscreen;
-  }
-
-  minimizePdfFullscreen(): void {
-    this.pdfFullscreen = false;
-  }
-
-  openIssuuReader(lesson: StudyMaterialLessonDto): void {
-    const n = normalizeIssuuEmbedUrl(lesson.issuuEmbedUrl);
-    if (!n) {
-      window.alert('Для цього уроку не задано коректне посилання Issuu. Відредагуйте урок і вставте URL з Issuu.');
-      return;
-    }
-    this.pdfBlob = null;
-    this.pdfTitle = lesson.title;
-    this.issuuReaderEmbedUrl = n;
-    this.pdfFullscreen = false;
-  }
-
-  openPdf(lesson: StudyMaterialLessonDto): void {
-    const u = this.auth.currentUser();
-    if (!u?.id) {
-      return;
-    }
-    this.pdfBlob = null;
-    this.issuuReaderEmbedUrl = null;
-    this.pdfTitle = lesson.title;
-    this.pdfDownloadName = this.sanitizeDownloadFileName(lesson.title);
-    this.pdfFullscreen = false;
-    this.api.getTeacherLessonPdfBlob(u.id, lesson.id, true).subscribe({
-      next: (blob) => {
-        this.pdfBlob = blob;
-      },
-      error: () => window.alert('Could not open PDF.'),
     });
   }
 }

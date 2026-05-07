@@ -63,7 +63,7 @@
                       @if (l.issuuEmbedUrl) {
                         <button
                           type="button"
-                          (click)="openIssuuReader(l)"
+                          (click)="lessonPreview.openIssuuReader(l)"
                           class="text-sm font-semibold text-sky-600 hover:text-sky-800"
                         >
                           Issuu
@@ -71,7 +71,7 @@
                       }
                       <button
                         type="button"
-                        (click)="openPdf(l)"
+                        (click)="lessonPreview.openPdf(l)"
                         class="text-sm font-semibold text-violet-700 hover:text-violet-900"
                       >
                         PDF
@@ -83,13 +83,13 @@
             }
           </div>
 
-          @if (pdfBlob || issuuReaderEmbedUrl) {
+          @if (lessonPreview.pdfBlob || lessonPreview.issuuReaderEmbedUrl) {
             <div
               role="dialog"
-              [attr.aria-modal]="pdfFullscreen"
-              (click)="pdfFullscreen && minimizePdfFullscreen()"
+              [attr.aria-modal]="lessonPreview.pdfFullscreen"
+              (click)="lessonPreview.pdfFullscreen && lessonPreview.minimizePdfFullscreen()"
               [class]="
-                pdfFullscreen
+                lessonPreview.pdfFullscreen
                   ? 'fixed inset-0 z-[110] flex flex-col bg-black/80 p-0 sm:p-3'
                   : 'relative z-0 mt-4 flex min-h-[min(52vh,480px)] min-w-0 flex-1 flex-col'
               "
@@ -101,16 +101,16 @@
                 <div
                   class="flex shrink-0 items-center justify-between gap-2 border-b border-slate-700/80 bg-[#2d2d2d] px-3 py-2.5"
                 >
-                  <p class="min-w-0 truncate text-sm font-semibold text-slate-100">{{ pdfTitle }}</p>
+                  <p class="min-w-0 truncate text-sm font-semibold text-slate-100">{{ lessonPreview.pdfTitle }}</p>
                   <div class="flex shrink-0 items-center gap-1">
                     <button
                       type="button"
-                      (click)="togglePdfFullscreen()"
+                      (click)="lessonPreview.togglePdfFullscreen()"
                       class="rounded-lg p-2 text-slate-200 hover:bg-white/10"
-                      [attr.aria-label]="pdfFullscreen ? 'Exit fullscreen' : 'Open fullscreen'"
-                      [title]="pdfFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
+                      [attr.aria-label]="lessonPreview.pdfFullscreen ? 'Exit fullscreen' : 'Open fullscreen'"
+                      [title]="lessonPreview.pdfFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
                     >
-                      @if (!pdfFullscreen) {
+                      @if (!lessonPreview.pdfFullscreen) {
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           fill="none"
@@ -146,7 +146,7 @@
                     </button>
                     <button
                       type="button"
-                      (click)="closePdf()"
+                      (click)="lessonPreview.closePdf()"
                       class="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-200 hover:bg-white/10"
                     >
                       Закрити
@@ -154,17 +154,17 @@
                   </div>
                 </div>
                 <div class="relative min-h-0 flex-1">
-                  @if (pdfBlob) {
+                  @if (lessonPreview.pdfBlob) {
                     <app-study-material-pdf-viewer
                       class="absolute inset-0 block"
-                      [pdfSrc]="pdfBlob"
+                      [pdfSrc]="lessonPreview.pdfBlob"
                       [allowDownload]="true"
-                      [downloadFileName]="pdfDownloadName"
+                      [downloadFileName]="lessonPreview.pdfDownloadName"
                     />
-                  } @else if (issuuReaderEmbedUrl) {
+                  } @else if (lessonPreview.issuuReaderEmbedUrl) {
                     <app-issuu-embed-frame
                       class="absolute inset-0 block min-h-0"
-                      [embedUrl]="issuuReaderEmbedUrl"
+                      [embedUrl]="lessonPreview.issuuReaderEmbedUrl"
                     />
                   }
                 </div>

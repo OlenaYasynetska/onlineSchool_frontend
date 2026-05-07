@@ -37,6 +37,8 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit {
   pdfBlob: Blob | null = null;
   pdfDownloadName = 'lesson.pdf';
   issuuReaderEmbedUrl: string | null = null;
+  /** false — попередній перегляд у картці; true — розгорнути на екран поверх інтерфейсу. */
+  pdfFullscreen = false;
 
   ngOnInit(): void {
     const fromAuth = normalizeSchoolId(this.auth.currentUser()?.schoolId);
@@ -72,6 +74,9 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit {
   }
 
   selectSet(row: StudyMaterialSetDto): void {
+    if (this.selectedSet?.id !== row.id) {
+      this.closePdf();
+    }
     this.selectedSet = row;
     this.lessons = [];
     this.lessonsError = null;
@@ -96,6 +101,15 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit {
     this.pdfBlob = null;
     this.issuuReaderEmbedUrl = null;
     this.pdfTitle = '';
+    this.pdfFullscreen = false;
+  }
+
+  togglePdfFullscreen(): void {
+    this.pdfFullscreen = !this.pdfFullscreen;
+  }
+
+  minimizePdfFullscreen(): void {
+    this.pdfFullscreen = false;
   }
 
   openIssuuReader(lesson: StudyMaterialLessonDto): void {
@@ -106,6 +120,7 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit {
     this.pdfBlob = null;
     this.pdfTitle = lesson.title;
     this.issuuReaderEmbedUrl = n;
+    this.pdfFullscreen = false;
   }
 
   openPdf(lesson: StudyMaterialLessonDto): void {
@@ -116,6 +131,7 @@ export class SchoolAdminStudyMaterialsPageComponent implements OnInit {
     this.issuuReaderEmbedUrl = null;
     this.pdfTitle = lesson.title;
     this.pdfDownloadName = this.sanitizeDownloadFileName(lesson.title);
+    this.pdfFullscreen = false;
     this.api.getAdminLessonPdfBlob(this.schoolId, lesson.id, true).subscribe({
       next: (blob) => {
         this.pdfBlob = blob;

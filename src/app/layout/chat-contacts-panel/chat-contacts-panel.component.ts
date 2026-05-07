@@ -62,6 +62,40 @@ import type { StudentRow } from '../../features/school-admin/models/school-admin
           max-width: 20rem;
         }
       }
+
+      .contacts-panel-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: rgb(203 213 225 / 0.9) rgb(248 250 252 / 0.8);
+      }
+      .contacts-panel-scroll::-webkit-scrollbar {
+        width: 8px;
+      }
+      .contacts-panel-scroll::-webkit-scrollbar-track {
+        background: rgb(241 245 249 / 0.7);
+        border-radius: 9999px;
+        margin-block: 2px;
+      }
+      .contacts-panel-scroll::-webkit-scrollbar-thumb {
+        background: rgb(203 213 225 / 0.95);
+        border-radius: 9999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+      }
+      .contacts-panel-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: rgb(186 198 212 / 0.95);
+      }
+      :host-context(.dark) .contacts-panel-scroll {
+        scrollbar-color: rgb(75 85 99 / 0.85) rgb(31 41 55 / 0.5);
+      }
+      :host-context(.dark) .contacts-panel-scroll::-webkit-scrollbar-track {
+        background: rgb(31 41 55 / 0.45);
+      }
+      :host-context(.dark) .contacts-panel-scroll::-webkit-scrollbar-thumb {
+        background: rgb(75 85 99 / 0.9);
+      }
+      :host-context(.dark) .contacts-panel-scroll::-webkit-scrollbar-thumb:hover {
+        background-color: rgb(107 114 128 / 0.95);
+      }
     `,
   ],
 })

@@ -194,16 +194,16 @@ export class SidebarComponent implements OnInit {
       fragment: 'student-schedule',
     },
     {
-      path: '/student/homework',
-      label: 'Submit homework',
-      icon: 'clipboard',
-      fragment: 'student-homework',
-    },
-    {
       path: '/student/materials',
       label: 'Materials',
       icon: 'book',
       fragment: 'student-materials',
+    },
+    {
+      path: '/student/homework',
+      label: 'Submit homework',
+      icon: 'clipboard',
+      fragment: 'student-homework',
     },
     {
       path: '/student/group-stats',

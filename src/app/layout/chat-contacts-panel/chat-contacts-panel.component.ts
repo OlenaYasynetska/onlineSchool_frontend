@@ -1,4 +1,4 @@
-import { Component, HostBinding, OnInit, inject, signal } from '@angular/core';
+import { Component, HostBinding, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -30,13 +30,24 @@ import type { StudentRow } from '../../features/school-admin/models/school-admin
         width: min(20rem, calc(100vw - 4.5rem));
         max-width: 20rem;
         z-index: 40;
-        transition: transform 300ms ease-out;
         transform: translateX(-100%);
+        opacity: 0;
+        visibility: hidden;
         pointer-events: none;
+        transition:
+          transform 300ms ease-out,
+          opacity 200ms ease-out,
+          visibility 0s linear 300ms;
       }
       :host(.is-open) {
         transform: translateX(0);
+        opacity: 1;
+        visibility: visible;
         pointer-events: auto;
+        transition:
+          transform 300ms ease-out,
+          opacity 200ms ease-out,
+          visibility 0s linear 0s;
       }
       @media (min-width: 768px) {
         :host {
@@ -47,7 +58,7 @@ import type { StudentRow } from '../../features/school-admin/models/school-admin
     `,
   ],
 })
-export class ChatContactsPanelComponent implements OnInit {
+export class ChatContactsPanelComponent {
   protected readonly chatUi = inject(ChatUiService);
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -66,8 +77,19 @@ export class ChatContactsPanelComponent implements OnInit {
   teachers = signal<TeacherOptionShort[]>([]);
   students = signal<StudentRow[]>([]);
 
-  ngOnInit(): void {
-    this.loadDirectory();
+  private directoryLoadStarted = false;
+
+  constructor() {
+    effect(() => {
+      if (!this.chatUi.contactsPanelOpen()) {
+        return;
+      }
+      if (this.directoryLoadStarted) {
+        return;
+      }
+      this.directoryLoadStarted = true;
+      this.loadDirectory();
+    });
   }
 
   private loadDirectory(): void {

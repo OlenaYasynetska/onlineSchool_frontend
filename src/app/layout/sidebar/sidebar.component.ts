@@ -36,8 +36,8 @@ export type CompactNavItem = {
 })
 export class SidebarComponent implements OnInit {
   protected readonly auth = inject(AuthService);
+  protected readonly chatUi = inject(ChatUiService);
   private readonly router = inject(Router);
-  private readonly chatUi = inject(ChatUiService);
   private readonly schoolDashApi = inject(SchoolAdminDashboardService);
 
   /** Tariff strip (school admin only) */
@@ -285,8 +285,17 @@ export class SidebarComponent implements OnInit {
       void this.router.navigate(['/teacher']);
       return;
     }
-    void this.router.navigateByUrl(this.chatPath()).then(() => {
-      this.chatUi.openContactsPanel();
-    });
+    void this.router.navigateByUrl(this.chatPath());
+  }
+
+  /** Відкрити / закрити панель контактів (чат) — лише за явним натиском. */
+  protected toggleContactsPanel(): void {
+    this.chatUi.toggleContactsPanel();
+  }
+
+  protected contactsToggleAriaLabel(): string {
+    return this.chatUi.contactsPanelOpen()
+      ? 'Hide contacts panel'
+      : 'Open contacts panel';
   }
 }

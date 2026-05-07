@@ -16,7 +16,7 @@ import type { FooterVariant } from '../footer/footer.component';
     <div class="flex min-h-0 w-full min-w-0 flex-1 overflow-hidden">
       <app-sidebar *ngIf="shouldShowSidebar()" />
       <main
-        class="flex min-h-0 w-full min-w-0 flex-1 flex-col"
+        class="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-slate-100"
         [class.overflow-y-auto]="shouldShowSidebar()"
         [class.overflow-hidden]="!shouldShowSidebar()"
         [class.pl-0]="shouldShowSidebar()"

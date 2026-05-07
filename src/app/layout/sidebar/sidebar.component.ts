@@ -77,28 +77,28 @@ export class SidebarComponent implements OnInit {
       fragment: 'teacher-my-groups',
     },
     {
-      path: '/teacher/schedule',
-      label: 'Schedule',
-      icon: 'calendar',
-      fragment: 'teacher-schedule',
-    },
-    {
       path: '/teacher/students',
       label: 'Students',
       icon: 'graduate',
       fragment: 'teacher-students',
     },
     {
-      path: '/teacher/homework',
-      label: 'Homework',
-      icon: 'envelope',
-      fragment: 'teacher-homework',
+      path: '/teacher/schedule',
+      label: 'Schedule',
+      icon: 'calendar',
+      fragment: 'teacher-schedule',
     },
     {
       path: '/teacher/materials',
       label: 'Materials',
       icon: 'book',
       fragment: 'teacher-materials',
+    },
+    {
+      path: '/teacher/homework',
+      label: 'Homework',
+      icon: 'envelope',
+      fragment: 'teacher-homework',
     },
     // Hidden: direct navigation disabled for teachers.
     // {

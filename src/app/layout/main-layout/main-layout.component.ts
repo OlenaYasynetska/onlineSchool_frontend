@@ -6,7 +6,6 @@ import { FooterComponent } from '../footer/footer.component';
 import type { FooterVariant } from '../footer/footer.component';
 import { ChatContactsPanelComponent } from '../chat-contacts-panel/chat-contacts-panel.component';
 import { AuthService } from '../../core/services/auth.service';
-import { LandingHeroHeaderComponent } from '../../features/landing/components/landing-hero-header/landing-hero-header.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -17,7 +16,6 @@ import { LandingHeroHeaderComponent } from '../../features/landing/components/la
     SidebarComponent,
     FooterComponent,
     ChatContactsPanelComponent,
-    LandingHeroHeaderComponent,
   ],
   host: {
     class: 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
@@ -25,35 +23,26 @@ import { LandingHeroHeaderComponent } from '../../features/landing/components/la
   template: `
     <div class="flex min-h-0 w-full min-w-0 flex-1 overflow-hidden">
       @if (shouldShowSidebar()) {
-        <div
-          class="relative flex h-full min-h-0 shrink-0 self-stretch"
-        >
+        <div class="relative flex h-full min-h-0 shrink-0">
           <app-sidebar />
           @if (showChatContactsPanel()) {
             <app-chat-contacts-panel />
           }
         </div>
       }
-      <div class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div class="cabinet-header-strip shrink-0 border-b border-white/30 bg-gradient-to-br from-[#FF7A18] via-[#FFC857] to-[#FFF1B8] bg-fixed">
-          <div class="w-full px-6 py-4 md:px-10">
-            <app-landing-hero-header [brand]="brand" layout="app" />
-          </div>
-        </div>
-        <main
-          class="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-slate-100"
-          [class.overflow-y-auto]="shouldShowSidebar()"
-          [class.overflow-hidden]="!shouldShowSidebar()"
-          [class.pl-0]="shouldShowSidebar()"
-          [class.pr-3]="shouldShowSidebar()"
-          [class.sm:pr-6]="shouldShowSidebar()"
-          [class.lg:pr-8]="shouldShowSidebar()"
-          [class.py-3]="shouldShowSidebar()"
-          [class.sm:py-4]="shouldShowSidebar()"
-        >
-          <router-outlet />
-        </main>
-      </div>
+      <main
+        class="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-slate-100"
+        [class.overflow-y-auto]="shouldShowSidebar()"
+        [class.overflow-hidden]="!shouldShowSidebar()"
+        [class.pl-0]="shouldShowSidebar()"
+        [class.pr-3]="shouldShowSidebar()"
+        [class.sm:pr-6]="shouldShowSidebar()"
+        [class.lg:pr-8]="shouldShowSidebar()"
+        [class.py-3]="shouldShowSidebar()"
+        [class.sm:py-4]="shouldShowSidebar()"
+      >
+        <router-outlet />
+      </main>
     </div>
     <div class="w-full min-w-0 shrink-0">
       <app-footer />
@@ -61,8 +50,6 @@ import { LandingHeroHeaderComponent } from '../../features/landing/components/la
   `,
 })
 export class MainLayoutComponent {
-  readonly brand = 'Owl Tracker';
-
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
 

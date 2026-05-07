@@ -1,20 +1,31 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { FooterComponent } from '../footer/footer.component';
 import type { FooterVariant } from '../footer/footer.component';
+import { ChatContactsPanelComponent } from '../chat-contacts-panel/chat-contacts-panel.component';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, SidebarComponent, FooterComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    SidebarComponent,
+    FooterComponent,
+    ChatContactsPanelComponent,
+  ],
   host: {
     class: 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
   },
   template: `
     <div class="flex min-h-0 w-full min-w-0 flex-1 overflow-hidden">
-      <app-sidebar *ngIf="shouldShowSidebar()" />
+      <div *ngIf="shouldShowSidebar()" class="relative flex h-full min-h-0 shrink-0">
+        <app-sidebar />
+        <app-chat-contacts-panel *ngIf="showChatContactsPanel()" />
+      </div>
       <main
         class="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-slate-100"
         [class.overflow-y-auto]="shouldShowSidebar()"
@@ -35,7 +46,18 @@ import type { FooterVariant } from '../footer/footer.component';
   `,
 })
 export class MainLayoutComponent {
-  constructor(private readonly router: Router) {}
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+
+  /** Панель контактів чату — лише учень / учитель у кабінеті. */
+  showChatContactsPanel(): boolean {
+    const role = this.auth.currentUser()?.role;
+    if (role !== 'TEACHER' && role !== 'STUDENT') {
+      return false;
+    }
+    const path = this.router.url.split('?')[0];
+    return path.startsWith('/teacher') || path.startsWith('/student');
+  }
 
   footerVariant(): FooterVariant {
     return this.router.url.split('?')[0].startsWith('/super-admin')

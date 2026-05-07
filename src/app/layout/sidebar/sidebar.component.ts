@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ChatUiService } from '../../core/services/chat-ui.service';
 import { SchoolAdminDashboardService } from '../../features/school-admin/services/school-admin-dashboard.service';
 
 export type SidebarNavIcon =
@@ -36,6 +37,7 @@ export type CompactNavItem = {
 export class SidebarComponent implements OnInit {
   protected readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly chatUi = inject(ChatUiService);
   private readonly schoolDashApi = inject(SchoolAdminDashboardService);
 
   /** Tariff strip (school admin only) */
@@ -229,11 +231,6 @@ export class SidebarComponent implements OnInit {
     return null;
   }
 
-  /** Вертикальний сайдбар (іконка над підписом) — лише адмін школи. */
-  isSchoolAdminLayout(): boolean {
-    return this.auth.currentUser()?.role === 'ADMIN_SCHOOL';
-  }
-
   isSuperAdminArea(): boolean {
     if (this.auth.currentUser()?.role !== 'SUPER_ADMIN') {
       return false;
@@ -279,13 +276,17 @@ export class SidebarComponent implements OnInit {
   protected onChatFabClick(): void {
     const p = this.currentPathNoQuery();
     if (p === '/student/chat' || p.startsWith('/student/chat/')) {
+      this.chatUi.closeContactsPanel();
       void this.router.navigate(['/student']);
       return;
     }
     if (p === '/teacher/chat' || p.startsWith('/teacher/chat/')) {
+      this.chatUi.closeContactsPanel();
       void this.router.navigate(['/teacher']);
       return;
     }
-    void this.router.navigateByUrl(this.chatPath());
+    void this.router.navigateByUrl(this.chatPath()).then(() => {
+      this.chatUi.openContactsPanel();
+    });
   }
 }

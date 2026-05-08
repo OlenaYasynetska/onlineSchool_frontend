@@ -327,7 +327,7 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="w-full max-w-md max-h-[min(92vh,720px)] overflow-y-auto rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
+    <div class="w-full max-w-md max-h-[min(92vh,720px)] overflow-y-auto rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200 scheme-light">
       <h3 class="text-lg font-bold text-slate-900">New material set</h3>
       <div class="mt-4 space-y-3">
         <label class="block text-xs font-semibold uppercase text-slate-600">Subject</label>
@@ -335,7 +335,7 @@
           [(ngModel)]="newSubjectId"
           (ngModelChange)="onCreateSubjectSelected()"
           [disabled]="createBusy"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
         >
           @for (sub of subjects; track sub.id) {
             <option [ngValue]="sub.id">{{ sub.title }}</option>
@@ -386,14 +386,14 @@
           [(ngModel)]="newTitle"
           [disabled]="createBusy"
           placeholder="e.g. Mathematik 5 — term 1"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
         />
         <label class="block text-xs font-semibold uppercase text-slate-600">Description (optional)</label>
         <textarea
           [(ngModel)]="newDescription"
           [disabled]="createBusy"
           rows="2"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
         ></textarea>
         @if (createError) {
           <p class="text-xs text-red-600">{{ createError }}</p>
@@ -427,8 +427,7 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
-      <h3 class="text-lg font-bold text-slate-900">Add PDF lesson</h3>
+    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200 scheme-light">
       <div class="mt-4 space-y-3">
         <label class="block text-xs font-semibold uppercase text-slate-600">
           Lesson title (optional if one file — uses file name)
@@ -437,7 +436,7 @@
           [(ngModel)]="lessonTitle"
           [disabled]="uploadBusy"
           placeholder="Applied to single file, or prefix when several files"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
         />
         <label class="block text-xs font-semibold uppercase text-slate-600">PDF files</label>
         <p class="text-xs text-slate-500">Select one or more PDFs (max 30). Multiple files: titles become “Your title (1)”, “(2)”… or file names if empty.</p>
@@ -499,21 +498,20 @@
     aria-modal="true"
     aria-labelledby="edit-set-title"
   >
-    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
-      <h3 id="edit-set-title" class="text-lg font-bold text-slate-900">Edit material set</h3>
+    <div class="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200 scheme-light">
       <div class="mt-4 space-y-3">
         <label class="block text-xs font-semibold uppercase text-slate-600">Title</label>
         <input
           [(ngModel)]="editSetTitle"
           [disabled]="editSetBusy"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
         />
         <label class="block text-xs font-semibold uppercase text-slate-600">Description (optional)</label>
         <textarea
           [(ngModel)]="editSetDescription"
           [disabled]="editSetBusy"
           rows="3"
-          class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+          class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
         ></textarea>
       </div>
       <div class="mt-6 flex justify-end gap-2">
@@ -544,15 +542,14 @@
     role="dialog"
     aria-modal="true"
   >
-    <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200">
-      <h3 class="text-lg font-bold text-slate-900">Редагувати урок</h3>
+    <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl ring-1 ring-slate-200 scheme-light">
       <div class="mt-4 space-y-4">
         <div>
           <label class="block text-xs font-semibold uppercase text-slate-600">Назва</label>
           <input
             [(ngModel)]="editLessonTitle"
             [disabled]="editLessonBusy"
-            class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+            class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
           />
         </div>
         <div>
@@ -564,7 +561,7 @@
             [disabled]="editLessonBusy"
             rows="3"
             placeholder="https://e.issuu.com/embed.html?d=… або вставте код iframe з Issuu"
-            class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm disabled:opacity-60"
+            class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:opacity-60"
           ></textarea>
           <p class="mt-1 text-xs text-slate-500">
             Залиште порожнім, щоб читати лише завантажений PDF. Дозволені лише посилання на

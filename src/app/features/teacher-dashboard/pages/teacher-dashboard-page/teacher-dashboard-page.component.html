@@ -27,7 +27,7 @@
               Teacher Dashboard · {{ teacherDisplayName }}
             </h1>
             <p class="mt-1 text-sm text-slate-600">
-              Your groups, activity, and group trends
+              Your groups and activity
             </p>
           </div>
         </div>
@@ -354,31 +354,6 @@
           </div>
         }
       </section>
-      }
-
-      @if (cabinetSegment() === '') {
-        <app-stars-by-subject-over-time-section
-          sectionDomId="teacher-group-stats"
-          hostSectionClass="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
-          chartId="teacher-dashboard-group-trends"
-          detailRouterLink="/teacher/group-stats"
-          [dateFrom]="trendDateFrom()"
-          [dateTo]="trendDateTo()"
-          (dateFromChange)="trendDateFrom.set($event)"
-          (dateToChange)="trendDateTo.set($event)"
-          (applyRange)="applyTrendRange()"
-          (presetThisMonth)="presetCurrentMonth()"
-          (presetLastMonths)="presetTrendMonths($event)"
-          presetStyle="teacher"
-          [dateRangeError]="trendRangeError()"
-          [chartError]="trendChartError()"
-          [loading]="trendChartLoading()"
-          [chartRefreshing]="false"
-          [bucketLabels]="trendLabels()"
-          [series]="trendChartSeries()"
-          [colors]="trendChartColors()"
-          [yaxis]="trendChartYaxis()"
-        />
       }
     }
   </div>

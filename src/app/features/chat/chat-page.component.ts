@@ -18,7 +18,7 @@ import { SchoolChatApiService, type ChatMessage } from './school-chat-api.servic
 export class ChatPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly auth = inject(AuthService);
+  protected readonly auth = inject(AuthService);
   protected readonly chatUi = inject(ChatUiService);
   private readonly chatApi = inject(SchoolChatApiService);
 
@@ -149,5 +149,19 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   isMine(m: ChatMessage): boolean {
     const id = this.auth.currentUser()?.id;
     return !!id && m.senderUserId === id;
+  }
+
+  /** Підпис у шапці чату для вчителя: прізвище та ім’я (як у запиті). */
+  protected teacherChatHeadingName(): string {
+    const u = this.auth.currentUser();
+    if (!u || u.role !== 'TEACHER') {
+      return '';
+    }
+    const parts = [u.lastName, u.firstName].map((s) => s?.trim()).filter(Boolean);
+    const fromParts = parts.join(' ').trim();
+    if (fromParts) {
+      return fromParts;
+    }
+    return (u.email?.trim() || 'Teacher');
   }
 }

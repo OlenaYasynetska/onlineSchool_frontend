@@ -194,7 +194,12 @@ export class ChatContactsPanelComponent {
   ): void {
     const u = this.auth.currentUser();
     if (!u) return;
-    this.chatUi.touchRecent({ peerId, kind, displayName, subtitle });
+    this.chatUi.touchRecent({
+      peerId,
+      kind,
+      displayName,
+      subtitle: u.role === 'TEACHER' ? undefined : subtitle,
+    });
     const base = u.role === 'TEACHER' ? '/teacher/chat' : '/student/chat';
     void this.router.navigate([base], {
       queryParams: { peer: peerId, kind, name: displayName },

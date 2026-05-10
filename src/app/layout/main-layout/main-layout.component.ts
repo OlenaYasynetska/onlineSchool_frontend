@@ -30,8 +30,8 @@ import { AuthService } from '../../core/services/auth.service';
       }
       <main
         class="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-slate-100"
-        [class.overflow-y-auto]="shouldShowSidebar()"
-        [class.overflow-hidden]="!shouldShowSidebar()"
+        [class.overflow-hidden]="shouldShowSidebar()"
+        [class.overflow-y-auto]="!shouldShowSidebar()"
         [class.pl-0]="shouldShowSidebar()"
         [class.pr-3]="shouldShowSidebar()"
         [class.sm:pr-6]="shouldShowSidebar()"

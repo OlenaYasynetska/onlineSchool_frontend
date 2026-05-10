@@ -13,7 +13,7 @@ import type { SchoolDashboardStats } from '../../../school-admin/models/school-a
   standalone: true,
   imports: [CommonModule, CardComponent],
   template: `
-    <div class="space-y-6">
+    <div class="min-h-0 flex-1 space-y-6 overflow-y-auto">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
       @if (isSuperAdmin()) {
         @if (loadError()) {

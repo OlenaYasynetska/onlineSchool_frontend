@@ -15,6 +15,9 @@ import { SchoolChatApiService, type ChatMessage } from './school-chat-api.servic
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './chat-page.component.html',
+  host: {
+    class: 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
+  },
 })
 export class ChatPageComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);

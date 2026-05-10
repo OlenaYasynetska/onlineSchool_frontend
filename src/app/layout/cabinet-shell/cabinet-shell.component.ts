@@ -9,9 +9,12 @@ import { RouterOutlet } from '@angular/router';
   selector: 'app-cabinet-shell',
   standalone: true,
   imports: [RouterOutlet],
+  host: {
+    class: 'flex min-h-0 min-w-0 flex-1 flex-col',
+  },
   template: `
     <div
-      class="flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
+      class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
     >
       <router-outlet />
     </div>

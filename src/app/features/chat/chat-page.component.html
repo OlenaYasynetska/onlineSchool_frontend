@@ -17,20 +17,7 @@
           <span class="min-w-0 truncate">{{ teacherChatHeadingName() }}</span>
         </h1>
       } @else {
-        @if (peerKind === 'teacher' && peerDisplayName) {
-          <h1
-            class="m-0 flex min-w-0 items-center gap-2.5 text-lg font-semibold text-slate-900"
-          >
-            <img
-              src="/assets/images/avatar_chat.png"
-              alt=""
-              class="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
-              width="40"
-              height="40"
-            />
-            <span class="min-w-0 truncate">{{ peerDisplayName }}</span>
-          </h1>
-        } @else if (peerKind === 'student' && peerDisplayName) {
+        @if (peerKind && peerDisplayName && studentSelfDisplayName()) {
           <h1
             class="m-0 flex min-w-0 items-center gap-2.5 text-lg font-semibold text-slate-900"
           >
@@ -41,7 +28,7 @@
               width="40"
               height="40"
             />
-            <span class="min-w-0 truncate">{{ peerDisplayName }}</span>
+            <span class="min-w-0 truncate">{{ studentSelfDisplayName() }}</span>
           </h1>
         } @else {
           <h1 class="text-lg font-semibold text-slate-900">Chat</h1>
@@ -63,18 +50,33 @@
               <span class="text-slate-500"> · Student</span>
             </span>
           } @else if (auth.currentUser()?.role === 'STUDENT') {
-            <img
-              src="/assets/images/avatar_student_chat.png"
-              alt=""
-              class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
-              width="36"
-              height="36"
-            />
-            <span class="min-w-0 truncate">
-              With:
-              <span class="font-medium text-slate-800">{{ studentSelfDisplayName() }}</span>
-              <span class="text-slate-500"> · You</span>
-            </span>
+            @if (peerKind === 'teacher') {
+              <img
+                src="/assets/images/avatar_chat.png"
+                alt=""
+                class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+                width="36"
+                height="36"
+              />
+              <span class="min-w-0 truncate">
+                With:
+                <span class="font-medium text-slate-800">{{ peerDisplayName }}</span>
+                <span class="text-slate-500"> · Teacher</span>
+              </span>
+            } @else if (peerKind === 'student') {
+              <img
+                src="/assets/images/avatar_student_chat.png"
+                alt=""
+                class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+                width="36"
+                height="36"
+              />
+              <span class="min-w-0 truncate">
+                With:
+                <span class="font-medium text-slate-800">{{ peerDisplayName }}</span>
+                <span class="text-slate-500"> · Student</span>
+              </span>
+            }
           } @else {
             <span class="min-w-0 truncate">
               With:
@@ -128,14 +130,24 @@
                 class="flex gap-2"
                 [ngClass]="isMine(m) ? 'justify-end' : 'justify-start'"
               >
-                @if (!isMine(m) && peerKind === 'student') {
-                  <img
-                    src="/assets/images/avatar_student_chat.png"
-                    alt=""
-                    class="mb-1 h-8 w-8 shrink-0 self-end rounded-full object-cover ring-1 ring-slate-200"
-                    width="32"
-                    height="32"
-                  />
+                @if (!isMine(m)) {
+                  @if (peerKind === 'student') {
+                    <img
+                      src="/assets/images/avatar_student_chat.png"
+                      alt=""
+                      class="mb-1 h-8 w-8 shrink-0 self-end rounded-full object-cover ring-1 ring-slate-200"
+                      width="32"
+                      height="32"
+                    />
+                  } @else if (peerKind === 'teacher') {
+                    <img
+                      src="/assets/images/avatar_chat.png"
+                      alt=""
+                      class="mb-1 h-8 w-8 shrink-0 self-end rounded-full object-cover ring-1 ring-slate-200"
+                      width="32"
+                      height="32"
+                    />
+                  }
                 }
                 <div
                   class="max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm"

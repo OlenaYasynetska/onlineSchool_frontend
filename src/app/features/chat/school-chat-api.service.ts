@@ -21,6 +21,7 @@ export interface ChatConversationSummary {
   peerDisplayName: string;
   lastMessagePreview: string;
   lastMessageAt: string;
+  unreadCount: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -47,6 +48,14 @@ export class SchoolChatApiService {
   listConversations(userId: string): Observable<ChatConversationSummary[]> {
     return this.http.get<ChatConversationSummary[]>(
       `${this.base()}/conversations?userId=${encodeURIComponent(userId)}`,
+    );
+  }
+
+  markConversationRead(userId: string, conversationId: string): Observable<void> {
+    const q = new URLSearchParams({ userId });
+    return this.http.post<void>(
+      `${this.base()}/conversations/${encodeURIComponent(conversationId)}/read?${q.toString()}`,
+      {},
     );
   }
 

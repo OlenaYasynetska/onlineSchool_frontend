@@ -47,6 +47,9 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit(): void {
     const u = this.auth.currentUser();
+    if (u?.role === 'TEACHER' || u?.role === 'STUDENT') {
+      this.chatUi.refreshUnreadTotals();
+    }
     if (u?.role !== 'ADMIN_SCHOOL' || !u.schoolId) {
       return;
     }

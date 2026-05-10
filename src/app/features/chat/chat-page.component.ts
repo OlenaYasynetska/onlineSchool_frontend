@@ -92,11 +92,18 @@ export class ChatPageComponent implements OnInit, OnDestroy {
           userId: u.id,
           conversationId: open.conversationId,
           limit: 80,
-        });
-      }),
-      tap((msgs) => {
-        this.messages = msgs;
-        this.loading = false;
+        }).pipe(
+          tap((msgs) => {
+            this.messages = msgs;
+            this.loading = false;
+          }),
+          switchMap(() =>
+            this.chatApi.markConversationRead(u.id!, open.conversationId).pipe(
+              tap(() => this.chatUi.refreshUnreadTotals()),
+              catchError(() => of(undefined)),
+            ),
+          ),
+        );
       }),
       catchError((err: unknown) => {
         this.loadError = this.describeChatLoadError(err);
@@ -185,6 +192,20 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     if (fromParts) {
       return fromParts;
     }
-    return (u.email?.trim() || 'Teacher');
+    return u.email?.trim() || 'Teacher';
+  }
+
+  /** Рядок «With: … · Student» для учня в діалозі з учителем — своє ім’я (дзеркало до виду вчителя). */
+  protected studentSelfDisplayName(): string {
+    const u = this.auth.currentUser();
+    if (!u || u.role !== 'STUDENT') {
+      return '';
+    }
+    const parts = [u.lastName, u.firstName].map((s) => s?.trim()).filter(Boolean);
+    const fromParts = parts.join(' ').trim();
+    if (fromParts) {
+      return fromParts;
+    }
+    return u.email?.trim() || 'Student';
   }
 }

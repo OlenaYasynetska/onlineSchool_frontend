@@ -17,7 +17,35 @@
           <span class="min-w-0 truncate">{{ teacherChatHeadingName() }}</span>
         </h1>
       } @else {
-        <h1 class="text-lg font-semibold text-slate-900">Chat</h1>
+        @if (peerKind === 'teacher' && peerDisplayName) {
+          <h1
+            class="m-0 flex min-w-0 items-center gap-2.5 text-lg font-semibold text-slate-900"
+          >
+            <img
+              src="/assets/images/avatar_chat.png"
+              alt=""
+              class="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+              width="40"
+              height="40"
+            />
+            <span class="min-w-0 truncate">{{ peerDisplayName }}</span>
+          </h1>
+        } @else if (peerKind === 'student' && peerDisplayName) {
+          <h1
+            class="m-0 flex min-w-0 items-center gap-2.5 text-lg font-semibold text-slate-900"
+          >
+            <img
+              src="/assets/images/avatar_student_chat.png"
+              alt=""
+              class="h-10 w-10 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+              width="40"
+              height="40"
+            />
+            <span class="min-w-0 truncate">{{ peerDisplayName }}</span>
+          </h1>
+        } @else {
+          <h1 class="text-lg font-semibold text-slate-900">Chat</h1>
+        }
       }
       @if (peerId && peerKind) {
         <p class="mt-0.5 flex min-w-0 items-center gap-2 text-sm text-slate-600">
@@ -29,12 +57,32 @@
               width="36"
               height="36"
             />
+            <span class="min-w-0 truncate">
+              With:
+              <span class="font-medium text-slate-800">{{ peerDisplayName }}</span>
+              <span class="text-slate-500"> · Student</span>
+            </span>
+          } @else if (auth.currentUser()?.role === 'STUDENT') {
+            <img
+              src="/assets/images/avatar_student_chat.png"
+              alt=""
+              class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+              width="36"
+              height="36"
+            />
+            <span class="min-w-0 truncate">
+              With:
+              <span class="font-medium text-slate-800">{{ studentSelfDisplayName() }}</span>
+              <span class="text-slate-500"> · Student</span>
+              <span class="sr-only"> (you)</span>
+            </span>
+          } @else {
+            <span class="min-w-0 truncate">
+              With:
+              <span class="font-medium text-slate-800">{{ peerDisplayName }}</span>
+              <span class="text-slate-500"> · Teacher</span>
+            </span>
           }
-          <span class="min-w-0 truncate">
-            With:
-            <span class="font-medium text-slate-800">{{ peerDisplayName }}</span>
-            <span class="text-slate-500"> · {{ peerKind === 'teacher' ? 'Teacher' : 'Student' }}</span>
-          </span>
         </p>
       } @else {
         <p class="mt-0.5 text-sm text-slate-500">

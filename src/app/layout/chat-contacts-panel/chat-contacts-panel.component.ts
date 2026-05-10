@@ -2,6 +2,8 @@ import { Component, HostBinding, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import {
   ChatUiService,
@@ -13,6 +15,10 @@ import { TeacherDashboardService } from '../../features/teacher-dashboard/servic
 import type { TeacherOptionShort } from '../../features/student-dashboard/models/student-homework.model';
 import type { StudentRow } from '../../features/school-admin/models/school-admin-dashboard.model';
 import { useChatContactsPanelLayout } from '../../shared/hooks/use-chat-contacts-panel-layout.hook';
+import {
+  SchoolChatApiService,
+  type ChatConversationSummary,
+} from '../../features/chat/school-chat-api.service';
 
 @Component({
   selector: 'app-chat-contacts-panel',
@@ -72,6 +78,7 @@ export class ChatContactsPanelComponent {
   private readonly router = inject(Router);
   private readonly studentHomework = inject(StudentHomeworkService);
   private readonly teacherDash = inject(TeacherDashboardService);
+  private readonly chatApi = inject(SchoolChatApiService);
 
   protected readonly contactsLayout = useChatContactsPanelLayout();
 
@@ -86,6 +93,8 @@ export class ChatContactsPanelComponent {
 
   teachers = signal<TeacherOptionShort[]>([]);
   students = signal<StudentRow[]>([]);
+  /** Ключ `kind:peerId` → кількість непрочитаних від співрозмовника. */
+  protected readonly unreadByPeer = signal<Record<string, number>>({});
 
   private directoryLoadStarted = false;
 
@@ -94,12 +103,23 @@ export class ChatContactsPanelComponent {
       if (!this.chatUi.contactsPanelOpen()) {
         return;
       }
-      if (this.directoryLoadStarted) {
+      if (!this.directoryLoadStarted) {
+        this.directoryLoadStarted = true;
+        this.loadDirectory();
         return;
       }
-      this.directoryLoadStarted = true;
-      this.loadDirectory();
+      this.refreshUnreadOnly();
     });
+  }
+
+  private refreshUnreadOnly(): void {
+    const u = this.auth.currentUser();
+    if (!u?.id) return;
+    if (u.role !== 'STUDENT' && u.role !== 'TEACHER') return;
+    this.chatApi
+      .listConversations(u.id)
+      .pipe(catchError(() => of([] as ChatConversationSummary[])))
+      .subscribe((summaries) => this.applyUnreadFromSummaries(summaries ?? []));
   }
 
   private loadDirectory(): void {
@@ -109,9 +129,13 @@ export class ChatContactsPanelComponent {
     this.loading.set(true);
     this.loadError.set(null);
     if (role === 'STUDENT') {
-      this.studentHomework.listTeachers(u.id).subscribe({
-        next: (list) => {
-          this.teachers.set(list ?? []);
+      forkJoin({
+        teachers: this.studentHomework.listTeachers(u.id),
+        summaries: this.chatApi.listConversations(u.id).pipe(catchError(() => of([] as ChatConversationSummary[]))),
+      }).subscribe({
+        next: ({ teachers, summaries }) => {
+          this.teachers.set(teachers ?? []);
+          this.applyUnreadFromSummaries(summaries ?? []);
           this.loading.set(false);
         },
         error: () => {
@@ -122,9 +146,13 @@ export class ChatContactsPanelComponent {
       return;
     }
     if (role === 'TEACHER') {
-      this.teacherDash.listMyStudents(u.id).subscribe({
-        next: (list) => {
-          this.students.set(list ?? []);
+      forkJoin({
+        students: this.teacherDash.listMyStudents(u.id),
+        summaries: this.chatApi.listConversations(u.id).pipe(catchError(() => of([] as ChatConversationSummary[]))),
+      }).subscribe({
+        next: ({ students, summaries }) => {
+          this.students.set(students ?? []);
+          this.applyUnreadFromSummaries(summaries ?? []);
           this.loading.set(false);
         },
         error: () => {
@@ -220,5 +248,28 @@ export class ChatContactsPanelComponent {
     if (r === 'STUDENT') return 'Teachers at your school';
     if (r === 'TEACHER') return 'Students in your groups';
     return 'Contacts';
+  }
+
+  protected peerUnreadKey(peerId: string, kind: ChatPeerKind): string {
+    return `${kind}:${peerId}`;
+  }
+
+  unreadCountForPeer(peerId: string, kind: ChatPeerKind): number {
+    const n = this.unreadByPeer()[this.peerUnreadKey(peerId, kind)];
+    return typeof n === 'number' && n > 0 ? n : 0;
+  }
+
+  private applyUnreadFromSummaries(summaries: ChatConversationSummary[]): void {
+    const map: Record<string, number> = {};
+    let sum = 0;
+    for (const s of summaries) {
+      if (s.peerKind !== 'teacher' && s.peerKind !== 'student') continue;
+      const k = this.peerUnreadKey(s.peerEntityId, s.peerKind);
+      const n = Number(s.unreadCount) || 0;
+      map[k] = n;
+      sum += n;
+    }
+    this.unreadByPeer.set(map);
+    this.chatUi.setUnreadTotalAggregated(sum);
   }
 }

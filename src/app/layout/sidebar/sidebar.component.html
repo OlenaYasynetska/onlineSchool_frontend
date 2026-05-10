@@ -207,14 +207,22 @@
         <button
           type="button"
           (click)="onChatFabClick()"
+          class="sidebar-chat-fab relative group inline-flex h-[3.25rem] w-[3.25rem] cursor-pointer items-center justify-center rounded-full border-2 border-sky-200/90 bg-gradient-to-b from-white to-slate-50/95 p-1.5 shadow-[0_6px_20px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:border-sky-300 hover:shadow-[0_10px_28px_rgba(2,132,199,0.18),0_4px_10px_rgba(15,23,42,0.1)] active:translate-y-0 active:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f8fb] md:h-[3.75rem] md:w-[3.75rem] dark:border-sky-500/35 dark:from-slate-800 dark:to-slate-800/90 dark:shadow-[0_6px_24px_rgba(0,0,0,0.35)] dark:hover:border-sky-400/50 dark:hover:shadow-[0_12px_32px_rgba(14,116,194,0.25)] dark:focus-visible:ring-offset-gray-900"
           [ngClass]="
             isChatFabRouteActive()
               ? '!ring-2 !ring-sky-500/70 !ring-offset-2 !ring-offset-[#f6f8fb] dark:!ring-offset-gray-900'
               : ''
           "
-          class="sidebar-chat-fab group relative inline-flex h-[3.25rem] w-[3.25rem] cursor-pointer items-center justify-center rounded-full border-2 border-sky-200/90 bg-gradient-to-b from-white to-slate-50/95 p-1.5 shadow-[0_6px_20px_rgba(15,23,42,0.12),0_2px_6px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:border-sky-300 hover:shadow-[0_10px_28px_rgba(2,132,199,0.18),0_4px_10px_rgba(15,23,42,0.1)] active:translate-y-0 active:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f6f8fb] md:h-[3.75rem] md:w-[3.75rem] dark:border-sky-500/35 dark:from-slate-800 dark:to-slate-800/90 dark:shadow-[0_6px_24px_rgba(0,0,0,0.35)] dark:hover:border-sky-400/50 dark:hover:shadow-[0_12px_32px_rgba(14,116,194,0.25)] dark:focus-visible:ring-offset-gray-900"
           [attr.aria-label]="chatFabAriaLabel()"
         >
+          @if (chatUi.chatUnreadTotal() > 0) {
+            <span
+              class="pointer-events-none absolute -right-0.5 -top-0.5 z-10 inline-flex min-h-[1.125rem] min-w-[1.125rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white dark:ring-slate-900"
+              aria-hidden="true"
+            >
+              {{ chatUi.chatUnreadTotal() > 99 ? '99+' : chatUi.chatUnreadTotal() }}
+            </span>
+          }
           <span
             class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white/80 p-1.5 dark:bg-slate-800/60"
             aria-hidden="true"

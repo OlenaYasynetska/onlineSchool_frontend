@@ -1,6 +1,9 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
-import { filter } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError, filter } from 'rxjs/operators';
+import { AuthService } from './auth.service';
+import { SchoolChatApiService } from '../../features/chat/school-chat-api.service';
 
 /** Роль співрозмовника в чаті (не поточного користувача). */
 export type ChatPeerKind = 'teacher' | 'student';
@@ -51,8 +54,12 @@ function isChatRoutePath(path: string): boolean {
 @Injectable({ providedIn: 'root' })
 export class ChatUiService {
   readonly contactsPanelOpen = signal(false);
+  /** Сума непрочитаних по всіх діалогах (для значка в сайдбарі). */
+  readonly chatUnreadTotal = signal(0);
 
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+  private readonly chatApi = inject(SchoolChatApiService);
 
   constructor() {
     this.router.events
@@ -101,5 +108,26 @@ export class ChatUiService {
       ...without,
     ].slice(0, MAX_RECENT);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  }
+
+  /** Встановити суму непрочитаних без повторного запиту (наприклад, з тієї ж відповіді, що й панель контактів). */
+  setUnreadTotalAggregated(sum: number): void {
+    this.chatUnreadTotal.set(Math.max(0, sum));
+  }
+
+  /** Оновити лічильник непрочитаних (після відкриття чату або з панелі контактів). */
+  refreshUnreadTotals(): void {
+    const u = this.auth.currentUser();
+    if (!u?.id || (u.role !== 'STUDENT' && u.role !== 'TEACHER')) {
+      this.chatUnreadTotal.set(0);
+      return;
+    }
+    this.chatApi
+      .listConversations(u.id)
+      .pipe(catchError(() => of([] as { unreadCount?: number }[])))
+      .subscribe((list) => {
+        const sum = (list ?? []).reduce((s, c) => s + (Number(c.unreadCount) || 0), 0);
+        this.chatUnreadTotal.set(sum);
+      });
   }
 }

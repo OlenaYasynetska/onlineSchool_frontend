@@ -27,7 +27,9 @@
     type="search"
     [(ngModel)]="searchQuery"
     [placeholder]="
-      auth.currentUser()?.role === 'STUDENT' ? 'Find a teacher…' : 'Find a student…'
+      auth.currentUser()?.role === 'STUDENT'
+        ? 'Find a teacher or classmate…'
+        : 'Find a student…'
     "
     class="mt-0.5 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-900/40"
     autocomplete="off"
@@ -52,7 +54,7 @@
               (click)="openFromRecent(e)"
               class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
             >
-              @if (auth.currentUser()?.role === 'TEACHER' && e.kind === 'student') {
+              @if (showPeerStudentAvatar(e.kind)) {
                 <img
                   src="/assets/images/avatar_student_chat.png"
                   alt=""
@@ -91,6 +93,113 @@
       </ul>
     }
 
+    @if (auth.currentUser()?.role === 'STUDENT') {
+      <p
+        class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+        [class.mt-2]="recent().length > 0"
+        [class.mt-0]="recent().length === 0"
+      >
+        Classmates
+      </p>
+      @if (filteredClassmates().length === 0) {
+        <p class="px-2 text-sm text-slate-500">
+          @if (searchQuery.trim()) {
+            No matches.
+          } @else {
+            No classmates in your groups yet.
+          }
+        </p>
+      } @else {
+        <ul class="space-y-1">
+          @for (c of filteredClassmates(); track c.id) {
+            <li>
+              <button
+                type="button"
+                (click)="openChat(c.id, c.kind, c.name, c.subtitle)"
+                class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
+              >
+                @if (showPeerStudentAvatar(c.kind)) {
+                  <img
+                    src="/assets/images/avatar_student_chat.png"
+                    alt=""
+                    class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                    width="36"
+                    height="36"
+                  />
+                }
+                <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
+                  <div class="flex min-w-0 items-center gap-2">
+                    <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
+                      c.name
+                    }}</span>
+                    @if (unreadCountForPeer(c.id, c.kind) > 0) {
+                      <span
+                        class="inline-flex min-w-[1.25rem] shrink-0 justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white tabular-nums dark:bg-sky-500"
+                        [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
+                      >
+                        {{
+                          unreadCountForPeer(c.id, c.kind) > 99 ? '99+' : unreadCountForPeer(c.id, c.kind)
+                        }}
+                      </span>
+                    }
+                  </div>
+                  <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
+                    c.subtitle
+                  }}</span>
+                </div>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      <p
+        class="mb-1.5 mt-2 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+      >
+        Teachers at your school
+      </p>
+      @if (filteredDirectory().length === 0) {
+        <p class="px-2 text-sm text-slate-500">
+          @if (searchQuery.trim()) {
+            No matches.
+          } @else {
+            No teachers listed.
+          }
+        </p>
+      } @else {
+        <ul class="space-y-1">
+          @for (c of filteredDirectory(); track c.id) {
+            <li>
+              <button
+                type="button"
+                (click)="openChat(c.id, c.kind, c.name, c.subtitle)"
+                class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
+              >
+                <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
+                  <div class="flex min-w-0 items-center gap-2">
+                    <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
+                      c.name
+                    }}</span>
+                    @if (unreadCountForPeer(c.id, c.kind) > 0) {
+                      <span
+                        class="inline-flex min-w-[1.25rem] shrink-0 justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white tabular-nums dark:bg-sky-500"
+                        [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
+                      >
+                        {{
+                          unreadCountForPeer(c.id, c.kind) > 99 ? '99+' : unreadCountForPeer(c.id, c.kind)
+                        }}
+                      </span>
+                    }
+                  </div>
+                  <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
+                    c.subtitle
+                  }}</span>
+                </div>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
     <p
       class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
       [class.mt-2]="recent().length > 0"
@@ -115,7 +224,7 @@
               (click)="openChat(c.id, c.kind, c.name, c.subtitle)"
               class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
             >
-              @if (auth.currentUser()?.role === 'TEACHER' && c.kind === 'student') {
+              @if (showPeerStudentAvatar(c.kind)) {
                 <img
                   src="/assets/images/avatar_student_chat.png"
                   alt=""
@@ -140,16 +249,15 @@
                     </span>
                   }
                 </div>
-                @if (auth.currentUser()?.role === 'STUDENT') {
-                  <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
-                    c.subtitle
-                  }}</span>
-                }
+                <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
+                  c.subtitle
+                }}</span>
               </div>
             </button>
           </li>
         }
       </ul>
+    }
     }
   }
 </div>

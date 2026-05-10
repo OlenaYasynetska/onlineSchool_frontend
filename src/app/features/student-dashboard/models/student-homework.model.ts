@@ -3,6 +3,11 @@ export interface TeacherOptionShort {
   displayName: string;
 }
 
+export interface ClassmateOptionShort {
+  id: string;
+  displayName: string;
+}
+
 export interface StudentGroupOption {
   id: string;
   name: string;

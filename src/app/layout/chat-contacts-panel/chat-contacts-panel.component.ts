@@ -12,7 +12,10 @@ import {
 } from '../../core/services/chat-ui.service';
 import { StudentHomeworkService } from '../../features/student-dashboard/services/student-homework.service';
 import { TeacherDashboardService } from '../../features/teacher-dashboard/services/teacher-dashboard.service';
-import type { TeacherOptionShort } from '../../features/student-dashboard/models/student-homework.model';
+import type {
+  ClassmateOptionShort,
+  TeacherOptionShort,
+} from '../../features/student-dashboard/models/student-homework.model';
 import type { StudentRow } from '../../features/school-admin/models/school-admin-dashboard.model';
 import { useChatContactsPanelLayout } from '../../shared/hooks/use-chat-contacts-panel-layout.hook';
 import {
@@ -92,6 +95,7 @@ export class ChatContactsPanelComponent {
   loadError = signal<string | null>(null);
 
   teachers = signal<TeacherOptionShort[]>([]);
+  classmates = signal<ClassmateOptionShort[]>([]);
   students = signal<StudentRow[]>([]);
   /** Ключ `kind:peerId` → кількість непрочитаних від співрозмовника. */
   protected readonly unreadByPeer = signal<Record<string, number>>({});
@@ -131,15 +135,17 @@ export class ChatContactsPanelComponent {
     if (role === 'STUDENT') {
       forkJoin({
         teachers: this.studentHomework.listTeachers(u.id),
+        classmates: this.studentHomework.listClassmates(u.id),
         summaries: this.chatApi.listConversations(u.id).pipe(catchError(() => of([] as ChatConversationSummary[]))),
       }).subscribe({
-        next: ({ teachers, summaries }) => {
+        next: ({ teachers, classmates, summaries }) => {
           this.teachers.set(teachers ?? []);
+          this.classmates.set(classmates ?? []);
           this.applyUnreadFromSummaries(summaries ?? []);
           this.loading.set(false);
         },
         error: () => {
-          this.loadError.set('Could not load teachers.');
+          this.loadError.set('Could not load contacts.');
           this.loading.set(false);
         },
       });
@@ -171,7 +177,7 @@ export class ChatContactsPanelComponent {
 
   private matchesRoleFilter(kind: ChatPeerKind): boolean {
     const r = this.auth.currentUser()?.role;
-    if (r === 'STUDENT') return kind === 'teacher';
+    if (r === 'STUDENT') return kind === 'teacher' || kind === 'student';
     if (r === 'TEACHER') return kind === 'student';
     return false;
   }
@@ -212,6 +218,34 @@ export class ChatContactsPanelComponent {
         }));
     }
     return [];
+  }
+
+  filteredClassmates(): {
+    id: string;
+    name: string;
+    subtitle: string;
+    kind: ChatPeerKind;
+  }[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (this.auth.currentUser()?.role !== 'STUDENT') return [];
+    return (this.classmates() ?? [])
+      .filter((c) => {
+        if (!q) return true;
+        return c.displayName.toLowerCase().includes(q);
+      })
+      .map((c) => ({
+        id: c.id,
+        name: c.displayName,
+        subtitle: 'Classmate',
+        kind: 'student' as const,
+      }));
+  }
+
+  /** Аватар учня біля контакту: для вчителя (діалог із учнем) і для учня (однокласник). */
+  protected showPeerStudentAvatar(kind: ChatPeerKind): boolean {
+    const r = this.auth.currentUser()?.role;
+    if (r === 'TEACHER' && kind === 'student') return true;
+    return r === 'STUDENT' && kind === 'student';
   }
 
   openChat(

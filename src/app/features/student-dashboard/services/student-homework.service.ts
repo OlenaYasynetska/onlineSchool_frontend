@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import type {
+  ClassmateOptionShort,
   HomeworkSubmission,
   StudentDashboardContextDto,
   StudentGroupOption,
@@ -21,6 +22,12 @@ export class StudentHomeworkService {
   listTeachers(userId: string): Observable<TeacherOptionShort[]> {
     return this.http.get<TeacherOptionShort[]>(
       `${this.base()}/teachers?userId=${encodeURIComponent(userId)}`
+    );
+  }
+
+  listClassmates(userId: string): Observable<ClassmateOptionShort[]> {
+    return this.http.get<ClassmateOptionShort[]>(
+      `${this.base()}/classmates?userId=${encodeURIComponent(userId)}`
     );
   }
 

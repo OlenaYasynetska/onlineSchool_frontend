@@ -97,9 +97,6 @@ export class ChatContactsPanelComponent {
   teachers = signal<TeacherOptionShort[]>([]);
   classmates = signal<ClassmateOptionShort[]>([]);
   students = signal<StudentRow[]>([]);
-  /** Ключ `kind:peerId` → кількість непрочитаних від співрозмовника. */
-  protected readonly unreadByPeer = signal<Record<string, number>>({});
-
   private directoryLoadStarted = false;
 
   constructor() {
@@ -123,7 +120,7 @@ export class ChatContactsPanelComponent {
     this.chatApi
       .listConversations(u.id)
       .pipe(catchError(() => of([] as ChatConversationSummary[])))
-      .subscribe((summaries) => this.applyUnreadFromSummaries(summaries ?? []));
+      .subscribe((summaries) => this.chatUi.syncUnreadFromSummaries(summaries ?? []));
   }
 
   private loadDirectory(): void {
@@ -141,7 +138,7 @@ export class ChatContactsPanelComponent {
         next: ({ teachers, classmates, summaries }) => {
           this.teachers.set(teachers ?? []);
           this.classmates.set(classmates ?? []);
-          this.applyUnreadFromSummaries(summaries ?? []);
+          this.chatUi.syncUnreadFromSummaries(summaries ?? []);
           this.loading.set(false);
         },
         error: () => {
@@ -158,7 +155,7 @@ export class ChatContactsPanelComponent {
       }).subscribe({
         next: ({ students, summaries }) => {
           this.students.set(students ?? []);
-          this.applyUnreadFromSummaries(summaries ?? []);
+          this.chatUi.syncUnreadFromSummaries(summaries ?? []);
           this.loading.set(false);
         },
         error: () => {
@@ -289,21 +286,7 @@ export class ChatContactsPanelComponent {
   }
 
   unreadCountForPeer(peerId: string, kind: ChatPeerKind): number {
-    const n = this.unreadByPeer()[this.peerUnreadKey(peerId, kind)];
+    const n = this.chatUi.unreadByPeer()[this.peerUnreadKey(peerId, kind)];
     return typeof n === 'number' && n > 0 ? n : 0;
-  }
-
-  private applyUnreadFromSummaries(summaries: ChatConversationSummary[]): void {
-    const map: Record<string, number> = {};
-    let sum = 0;
-    for (const s of summaries) {
-      if (s.peerKind !== 'teacher' && s.peerKind !== 'student') continue;
-      const k = this.peerUnreadKey(s.peerEntityId, s.peerKind);
-      const n = Number(s.unreadCount) || 0;
-      map[k] = n;
-      sum += n;
-    }
-    this.unreadByPeer.set(map);
-    this.chatUi.setUnreadTotalAggregated(sum);
   }
 }

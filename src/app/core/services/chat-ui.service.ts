@@ -3,7 +3,10 @@ import { NavigationEnd, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { catchError, filter } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import { SchoolChatApiService } from '../../features/chat/school-chat-api.service';
+import {
+  SchoolChatApiService,
+  type ChatConversationSummary,
+} from '../../features/chat/school-chat-api.service';
 
 /** Роль співрозмовника в чаті (не поточного користувача). */
 export type ChatPeerKind = 'teacher' | 'student';
@@ -56,6 +59,8 @@ export class ChatUiService {
   readonly contactsPanelOpen = signal(false);
   /** Сума непрочитаних по всіх діалогах (для значка в сайдбарі). */
   readonly chatUnreadTotal = signal(0);
+  /** Ключ `kind:peerEntityId` → кількість непрочитаних (для крапки біля імені в панелі). */
+  readonly unreadByPeer = signal<Record<string, number>>({});
 
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -110,8 +115,20 @@ export class ChatUiService {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   }
 
-  /** Встановити суму непрочитаних без повторного запиту (наприклад, з тієї ж відповіді, що й панель контактів). */
-  setUnreadTotalAggregated(sum: number): void {
+  /**
+   * Оновити непрочитані по діалогах з відповіді API (панель контактів або після mark read).
+   */
+  syncUnreadFromSummaries(summaries: ChatConversationSummary[]): void {
+    const map: Record<string, number> = {};
+    let sum = 0;
+    for (const s of summaries ?? []) {
+      if (s.peerKind !== 'teacher' && s.peerKind !== 'student') continue;
+      const k = `${s.peerKind}:${s.peerEntityId}`;
+      const n = Number(s.unreadCount) || 0;
+      map[k] = n;
+      sum += n;
+    }
+    this.unreadByPeer.set(map);
     this.chatUnreadTotal.set(Math.max(0, sum));
   }
 
@@ -120,14 +137,12 @@ export class ChatUiService {
     const u = this.auth.currentUser();
     if (!u?.id || (u.role !== 'STUDENT' && u.role !== 'TEACHER')) {
       this.chatUnreadTotal.set(0);
+      this.unreadByPeer.set({});
       return;
     }
     this.chatApi
       .listConversations(u.id)
-      .pipe(catchError(() => of([] as { unreadCount?: number }[])))
-      .subscribe((list) => {
-        const sum = (list ?? []).reduce((s, c) => s + (Number(c.unreadCount) || 0), 0);
-        this.chatUnreadTotal.set(sum);
-      });
+      .pipe(catchError(() => of([] as ChatConversationSummary[])))
+      .subscribe((list) => this.syncUnreadFromSummaries(list ?? []));
   }
 }

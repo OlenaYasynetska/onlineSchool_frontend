@@ -70,15 +70,10 @@
                   }}</span>
                   @if (unreadCountForPeer(e.peerId, e.kind) > 0) {
                     <span
-                      class="inline-flex min-w-[1.25rem] shrink-0 justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white tabular-nums dark:bg-sky-500"
+                      class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
+                      [attr.title]="'Unread messages: ' + unreadCountForPeer(e.peerId, e.kind)"
                       [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(e.peerId, e.kind)"
-                    >
-                      {{
-                        unreadCountForPeer(e.peerId, e.kind) > 99
-                          ? '99+'
-                          : unreadCountForPeer(e.peerId, e.kind)
-                      }}
-                    </span>
+                    ></span>
                   }
                 </div>
                 @if (auth.currentUser()?.role === 'STUDENT') {
@@ -134,13 +129,10 @@
                     }}</span>
                     @if (unreadCountForPeer(c.id, c.kind) > 0) {
                       <span
-                        class="inline-flex min-w-[1.25rem] shrink-0 justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white tabular-nums dark:bg-sky-500"
+                        class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
+                        [attr.title]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
                         [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
-                      >
-                        {{
-                          unreadCountForPeer(c.id, c.kind) > 99 ? '99+' : unreadCountForPeer(c.id, c.kind)
-                        }}
-                      </span>
+                      ></span>
                     }
                   </div>
                   <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
@@ -181,13 +173,10 @@
                     }}</span>
                     @if (unreadCountForPeer(c.id, c.kind) > 0) {
                       <span
-                        class="inline-flex min-w-[1.25rem] shrink-0 justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white tabular-nums dark:bg-sky-500"
+                        class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
+                        [attr.title]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
                         [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
-                      >
-                        {{
-                          unreadCountForPeer(c.id, c.kind) > 99 ? '99+' : unreadCountForPeer(c.id, c.kind)
-                        }}
-                      </span>
+                      ></span>
                     }
                   </div>
                   <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
@@ -240,13 +229,10 @@
                   }}</span>
                   @if (unreadCountForPeer(c.id, c.kind) > 0) {
                     <span
-                      class="inline-flex min-w-[1.25rem] shrink-0 justify-center rounded-full bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white tabular-nums dark:bg-sky-500"
+                      class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
+                      [attr.title]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
                       [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
-                    >
-                      {{
-                        unreadCountForPeer(c.id, c.kind) > 99 ? '99+' : unreadCountForPeer(c.id, c.kind)
-                      }}
-                    </span>
+                    ></span>
                   }
                 </div>
                 <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{

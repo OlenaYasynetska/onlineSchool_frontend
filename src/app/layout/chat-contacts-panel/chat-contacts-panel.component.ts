@@ -15,6 +15,7 @@ import { TeacherDashboardService } from '../../features/teacher-dashboard/servic
 import type {
   ClassmateOptionShort,
   TeacherOptionShort,
+  StudentDashboardContextDto,
 } from '../../features/student-dashboard/models/student-homework.model';
 import type { StudentRow } from '../../features/school-admin/models/school-admin-dashboard.model';
 import { useChatContactsPanelLayout } from '../../shared/hooks/use-chat-contacts-panel-layout.hook';
@@ -97,6 +98,8 @@ export class ChatContactsPanelComponent {
   teachers = signal<TeacherOptionShort[]>([]);
   classmates = signal<ClassmateOptionShort[]>([]);
   students = signal<StudentRow[]>([]);
+  /** MySQL students.id для поточного учня — щоб не відкривати чат із собою. */
+  protected readonly myStudentRecordId = signal<string | null>(null);
   private directoryLoadStarted = false;
 
   constructor() {
@@ -138,14 +141,23 @@ export class ChatContactsPanelComponent {
     this.loading.set(true);
     this.loadError.set(null);
     if (role === 'STUDENT') {
+      const emptyCtx: StudentDashboardContextDto = { schoolName: '', groups: [] };
       forkJoin({
         teachers: this.studentHomework.listTeachers(u.id),
         classmates: this.studentHomework.listClassmates(u.id),
         summaries: this.chatApi.listConversations(u.id).pipe(catchError(() => of([] as ChatConversationSummary[]))),
+        context: this.studentHomework.dashboardContext(u.id).pipe(catchError(() => of(emptyCtx))),
       }).subscribe({
-        next: ({ teachers, classmates, summaries }) => {
+        next: ({ teachers, classmates, summaries, context }) => {
           this.teachers.set(teachers ?? []);
           this.classmates.set(classmates ?? []);
+          const sid = context?.studentRecordId?.trim();
+          if (sid) {
+            this.myStudentRecordId.set(sid);
+            this.chatUi.purgeSelfFromRecent(sid);
+          } else {
+            this.myStudentRecordId.set(null);
+          }
           this.chatUi.syncUnreadFromSummaries(summaries ?? []);
           this.loading.set(false);
         },
@@ -177,7 +189,12 @@ export class ChatContactsPanelComponent {
   }
 
   recent(): ChatRecentEntry[] {
-    return this.chatUi.readRecent().filter((e) => this.matchesRoleFilter(e.kind));
+    let list = this.chatUi.readRecent().filter((e) => this.matchesRoleFilter(e.kind));
+    const sid = this.myStudentRecordId();
+    if (this.auth.currentUser()?.role === 'STUDENT' && sid) {
+      list = list.filter((e) => !(e.kind === 'student' && e.peerId === sid));
+    }
+    return list;
   }
 
   private matchesRoleFilter(kind: ChatPeerKind): boolean {
@@ -233,8 +250,10 @@ export class ChatContactsPanelComponent {
   }[] {
     const q = this.searchQuery.trim().toLowerCase();
     if (this.auth.currentUser()?.role !== 'STUDENT') return [];
+    const sid = this.myStudentRecordId();
     return (this.classmates() ?? [])
       .filter((c) => {
+        if (sid && c.id === sid) return false;
         if (!q) return true;
         return c.displayName.toLowerCase().includes(q);
       })
@@ -261,6 +280,12 @@ export class ChatContactsPanelComponent {
   ): void {
     const u = this.auth.currentUser();
     if (!u) return;
+    if (u.role === 'STUDENT' && kind === 'student') {
+      const sid = this.myStudentRecordId();
+      if (sid && peerId.trim() === sid) {
+        return;
+      }
+    }
     this.chatUi.touchRecent({
       peerId,
       kind,

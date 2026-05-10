@@ -39,6 +39,8 @@ export interface StarRewardLogDto {
 export interface StudentDashboardContextDto {
   schoolName: string;
   groups: StudentGroupOption[];
+  /** students.id (MySQL) — для чату, щоб не показувати діалог «з собою». */
+  studentRecordId?: string;
 }
 
 /** Відповідь GET /student/homework/my-stars — зірки з оцінених ДЗ у БД. */

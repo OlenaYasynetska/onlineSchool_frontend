@@ -128,6 +128,17 @@ export class ChatUiService {
     );
   }
 
+  /** Прибрати з Recent записи «чат із собою» (student / той самий students.id). */
+  purgeSelfFromRecent(studentRecordId: string): void {
+    const sid = studentRecordId.trim();
+    if (!sid || typeof localStorage === 'undefined') return;
+    const list = safeParse(localStorage.getItem(STORAGE_KEY));
+    const next = list.filter((e) => !(e.kind === 'student' && e.peerId === sid));
+    if (next.length !== list.length) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    }
+  }
+
   touchRecent(entry: {
     peerId: string;
     kind: ChatPeerKind;

@@ -2,6 +2,7 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -97,8 +98,8 @@ export class ChatPageComponent implements OnInit, OnDestroy {
         this.messages = msgs;
         this.loading = false;
       }),
-      catchError(() => {
-        this.loadError = 'Could not load chat. Check network and MongoDB configuration on the server.';
+      catchError((err: unknown) => {
+        this.loadError = this.describeChatLoadError(err);
         this.loading = false;
         this.messages = [];
         this.conversationId = null;
@@ -106,6 +107,28 @@ export class ChatPageComponent implements OnInit, OnDestroy {
       }),
       map(() => undefined),
     );
+  }
+
+  private describeChatLoadError(err: unknown): string {
+    const fallback =
+      'Could not load chat. Check network and MongoDB configuration on the server.';
+    if (!(err instanceof HttpErrorResponse)) {
+      return fallback;
+    }
+    if (err.status === 0) {
+      return 'No connection to the server. Check the internet and that the API is running.';
+    }
+    const body = err.error;
+    if (body && typeof body === 'object' && 'message' in body) {
+      const msg = (body as { message?: unknown }).message;
+      if (typeof msg === 'string' && msg.trim()) {
+        return msg.trim();
+      }
+    }
+    if (err.status >= 400 && err.status < 500) {
+      return `Chat request failed (${err.status}). Check teacher/student link and URL parameters (kind=teacher for students).`;
+    }
+    return fallback;
   }
 
   toggleContacts(): void {

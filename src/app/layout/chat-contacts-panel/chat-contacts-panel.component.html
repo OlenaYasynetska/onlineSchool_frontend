@@ -47,7 +47,7 @@
         Recent
       </p>
       <ul class="space-y-1">
-        @for (e of recent(); track e.peerId) {
+        @for (e of recent(); track e.peerId + ':' + e.kind) {
           <li>
             <button
               type="button"
@@ -63,16 +63,17 @@
                   height="36"
                 />
               }
+              @let ur = unreadCountForPeer(e.peerId, e.kind, e.displayName);
               <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
                 <div class="flex min-w-0 items-center gap-2">
                   <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
                     e.displayName
                   }}</span>
-                  @if (unreadCountForPeer(e.peerId, e.kind) > 0) {
+                  @if (ur > 0) {
                     <span
                       class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
-                      [attr.title]="'Unread messages: ' + unreadCountForPeer(e.peerId, e.kind)"
-                      [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(e.peerId, e.kind)"
+                      [attr.title]="'Unread messages: ' + ur"
+                      [attr.aria-label]="'Unread messages: ' + ur"
                     ></span>
                   }
                 </div>
@@ -123,15 +124,16 @@
                   />
                 }
                 <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
+                  @let uc = unreadCountForPeer(c.id, c.kind, c.name);
                   <div class="flex min-w-0 items-center gap-2">
                     <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
                       c.name
                     }}</span>
-                    @if (unreadCountForPeer(c.id, c.kind) > 0) {
+                    @if (uc > 0) {
                       <span
                         class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
-                        [attr.title]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
-                        [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
+                        [attr.title]="'Unread messages: ' + uc"
+                        [attr.aria-label]="'Unread messages: ' + uc"
                       ></span>
                     }
                   </div>
@@ -167,15 +169,16 @@
                 class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
               >
                 <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
+                  @let uc = unreadCountForPeer(c.id, c.kind, c.name);
                   <div class="flex min-w-0 items-center gap-2">
                     <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
                       c.name
                     }}</span>
-                    @if (unreadCountForPeer(c.id, c.kind) > 0) {
+                    @if (uc > 0) {
                       <span
                         class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
-                        [attr.title]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
-                        [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
+                        [attr.title]="'Unread messages: ' + uc"
+                        [attr.aria-label]="'Unread messages: ' + uc"
                       ></span>
                     }
                   </div>
@@ -223,15 +226,16 @@
                 />
               }
               <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
+                @let uc = unreadCountForPeer(c.id, c.kind, c.name);
                 <div class="flex min-w-0 items-center gap-2">
                   <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
                     c.name
                   }}</span>
-                  @if (unreadCountForPeer(c.id, c.kind) > 0) {
+                  @if (uc > 0) {
                     <span
                       class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
-                      [attr.title]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
-                      [attr.aria-label]="'Unread messages: ' + unreadCountForPeer(c.id, c.kind)"
+                      [attr.title]="'Unread messages: ' + uc"
+                      [attr.aria-label]="'Unread messages: ' + uc"
                     ></span>
                   }
                 </div>

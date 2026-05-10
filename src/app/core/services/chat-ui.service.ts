@@ -33,7 +33,9 @@ function safeParse(raw: string | null): ChatRecentEntry[] {
           e &&
           typeof e === 'object' &&
           typeof (e as ChatRecentEntry).peerId === 'string' &&
-          typeof (e as ChatRecentEntry).displayName === 'string',
+          typeof (e as ChatRecentEntry).displayName === 'string' &&
+          ((e as ChatRecentEntry).kind === 'teacher' ||
+            (e as ChatRecentEntry).kind === 'student'),
       )
       .map((e) => e as ChatRecentEntry);
   } catch {
@@ -54,6 +56,35 @@ function isChatRoutePath(path: string): boolean {
   );
 }
 
+function normalizePeerKind(raw: string | undefined | null): ChatPeerKind | null {
+  const k = String(raw ?? '')
+    .trim()
+    .toLowerCase();
+  return k === 'teacher' || k === 'student' ? k : null;
+}
+
+function normNameTokens(name: string): Set<string> {
+  return new Set(
+    name
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 0),
+  );
+}
+
+/** Той самий людина незалежно від порядку слів у ПІБ (Laura Gruber vs Gruber Laura). */
+function chatSamePersonDisplayName(a: string, b: string): boolean {
+  const ta = normNameTokens(a);
+  const tb = normNameTokens(b);
+  if (ta.size === 0 || tb.size === 0) return false;
+  if (ta.size !== tb.size) return false;
+  for (const x of ta) {
+    if (!tb.has(x)) return false;
+  }
+  return true;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ChatUiService {
   readonly contactsPanelOpen = signal(false);
@@ -61,6 +92,8 @@ export class ChatUiService {
   readonly chatUnreadTotal = signal(0);
   /** Ключ `kind:peerEntityId` → кількість непрочитаних (для крапки біля імені в панелі). */
   readonly unreadByPeer = signal<Record<string, number>>({});
+  /** Остання відповідь listConversations — для резервного зіставлення з рядком у Recent. */
+  readonly lastConversationSummaries = signal<ChatConversationSummary[]>([]);
 
   private readonly router = inject(Router);
   private readonly auth = inject(AuthService);
@@ -104,7 +137,9 @@ export class ChatUiService {
     if (typeof localStorage === 'undefined') return;
     const now = new Date().toISOString();
     const list = safeParse(localStorage.getItem(STORAGE_KEY));
-    const without = list.filter((e) => e.peerId !== entry.peerId);
+    const without = list.filter(
+      (e) => !(e.peerId === entry.peerId && e.kind === entry.kind),
+    );
     const next: ChatRecentEntry[] = [
       {
         ...entry,
@@ -119,11 +154,16 @@ export class ChatUiService {
    * Оновити непрочитані по діалогах з відповіді API (панель контактів або після mark read).
    */
   syncUnreadFromSummaries(summaries: ChatConversationSummary[]): void {
+    const list = summaries ?? [];
+    this.lastConversationSummaries.set(list);
     const map: Record<string, number> = {};
     let sum = 0;
-    for (const s of summaries ?? []) {
-      if (s.peerKind !== 'teacher' && s.peerKind !== 'student') continue;
-      const k = `${s.peerKind}:${s.peerEntityId}`;
+    for (const s of list) {
+      const pk = normalizePeerKind(s.peerKind);
+      if (!pk) continue;
+      const id = String(s.peerEntityId ?? '').trim();
+      if (!id) continue;
+      const k = `${pk}:${id}`;
       const n = Number(s.unreadCount) || 0;
       map[k] = n;
       sum += n;
@@ -132,12 +172,49 @@ export class ChatUiService {
     this.chatUnreadTotal.set(Math.max(0, sum));
   }
 
+  /**
+   * Непрочитані для рядка в панелі контактів: за id і видом, інакше за іменем з API (якщо id у Recent не збігається з peerEntityId).
+   */
+  unreadCountForContactRow(peerId: string, kind: ChatPeerKind, displayName?: string): number {
+    const pid = String(peerId ?? '').trim();
+    const map = this.unreadByPeer();
+    const direct = map[`${kind}:${pid}`];
+    if (typeof direct === 'number') {
+      return direct > 0 ? direct : 0;
+    }
+
+    for (const s of this.lastConversationSummaries()) {
+      const pk = normalizePeerKind(s.peerKind);
+      if (pk !== kind) continue;
+      const peid = String(s.peerEntityId ?? '').trim();
+      if (peid === pid) {
+        const n = Number(s.unreadCount) || 0;
+        return n > 0 ? n : 0;
+      }
+    }
+
+    const dn = displayName?.trim();
+    if (dn) {
+      for (const s of this.lastConversationSummaries()) {
+        const pk = normalizePeerKind(s.peerKind);
+        if (pk !== kind) continue;
+        if (chatSamePersonDisplayName(dn, s.peerDisplayName ?? '')) {
+          const n = Number(s.unreadCount) || 0;
+          return n > 0 ? n : 0;
+        }
+      }
+    }
+
+    return 0;
+  }
+
   /** Оновити лічильник непрочитаних (після відкриття чату або з панелі контактів). */
   refreshUnreadTotals(): void {
     const u = this.auth.currentUser();
     if (!u?.id || (u.role !== 'STUDENT' && u.role !== 'TEACHER')) {
       this.chatUnreadTotal.set(0);
       this.unreadByPeer.set({});
+      this.lastConversationSummaries.set([]);
       return;
     }
     this.chatApi

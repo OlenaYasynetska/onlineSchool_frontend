@@ -111,6 +111,14 @@ export class ChatContactsPanelComponent {
       }
       this.refreshUnreadOnly();
     });
+
+    effect((onCleanup) => {
+      if (!this.chatUi.contactsPanelOpen()) {
+        return;
+      }
+      const timer = window.setInterval(() => this.refreshUnreadOnly(), 12000);
+      onCleanup(() => window.clearInterval(timer));
+    });
   }
 
   private refreshUnreadOnly(): void {
@@ -281,12 +289,7 @@ export class ChatContactsPanelComponent {
     return 'Contacts';
   }
 
-  protected peerUnreadKey(peerId: string, kind: ChatPeerKind): string {
-    return `${kind}:${peerId}`;
-  }
-
-  unreadCountForPeer(peerId: string, kind: ChatPeerKind): number {
-    const n = this.chatUi.unreadByPeer()[this.peerUnreadKey(peerId, kind)];
-    return typeof n === 'number' && n > 0 ? n : 0;
+  unreadCountForPeer(peerId: string, kind: ChatPeerKind, displayName?: string): number {
+    return this.chatUi.unreadCountForContactRow(peerId, kind, displayName);
   }
 }

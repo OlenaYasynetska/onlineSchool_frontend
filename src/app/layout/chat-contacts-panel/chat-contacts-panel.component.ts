@@ -235,7 +235,7 @@ export class ChatContactsPanelComponent {
         .map((s) => ({
           id: s.id,
           name: s.fullName,
-          subtitle: s.email,
+          subtitle: '',
           kind: 'student' as const,
         }));
     }

@@ -16,7 +16,7 @@ import { SchoolChatApiService, type ChatMessage } from './school-chat-api.servic
   imports: [CommonModule, FormsModule],
   templateUrl: './chat-page.component.html',
   host: {
-    class: 'flex min-w-0 w-full flex-col',
+    class: 'flex min-h-0 min-w-0 w-full flex-1 flex-col',
   },
 })
 export class ChatPageComponent implements OnInit, OnDestroy {

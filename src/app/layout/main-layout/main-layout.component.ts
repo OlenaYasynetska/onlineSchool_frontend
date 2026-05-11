@@ -29,13 +29,17 @@ import { AuthService } from '../../core/services/auth.service';
         }
       }
       <main
-        class="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto bg-slate-100"
+        class="flex min-h-0 w-full min-w-0 flex-1 flex-col bg-slate-100"
+        [class.overflow-y-auto]="!isChatPage()"
+        [class.overflow-hidden]="isChatPage()"
         [class.pl-0]="shouldShowSidebar()"
         [class.pr-3]="shouldShowSidebar()"
         [class.sm:pr-6]="shouldShowSidebar()"
         [class.lg:pr-8]="shouldShowSidebar()"
-        [class.py-3]="shouldShowSidebar()"
-        [class.sm:py-4]="shouldShowSidebar()"
+        [class.pt-3]="shouldShowSidebar()"
+        [class.sm:pt-4]="shouldShowSidebar()"
+        [class.pb-3]="shouldShowSidebar() && !isChatPage()"
+        [class.sm:pb-4]="shouldShowSidebar() && !isChatPage()"
       >
         <router-outlet />
       </main>
@@ -78,5 +82,11 @@ export class MainLayoutComponent {
       url.startsWith('/analytics') ||
       url.startsWith('/super-admin')
     );
+  }
+
+  /** Чат: повна висота main, поле вводу внизу без «провисання» через scroll на main. */
+  isChatPage(): boolean {
+    const path = this.router.url.split('?')[0];
+    return path === '/teacher/chat' || path === '/student/chat';
   }
 }

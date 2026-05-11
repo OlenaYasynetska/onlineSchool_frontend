@@ -10,8 +10,12 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet],
   host: {
-    class: 'flex min-w-0 w-full flex-col',
+    class: 'flex min-h-0 min-w-0 w-full flex-1 flex-col',
   },
-  template: `<router-outlet />`,
+  template: `
+    <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+      <router-outlet />
+    </div>
+  `,
 })
 export class CabinetShellComponent {}

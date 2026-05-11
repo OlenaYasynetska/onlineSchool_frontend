@@ -1,4 +1,13 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  ElementRef,
+  EnvironmentInjector,
+  inject,
+  OnDestroy,
+  OnInit,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -25,6 +34,9 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   protected readonly auth = inject(AuthService);
   protected readonly chatUi = inject(ChatUiService);
   private readonly chatApi = inject(SchoolChatApiService);
+  private readonly envInjector = inject(EnvironmentInjector);
+  private readonly chatMessagesViewport =
+    viewChild<ElementRef<HTMLElement>>('chatMessagesViewport');
 
   private readonly destroy$ = new Subject<void>();
 
@@ -99,6 +111,7 @@ export class ChatPageComponent implements OnInit, OnDestroy {
           tap((msgs) => {
             this.messages = msgs;
             this.loading = false;
+            this.scheduleScrollChatToBottom();
           }),
           switchMap(() =>
             this.chatApi.markConversationRead(u.id!, open.conversationId).pipe(
@@ -171,12 +184,25 @@ export class ChatPageComponent implements OnInit, OnDestroy {
         this.messages = [...this.messages, m];
         this.draft = '';
         this.sending = false;
+        this.scheduleScrollChatToBottom();
       },
       error: () => {
         this.sendError = 'Failed to send.';
         this.sending = false;
       },
     });
+  }
+
+  private scheduleScrollChatToBottom(): void {
+    afterNextRender(
+      () => {
+        const el = this.chatMessagesViewport()?.nativeElement;
+        if (el) {
+          el.scrollTop = el.scrollHeight;
+        }
+      },
+      { injector: this.envInjector },
+    );
   }
 
   isMine(m: ChatMessage): boolean {

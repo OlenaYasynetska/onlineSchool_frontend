@@ -38,10 +38,11 @@ import {
       :host {
         display: flex;
         flex-direction: column;
-        flex-shrink: 0;
+        flex-shrink: 1;
         min-height: 0;
         height: 100%;
-        width: min(20rem, calc(100vw - 4.25rem - 12px));
+        /* Резинова ширина: зростає/стискається з вікном, з межами */
+        width: clamp(12rem, min(36vw, calc(100vw - 4.25rem - 12px)), 22rem);
         max-width: 0;
         min-width: 0;
         overflow: hidden;
@@ -55,11 +56,12 @@ import {
       }
       @media (min-width: 768px) {
         :host {
-          width: 20rem;
+          width: clamp(14rem, 28vw, 22rem);
         }
       }
       :host(.is-open) {
-        max-width: min(20rem, calc(100vw - 4.25rem - 12px));
+        max-width: 22rem;
+        min-width: 12rem;
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -70,7 +72,7 @@ import {
       }
       @media (min-width: 768px) {
         :host(.is-open) {
-          max-width: 20rem;
+          max-width: 22rem;
         }
       }
     `,

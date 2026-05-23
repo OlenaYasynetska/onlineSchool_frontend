@@ -49,6 +49,19 @@
               <span class="font-medium text-slate-800">{{ peerDisplayName }}</span>
               <span class="text-slate-500"> · Student</span>
             </span>
+          } @else if (auth.currentUser()?.role === 'TEACHER' && peerKind === 'teacher') {
+            <img
+              src="/assets/images/avatar_chat.png"
+              alt=""
+              class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200"
+              width="36"
+              height="36"
+            />
+            <span class="min-w-0 truncate">
+              With:
+              <span class="font-medium text-slate-800">{{ peerDisplayName }}</span>
+              <span class="text-slate-500"> · Teacher</span>
+            </span>
           } @else if (auth.currentUser()?.role === 'STUDENT') {
             @if (peerKind === 'teacher') {
               <img

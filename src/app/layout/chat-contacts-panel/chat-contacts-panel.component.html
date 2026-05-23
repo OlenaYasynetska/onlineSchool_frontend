@@ -28,8 +28,8 @@
     [(ngModel)]="searchQuery"
     [placeholder]="
       auth.currentUser()?.role === 'STUDENT'
-        ? 'Find a teacher or classmate…'
-        : 'Find a student…'
+        ? 'Find a teacher or student…'
+        : 'Find a student or teacher…'
     "
     class="mt-0.5 w-full rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-sky-500 dark:focus:ring-sky-900/40"
     autocomplete="off"
@@ -54,7 +54,15 @@
               (click)="openFromRecent(e)"
               class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
             >
-              @if (showPeerStudentAvatar(e.kind)) {
+              @if (showTeacherPeerAvatar(e.kind)) {
+                <img
+                  src="/assets/images/avatar_chat.png"
+                  alt=""
+                  class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                  width="36"
+                  height="36"
+                />
+              } @else if (showPeerStudentAvatar(e.kind)) {
                 <img
                   src="/assets/images/avatar_student_chat.png"
                   alt=""
@@ -77,7 +85,7 @@
                     ></span>
                   }
                 </div>
-                @if (auth.currentUser()?.role === 'STUDENT') {
+                @if (auth.currentUser()?.role === 'STUDENT' || auth.currentUser()?.role === 'TEACHER') {
                   <span class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{{
                     e.subtitle || (e.kind === 'teacher' ? 'Teacher' : 'Student')
                   }}</span>
@@ -95,14 +103,14 @@
         [class.mt-2]="recent().length > 0"
         [class.mt-0]="recent().length === 0"
       >
-        Classmates
+        Students at your school
       </p>
       @if (filteredClassmates().length === 0) {
         <p class="px-2 text-sm text-slate-500">
           @if (searchQuery.trim()) {
             No matches.
           } @else {
-            No classmates in your groups yet.
+            No students in your school yet.
           }
         </p>
       } @else {
@@ -195,65 +203,116 @@
           }
         </ul>
       }
-    } @else {
-    <p
-      class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
-      [class.mt-2]="recent().length > 0"
-      [class.mt-0]="recent().length === 0"
-    >
-      {{ directoryHeading() }}
-    </p>
-    @if (filteredDirectory().length === 0) {
-      <p class="px-2 text-sm text-slate-500">
-        @if (searchQuery.trim()) {
-          No matches.
-        } @else {
-          No contacts yet.
-        }
+    } @else if (auth.currentUser()?.role === 'TEACHER') {
+      <p
+        class="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+        [class.mt-2]="recent().length > 0"
+        [class.mt-0]="recent().length === 0"
+      >
+        {{ directoryHeading() }}
       </p>
-    } @else {
-      <ul class="space-y-1">
-        @for (c of filteredDirectory(); track c.id) {
-          <li>
-            <button
-              type="button"
-              (click)="openChat(c.id, c.kind, c.name, c.subtitle)"
-              class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
-            >
-              @if (showPeerStudentAvatar(c.kind)) {
-                <img
-                  src="/assets/images/avatar_student_chat.png"
-                  alt=""
-                  class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-600"
-                  width="36"
-                  height="36"
-                />
-              }
-              <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
-                @let uc = unreadCountForPeer(c.id, c.kind, c.name);
-                <div class="flex min-w-0 items-center gap-2">
-                  <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
-                    c.name
-                  }}</span>
-                  @if (uc > 0) {
-                    <span
-                      class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
-                      [attr.title]="'Unread messages: ' + uc"
-                      [attr.aria-label]="'Unread messages: ' + uc"
-                    ></span>
+      @if (filteredDirectory().length === 0) {
+        <p class="px-2 text-sm text-slate-500">
+          @if (searchQuery.trim()) {
+            No matches.
+          } @else {
+            No students listed.
+          }
+        </p>
+      } @else {
+        <ul class="space-y-1">
+          @for (c of filteredDirectory(); track c.id) {
+            <li>
+              <button
+                type="button"
+                (click)="openChat(c.id, c.kind, c.name, c.subtitle)"
+                class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
+              >
+                @if (showPeerStudentAvatar(c.kind)) {
+                  <img
+                    src="/assets/images/avatar_student_chat.png"
+                    alt=""
+                    class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                    width="36"
+                    height="36"
+                  />
+                }
+                <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
+                  @let uc = unreadCountForPeer(c.id, c.kind, c.name);
+                  <div class="flex min-w-0 items-center gap-2">
+                    <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
+                      c.name
+                    }}</span>
+                    @if (uc > 0) {
+                      <span
+                        class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
+                        [attr.title]="'Unread messages: ' + uc"
+                        [attr.aria-label]="'Unread messages: ' + uc"
+                      ></span>
+                    }
+                  </div>
+                </div>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      <p
+        class="mb-1.5 mt-2 px-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400"
+      >
+        {{ colleagueDirectoryHeading() }}
+      </p>
+      @if (filteredColleagues().length === 0) {
+        <p class="px-2 text-sm text-slate-500">
+          @if (searchQuery.trim()) {
+            No matches.
+          } @else {
+            No other teachers listed.
+          }
+        </p>
+      } @else {
+        <ul class="space-y-1">
+          @for (c of filteredColleagues(); track c.id) {
+            <li>
+              <button
+                type="button"
+                (click)="openChat(c.id, c.kind, c.name, c.subtitle)"
+                class="flex w-full items-center gap-2 rounded-lg px-2 py-2.5 text-left text-sm transition hover:bg-sky-50 dark:hover:bg-gray-800"
+              >
+                @if (showTeacherPeerAvatar(c.kind)) {
+                  <img
+                    src="/assets/images/avatar_chat.png"
+                    alt=""
+                    class="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-600"
+                    width="36"
+                    height="36"
+                  />
+                }
+                <div class="flex min-w-0 flex-1 flex-col items-stretch gap-0.5">
+                  @let uc = unreadCountForPeer(c.id, c.kind, c.name);
+                  <div class="flex min-w-0 items-center gap-2">
+                    <span class="min-w-0 flex-1 truncate font-medium text-slate-900 dark:text-white">{{
+                      c.name
+                    }}</span>
+                    @if (uc > 0) {
+                      <span
+                        class="h-2.5 w-2.5 shrink-0 rounded-full bg-rose-500 shadow-sm dark:bg-rose-400"
+                        [attr.title]="'Unread messages: ' + uc"
+                        [attr.aria-label]="'Unread messages: ' + uc"
+                      ></span>
+                    }
+                  </div>
+                  @if (c.subtitle) {
+                    <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
+                      c.subtitle
+                    }}</span>
                   }
                 </div>
-                @if (c.subtitle) {
-                  <span class="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{{
-                    c.subtitle
-                  }}</span>
-                }
-              </div>
-            </button>
-          </li>
-        }
-      </ul>
-    }
+              </button>
+            </li>
+          }
+        </ul>
+      }
     }
   }
 </div>

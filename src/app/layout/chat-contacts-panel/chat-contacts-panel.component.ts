@@ -100,6 +100,7 @@ export class ChatContactsPanelComponent {
   teachers = signal<TeacherOptionShort[]>([]);
   classmates = signal<ClassmateOptionShort[]>([]);
   students = signal<StudentRow[]>([]);
+  colleagues = signal<TeacherOptionShort[]>([]);
   /** MySQL students.id для поточного учня — щоб не відкривати чат із собою. */
   protected readonly myStudentRecordId = signal<string | null>(null);
   private directoryLoadStarted = false;
@@ -173,15 +174,17 @@ export class ChatContactsPanelComponent {
     if (role === 'TEACHER') {
       forkJoin({
         students: this.teacherDash.listMyStudents(u.id),
+        colleagues: this.teacherDash.listSchoolColleagues(u.id),
         summaries: this.chatApi.listConversations(u.id).pipe(catchError(() => of([] as ChatConversationSummary[]))),
       }).subscribe({
-        next: ({ students, summaries }) => {
+        next: ({ students, colleagues, summaries }) => {
           this.students.set(students ?? []);
+          this.colleagues.set(colleagues ?? []);
           this.chatUi.syncUnreadFromSummaries(summaries ?? []);
           this.loading.set(false);
         },
         error: () => {
-          this.loadError.set('Could not load students.');
+          this.loadError.set('Could not load contacts.');
           this.loading.set(false);
         },
       });
@@ -202,8 +205,29 @@ export class ChatContactsPanelComponent {
   private matchesRoleFilter(kind: ChatPeerKind): boolean {
     const r = this.auth.currentUser()?.role;
     if (r === 'STUDENT') return kind === 'teacher' || kind === 'student';
-    if (r === 'TEACHER') return kind === 'student';
+    if (r === 'TEACHER') return kind === 'student' || kind === 'teacher';
     return false;
+  }
+
+  filteredColleagues(): {
+    id: string;
+    name: string;
+    subtitle: string;
+    kind: ChatPeerKind;
+  }[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (this.auth.currentUser()?.role !== 'TEACHER') return [];
+    return (this.colleagues() ?? [])
+      .filter((t) => {
+        if (!q) return true;
+        return t.displayName.toLowerCase().includes(q);
+      })
+      .map((t) => ({
+        id: t.id,
+        name: t.displayName,
+        subtitle: 'Teacher',
+        kind: 'teacher' as const,
+      }));
   }
 
   filteredDirectory(): {
@@ -237,7 +261,7 @@ export class ChatContactsPanelComponent {
         .map((s) => ({
           id: s.id,
           name: s.fullName,
-          subtitle: '',
+          subtitle: 'Student',
           kind: 'student' as const,
         }));
     }
@@ -262,7 +286,7 @@ export class ChatContactsPanelComponent {
       .map((c) => ({
         id: c.id,
         name: c.displayName,
-        subtitle: 'Classmate',
+        subtitle: 'Student',
         kind: 'student' as const,
       }));
   }
@@ -272,6 +296,11 @@ export class ChatContactsPanelComponent {
     const r = this.auth.currentUser()?.role;
     if (r === 'TEACHER' && kind === 'student') return true;
     return r === 'STUDENT' && kind === 'student';
+  }
+
+  /** Аватар вчителя в списку (діалог із колегою). */
+  protected showTeacherPeerAvatar(kind: ChatPeerKind): boolean {
+    return this.auth.currentUser()?.role === 'TEACHER' && kind === 'teacher';
   }
 
   openChat(
@@ -292,7 +321,7 @@ export class ChatContactsPanelComponent {
       peerId,
       kind,
       displayName,
-      subtitle: u.role === 'TEACHER' ? undefined : subtitle,
+      subtitle,
     });
     const base = u.role === 'TEACHER' ? '/teacher/chat' : '/student/chat';
     void this.router.navigate([base], {
@@ -312,8 +341,12 @@ export class ChatContactsPanelComponent {
   directoryHeading(): string {
     const r = this.auth.currentUser()?.role;
     if (r === 'STUDENT') return 'Teachers at your school';
-    if (r === 'TEACHER') return 'Students in your groups';
+    if (r === 'TEACHER') return 'Students at your school';
     return 'Contacts';
+  }
+
+  colleagueDirectoryHeading(): string {
+    return 'Teachers';
   }
 
   unreadCountForPeer(peerId: string, kind: ChatPeerKind, displayName?: string): number {

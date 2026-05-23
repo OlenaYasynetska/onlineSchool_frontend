@@ -6,6 +6,7 @@ import type {
   SchoolGroupCard,
   StudentRow,
 } from '../../school-admin/models/school-admin-dashboard.model';
+import type { TeacherOptionShort } from '../../student-dashboard/models/student-homework.model';
 import type { TeacherGroupStats } from '../models/teacher-group-stats.model';
 
 export interface TeacherActivityEntry {
@@ -31,10 +32,17 @@ export class TeacherDashboardService {
     );
   }
 
-  /** Студенти з груп цього вчителя (БД). */
+  /** Усі студенти школи вчителя (БД). */
   listMyStudents(userId: string): Observable<StudentRow[]> {
     return this.http.get<StudentRow[]>(
       `${environment.apiUrl}/teacher/students?userId=${encodeURIComponent(userId)}`
+    );
+  }
+
+  /** Інші вчителі тієї ж школи — для чату. */
+  listSchoolColleagues(userId: string): Observable<TeacherOptionShort[]> {
+    return this.http.get<TeacherOptionShort[]>(
+      `${environment.apiUrl}/teacher/colleagues?userId=${encodeURIComponent(userId)}`
     );
   }
 

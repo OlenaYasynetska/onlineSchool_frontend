@@ -6,13 +6,13 @@
 
 ### Стек
 
-| Технологія | Призначення |
-|------------|-------------|
-| Angular 19 | UI, роутинг, forms, HttpClient |
-| Tailwind CSS | стилі (`src/styles/style.css`, PostCSS) |
-| RxJS | асинхронні потоки |
-| ng-apexcharts + ApexCharts | графіки / аналітика |
-| ngx-extended-pdf-viewer | перегляд PDF (навчальні матеріали) |
+| Технологія                 | Призначення                             |
+|----------------------------|-----------------------------------------|
+| Angular 19                 | UI, роутинг, forms, HttpClient          |
+| Tailwind CSS               | стилі (`src/styles/style.css`, PostCSS) |
+| RxJS                       | асинхронні потоки                       |
+| ng-apexcharts + ApexCharts | графіки / аналітика                     |
+| ngx-extended-pdf-viewer    | перегляд PDF (навчальні матеріали)      |
 
 Інструменти: ESLint (`ng lint`), Prettier, Karma/Jasmine для тестів.
 
@@ -62,17 +62,17 @@ src/app
 
 ### Маршрути (огляд)
 
-| Шлях | Захист | Зміст |
-|------|--------|--------|
-| `/` | — | Лендинг |
-| `/auth/*` | — | Авторизація |
-| `/plans` | — | Тарифи |
-| `/dashboard` | `authGuard`, `dashboardEntryGuard` | Загальний dashboard |
-| `/students`, `/teachers`, `/schools`, `/analytics` | `authGuard` | Списки та аналітика (ліміт за ролями також на бекенді / у UI) |
-| `/teacher/*` | `authGuard` + роль **TEACHER** | Кабінет викладача; чат: `/teacher/chat` |
-| `/student/*` | `authGuard` + роль **STUDENT** | Кабінет учня; чат: `/student/chat` |
-| `/school-admin/*` | `authGuard` + **ADMIN_SCHOOL** | Адміністрування школи |
-| `/super-admin/*` | `authGuard` + **SUPER_ADMIN** | Суперадмін |
+| Шлях                                               | Захист                            | Зміст                                                         |
+|----------------------------------------------------|-----------------------------------|---------------------------------------------------------------|
+| `/`                                                | —                                 | Лендинг                                                       |
+| `/auth/*`                                          | —                                 | Авторизація                                                   |
+| `/plans`                                           | —                                 | Тарифи                                                        |
+| `/dashboard`                                       | `authGuard`, `dashboardEntryGuard`| Загальний dashboard                                           |
+| `/students`, `/teachers`, `/schools`, `/analytics` | `authGuard`                       | Списки та аналітика (ліміт за ролями також на бекенді / у UI) |
+| `/teacher/*`                                       | `authGuard` + роль **TEACHER**    | Кабінет викладача; чат: `/teacher/chat`                       |
+| `/student/*`                                       | `authGuard` + роль **STUDENT**    | Кабінет учня; чат: `/student/chat`                            |
+| `/school-admin/*`                                  | `authGuard` + **ADMIN_SCHOOL**    | Адміністрування школи                                         |
+| `/super-admin/*`                                   | `authGuard` + **SUPER_ADMIN**     | Суперадмін                                                    |
 
 404 — через `features/errors`.
 
@@ -120,12 +120,12 @@ npm run build
 
 ### Корисні файли
 
-| Файл | Опис |
-|------|------|
-| `angular.json` | Проєкт `education-frontend`, `fileReplacements` для production |
-| `proxy.conf.json` | Проксі `/api` на бекенд під час `ng serve` |
-| `vercel.json` | Збірка та rewrites для production |
-| `scripts/generate-prod-env.mjs` | Генерація prod environment з env-змінних |
+| Файл                            | Опис                                                           |
+|---------------------------------|----------------------------------------------------------------|
+| `angular.json`                  | Проєкт `education-frontend`, `fileReplacements` для production |
+| `proxy.conf.json`               | Проксі `/api` на бекенд під час `ng serve`                     |
+| `vercel.json`                   | Збірка та rewrites для production                              |
+| `scripts/generate-prod-env.mjs` | Генерація prod environment з env-змінних                       |
 
 ---
 
@@ -135,13 +135,13 @@ Client for the education platform: **Angular 19**, **TypeScript 5.6**, **Tailwin
 
 ### Stack
 
-| Technology | Purpose |
-|------------|---------|
-| Angular 19 | UI, routing, forms, HttpClient |
-| Tailwind CSS | styling (`src/styles/style.css`, PostCSS) |
-| RxJS | async streams |
-| ng-apexcharts + ApexCharts | charts / analytics |
-| ngx-extended-pdf-viewer | PDF viewing (study materials) |
+| Technology                 | Purpose                                   |
+|----------------------------|-------------------------------------------|
+| Angular 19                 | UI, routing, forms, HttpClient            |
+| Tailwind CSS               | styling (`src/styles/style.css`, PostCSS) |
+| RxJS                       | async streams                             |
+| ng-apexcharts + ApexCharts | charts / analytics                        |
+| ngx-extended-pdf-viewer    | PDF viewing (study materials)             |
 
 Tooling: ESLint (`ng lint`), Prettier, Karma/Jasmine for tests.
 
@@ -191,17 +191,17 @@ See `*.routes.ts` under each `features/` folder for exact pages and child paths.
 
 ### Routes (overview)
 
-| Path | Protection | Content |
-|------|------------|---------|
-| `/` | — | Landing |
-| `/auth/*` | — | Authentication |
-| `/plans` | — | Plans / pricing |
-| `/dashboard` | `authGuard`, `dashboardEntryGuard` | Main dashboard |
-| `/students`, `/teachers`, `/schools`, `/analytics` | `authGuard` | Lists and analytics (role limits also enforced by API / UI) |
-| `/teacher/*` | `authGuard` + **TEACHER** | Teacher area; chat: `/teacher/chat` |
-| `/student/*` | `authGuard` + **STUDENT** | Student area; chat: `/student/chat` |
-| `/school-admin/*` | `authGuard` + **ADMIN_SCHOOL** | School administration |
-| `/super-admin/*` | `authGuard` + **SUPER_ADMIN** | Super admin |
+| Path                                               | Protection                         | Content                                                     |
+|----------------------------------------------------|------------------------------------|-------------------------------------------------------------|
+| `/`                                                | —                                  | Landing                                                     |
+| `/auth/*`                                          | —                                  | Authentication                                              |
+| `/plans`                                           | —                                  | Plans / pricing                                             |
+| `/dashboard`                                       | `authGuard`, `dashboardEntryGuard` | Main dashboard                                              |
+| `/students`, `/teachers`, `/schools`, `/analytics` | `authGuard`                        | Lists and analytics (role limits also enforced by API / UI) |
+| `/teacher/*`                                       | `authGuard` + **TEACHER**          | Teacher area; chat: `/teacher/chat`                         |
+| `/student/*`                                       | `authGuard` + **STUDENT**          | Student area; chat: `/student/chat`                         |
+| `/school-admin/*`                                  | `authGuard` + **ADMIN_SCHOOL**     | School administration                                       |
+| `/super-admin/*`                                   | `authGuard` + **SUPER_ADMIN**      | Super admin                                                 |
 
 404 is handled under `features/errors`.
 
@@ -249,9 +249,9 @@ npm run build
 
 ### Useful files
 
-| File | Description |
-|------|-------------|
-| `angular.json` | `education-frontend` project, production `fileReplacements` |
-| `proxy.conf.json` | Proxies `/api` to the backend during `ng serve` |
-| `vercel.json` | Build output and production rewrites |
-| `scripts/generate-prod-env.mjs` | Builds prod environment from env vars |
+| File                            | Description                                                 |
+|---------------------------------|-------------------------------------------------------------|
+| `angular.json`                  | `education-frontend` project, production `fileReplacements` |
+| `proxy.conf.json`               | Proxies `/api` to the backend during `ng serve`             |
+| `vercel.json`                   | Build output and production rewrites                        |
+| `scripts/generate-prod-env.mjs` | Builds prod environment from env vars                       |

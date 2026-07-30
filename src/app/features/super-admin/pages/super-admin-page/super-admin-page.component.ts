@@ -17,6 +17,7 @@ import type {
   SuperAdminDashboardResponse,
 } from '../../models/super-admin-dashboard.model';
 import { SchoolGridCardComponent } from '../../components/school-grid-card/school-grid-card.component';
+import { OrganizationGridCardComponent } from '../../components/organization-grid-card/organization-grid-card.component';
 import { createSuperAdminOrganizationsSearchState } from '../../super-admin-organizations-search.state';
 import { createSuperAdminSchoolsToolbarState } from '../../super-admin-schools-toolbar.state';
 import {
@@ -34,7 +35,7 @@ const emptyDash: SuperAdminDashboardResponse = {
 @Component({
   selector: 'app-super-admin-page',
   standalone: true,
-  imports: [CommonModule, RouterLink, SchoolGridCardComponent],
+  imports: [CommonModule, RouterLink, SchoolGridCardComponent, OrganizationGridCardComponent],
   templateUrl: './super-admin-page.component.html',
 })
 export class SuperAdminPageComponent implements OnInit {

@@ -317,7 +317,41 @@
         </span>
       </div>
     </div>
-    <div class="overflow-x-auto rounded-lg border border-slate-100">
+
+    <!-- Cards: viewport &lt; 1100px -->
+    <div class="min-[1100px]:hidden">
+      @if (dash().organizations.length > 0) {
+        @if (orgsUi.filteredOrganizations().length > 0) {
+          <div class="grid gap-4 sm:grid-cols-2">
+            @for (
+              row of orgsUi.filteredOrganizations();
+              track row.id;
+              let i = $index
+            ) {
+              <app-organization-grid-card [org]="row" [displayIndex]="i + 1" />
+            }
+          </div>
+        } @else {
+          <p class="rounded-lg border border-slate-100 bg-slate-50 px-4 py-10 text-center text-sm text-slate-600">
+            No organizations match your search.
+            <button
+              type="button"
+              class="mt-2 block w-full text-center font-medium text-blue-600 hover:underline"
+              (click)="orgsUi.clearOrganizationSearch()"
+            >
+              Clear search
+            </button>
+          </p>
+        }
+      } @else {
+        <p class="rounded-lg border border-slate-100 bg-slate-50 px-4 py-10 text-center text-sm text-slate-500">
+          No organizations yet. Add your first school in the database.
+        </p>
+      }
+    </div>
+
+    <!-- Table: viewport &gt;= 1100px -->
+    <div class="hidden overflow-x-auto rounded-lg border border-slate-100 min-[1100px]:block">
       <table class="w-full min-w-[720px] text-left text-sm">
         <thead>
           <tr class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600">

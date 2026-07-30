@@ -61,7 +61,7 @@
         <div class="relative">
           <input
             id="reg-password"
-            [type]="passwordVisible() ? 'text' : 'password'"
+            [type]="passwordVisibility.inputType()"
             formControlName="password"
             autocomplete="new-password"
             placeholder="New password"
@@ -71,11 +71,11 @@
           <button
             type="button"
             class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-xs font-medium text-slate-500 hover:bg-white/80 hover:text-slate-800"
-            (click)="passwordVisible.set(!passwordVisible())"
-            [attr.aria-pressed]="passwordVisible()"
+            (click)="passwordVisibility.toggle()"
+            [attr.aria-pressed]="passwordVisibility.visible()"
             aria-label="Toggle password visibility"
           >
-            {{ passwordVisible() ? 'Hide' : 'Show' }}
+            {{ passwordVisibility.toggleLabel() }}
           </button>
         </div>
       </div>

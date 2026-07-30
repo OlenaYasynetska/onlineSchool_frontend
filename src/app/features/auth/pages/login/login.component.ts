@@ -13,6 +13,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { environment } from '../../../../../environments/environment';
 import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop/auth-plans-backdrop.component';
+import { usePasswordVisibility } from '../../../../shared/hooks/use-password-visibility.hook';
 
 @Component({
   selector: 'app-login',
@@ -75,14 +76,25 @@ import { AuthPlansBackdropComponent } from '../../components/auth-plans-backdrop
               class="mb-1.5 block text-sm font-medium text-slate-600"
               >Password</label
             >
-            <input
-              id="login-password"
-              type="password"
-              formControlName="password"
-              autocomplete="current-password"
-              class="block w-full rounded-xl border-0 bg-[#EBF2FA] px-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C5D9ED]"
-              aria-label="Password"
-            />
+            <div class="relative">
+              <input
+                id="login-password"
+                [type]="passwordVisibility.inputType()"
+                formControlName="password"
+                autocomplete="current-password"
+                class="block w-full rounded-xl border-0 bg-[#EBF2FA] py-2.5 pl-3 pr-16 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#C5D9ED]"
+                aria-label="Password"
+              />
+              <button
+                type="button"
+                class="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5 text-xs font-medium text-slate-500 hover:bg-white/80 hover:text-slate-800"
+                (click)="passwordVisibility.toggle()"
+                [attr.aria-pressed]="passwordVisibility.visible()"
+                aria-label="Toggle password visibility"
+              >
+                {{ passwordVisibility.toggleLabel() }}
+              </button>
+            </div>
             <p class="mt-1.5 text-xs text-slate-500">
               Use the password from the invitation email or set by your school admin.
             </p>
@@ -127,6 +139,8 @@ export class LoginComponent implements OnInit, OnDestroy {
   readonly loginShellClass =
     'max-w-[min(100%,420px)] items-center justify-center';
 
+  readonly passwordVisibility = usePasswordVisibility();
+
   form = this.fb.nonNullable.group({
     roleIdentifier: ['', Validators.required],
     password: ['', Validators.required],
@@ -152,6 +166,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   close(): void {
+    this.passwordVisibility.hide();
     void this.router.navigate(['/']);
   }
 

@@ -6,12 +6,12 @@ import {
   inject,
   Input,
   Output,
-  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, type FormGroup } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import type { PlanOption, PaymentOption } from './register-form.constants';
+import { usePasswordVisibility } from '../../../../shared/hooks/use-password-visibility.hook';
 
 @Component({
   selector: 'app-register-form',
@@ -35,7 +35,7 @@ export class RegisterFormComponent {
   @Output() readonly submit = new EventEmitter<void>();
   @Output() readonly closeRequested = new EventEmitter<void>();
 
-  readonly passwordVisible = signal(false);
+  readonly passwordVisibility = usePasswordVisibility();
 
   emailFieldShowError(): boolean {
     if (!this.form) return false;

@@ -24,6 +24,8 @@ import { EditGroupModalComponent } from '../../components/edit-group-modal/edit-
 import { AddTeacherModalComponent } from '../../components/add-teacher-modal/add-teacher-modal.component';
 import { AddStudentModalComponent } from '../../components/add-student-modal/add-student-modal.component';
 import { EmailLinkComponent } from '../../../../shared/components/email-link/email-link.component';
+import { TeacherGridCardComponent } from '../../components/teacher-grid-card/teacher-grid-card.component';
+import { StudentGridCardComponent } from '../../components/student-grid-card/student-grid-card.component';
 
 @Component({
   selector: 'app-school-admin-page',
@@ -31,6 +33,8 @@ import { EmailLinkComponent } from '../../../../shared/components/email-link/ema
   imports: [
     CommonModule,
     EmailLinkComponent,
+    TeacherGridCardComponent,
+    StudentGridCardComponent,
     AddGroupModalComponent,
     AddGroupSuccessModalComponent,
     EditGroupModalComponent,

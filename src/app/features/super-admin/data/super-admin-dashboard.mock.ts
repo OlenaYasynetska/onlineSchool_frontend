@@ -30,21 +30,21 @@ export const PLAN_OVERVIEW_CARDS: PlanOverviewCard[] = [
     label: 'Plan Pro',
     count: 0,
     percent: 0,
-    accentClass: 'border-amber-500 bg-amber-50 text-amber-900',
+    accentClass: 'bg-amber-50 text-amber-900',
   },
   {
     id: 'standard',
     label: 'Plan Standard',
     count: 0,
     percent: 0,
-    accentClass: 'border-blue-500 bg-blue-50 text-blue-900',
+    accentClass: 'bg-blue-50 text-blue-900',
   },
   {
     id: 'free',
     label: 'Plan Free',
     count: 0,
     percent: 0,
-    accentClass: 'border-slate-400 bg-slate-100 text-slate-800',
+    accentClass: 'bg-slate-100 text-slate-800',
   },
 ];
 

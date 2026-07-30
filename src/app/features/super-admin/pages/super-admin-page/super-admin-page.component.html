@@ -14,7 +14,7 @@
     <div class="grid gap-3 sm:grid-cols-3">
       @for (card of dash().planOverview; track card.id) {
         <div
-          class="rounded-xl border-2 px-4 py-4 shadow-sm"
+          class="rounded-lg border border-slate-200/90 px-5 py-5 shadow-md transition-shadow hover:shadow-lg"
           [ngClass]="card.accentClass"
         >
           <p class="text-sm font-semibold">{{ card.label }}</p>

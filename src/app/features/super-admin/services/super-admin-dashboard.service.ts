@@ -104,11 +104,11 @@ export class SuperAdminDashboardService {
   private planAccent(item: PlanOverviewCard): string {
     switch (item.id) {
       case 'pro':
-        return 'border-amber-500 bg-amber-50 text-amber-900';
+        return 'bg-amber-50 text-amber-900';
       case 'standard':
-        return 'border-blue-500 bg-blue-50 text-blue-900';
+        return 'bg-blue-50 text-blue-900';
       default:
-        return 'border-slate-400 bg-slate-100 text-slate-800';
+        return 'bg-slate-100 text-slate-800';
     }
   }
 }

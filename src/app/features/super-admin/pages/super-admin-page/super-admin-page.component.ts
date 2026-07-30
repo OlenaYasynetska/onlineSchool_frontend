@@ -12,7 +12,6 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { SuperAdminDashboardService } from '../../services/super-admin-dashboard.service';
 import type {
-  OrganizationRow,
   PaymentHistoryRow,
   SuperAdminDashboardResponse,
 } from '../../models/super-admin-dashboard.model';
@@ -24,6 +23,8 @@ import {
   schoolPlanBadgeClass,
   schoolPlanBadgeLabel,
 } from '../../school-plan-badge';
+import { useResponsiveAdminTableLayout } from '../../../../shared/hooks/use-responsive-admin-table-layout.hook';
+import { organizationStatusClass } from '../../hooks/use-organization-status-style.hook';
 
 const emptyDash: SuperAdminDashboardResponse = {
   planOverview: [],
@@ -58,6 +59,8 @@ export class SuperAdminPageComponent implements OnInit {
   /** Для шаблону: чисті функції бейджа плану. */
   readonly schoolPlanBadgeClass = schoolPlanBadgeClass;
   readonly schoolPlanBadgeLabel = schoolPlanBadgeLabel;
+  readonly tableLayout = useResponsiveAdminTableLayout();
+  readonly organizationStatusClass = organizationStatusClass;
 
   ngOnInit(): void {
     this.dashboardApi.getDashboard().subscribe({
@@ -78,19 +81,6 @@ export class SuperAdminPageComponent implements OnInit {
       this.filterHostRef()?.nativeElement ?? null,
       event.target as Node
     );
-  }
-
-  orgStatusClass(status: OrganizationRow['status']): string {
-    switch (status) {
-      case 'Active':
-        return 'text-xs font-semibold text-emerald-700';
-      case 'Expiring soon':
-        return 'text-xs font-semibold text-amber-700';
-      case 'Inactive':
-        return 'text-xs font-semibold text-slate-500';
-      default:
-        return '';
-    }
   }
 
   paymentStatusClass(status: PaymentHistoryRow['status']): string {

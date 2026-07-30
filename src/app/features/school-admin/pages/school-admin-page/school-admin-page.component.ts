@@ -26,6 +26,7 @@ import { AddStudentModalComponent } from '../../components/add-student-modal/add
 import { EmailLinkComponent } from '../../../../shared/components/email-link/email-link.component';
 import { TeacherGridCardComponent } from '../../components/teacher-grid-card/teacher-grid-card.component';
 import { StudentGridCardComponent } from '../../components/student-grid-card/student-grid-card.component';
+import { useResponsiveAdminTableLayout } from '../../../../shared/hooks/use-responsive-admin-table-layout.hook';
 
 @Component({
   selector: 'app-school-admin-page',
@@ -60,6 +61,7 @@ export class SchoolAdminPageComponent implements OnInit {
     students: this.dash.students,
     groups: this.dash.groups,
   }));
+  readonly tableLayout = useResponsiveAdminTableLayout();
   loading = true;
   noSchoolAssigned = false;
   /**

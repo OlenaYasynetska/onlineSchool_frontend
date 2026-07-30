@@ -1,6 +1,10 @@
 /* Селектор app-email-link — без ViewEncapsulation, інакше preflight/таблиці перебивають колір посилання */
 app-email-link {
-  display: inline;
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   pointer-events: auto;
 }
 
@@ -11,6 +15,8 @@ app-email-link a.email-link {
   position: relative;
   z-index: 1;
   pointer-events: auto;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 app-email-link a.email-link:hover {

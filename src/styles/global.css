@@ -55,3 +55,19 @@ body {
     transition: none !important;
   }
 }
+
+/* Admin / school-admin filter row: однакова висота select, date, search */
+.admin-filter-field {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.admin-filter-field[type='date']::-webkit-date-and-time-value {
+  min-height: 1.25rem;
+  line-height: 1.25rem;
+}
+
+.admin-filter-field[type='search']::-webkit-search-cancel-button {
+  margin-right: 0;
+}
+

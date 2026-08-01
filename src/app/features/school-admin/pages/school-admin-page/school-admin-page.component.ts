@@ -27,6 +27,7 @@ import { EmailLinkComponent } from '../../../../shared/components/email-link/ema
 import { TeacherGridCardComponent } from '../../components/teacher-grid-card/teacher-grid-card.component';
 import { StudentGridCardComponent } from '../../components/student-grid-card/student-grid-card.component';
 import { useResponsiveAdminTableLayout } from '../../../../shared/hooks/use-responsive-admin-table-layout.hook';
+import { useAdminFilterFieldLayout } from '../../../../shared/hooks/use-admin-filter-field-layout.hook';
 
 @Component({
   selector: 'app-school-admin-page',
@@ -62,6 +63,7 @@ export class SchoolAdminPageComponent implements OnInit {
     groups: this.dash.groups,
   }));
   readonly tableLayout = useResponsiveAdminTableLayout();
+  readonly filterField = useAdminFilterFieldLayout();
   loading = true;
   noSchoolAssigned = false;
   /**

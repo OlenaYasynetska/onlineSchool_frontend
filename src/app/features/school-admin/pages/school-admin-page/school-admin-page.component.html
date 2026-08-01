@@ -312,7 +312,7 @@
             placeholder="Search teacher"
             [disabled]="teachers.length === 0"
             (input)="teachersVm.onTeacherSearchInput($event)"
-            class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+            [class]="filterField.searchFieldClass + ' ' + filterField.searchFieldDisabledClass"
           />
           <span
             class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"
@@ -542,13 +542,13 @@
           <div class="flex w-full min-w-[10rem] flex-col gap-1 sm:w-auto sm:max-w-[12rem]">
             <label
               for="school-admin-students-group"
-              class="text-xs font-medium text-slate-600"
+              [class]="filterField.labelClass"
               >Group</label
             >
             <select
               id="school-admin-students-group"
               (change)="studentsVm.onGroupFilterChange($event)"
-              class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              [class]="filterField.fieldClass"
             >
               <option value="">All groups</option>
               @for (g of studentsVm.groupFilterOptions; track g) {
@@ -562,27 +562,27 @@
             <div class="flex min-w-0 flex-1 flex-col gap-1">
               <label
                 for="school-admin-students-joined-from"
-                class="text-xs font-medium text-slate-600"
+                [class]="filterField.labelClass"
                 >Joined from</label
               >
               <input
                 id="school-admin-students-joined-from"
                 type="date"
                 (input)="studentsVm.onJoinedFromInput($event)"
-                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                [class]="filterField.fieldClass"
               />
             </div>
             <div class="flex min-w-0 flex-1 flex-col gap-1">
               <label
                 for="school-admin-students-joined-to"
-                class="text-xs font-medium text-slate-600"
+                [class]="filterField.labelClass"
                 >Joined to</label
               >
               <input
                 id="school-admin-students-joined-to"
                 type="date"
                 (input)="studentsVm.onJoinedToInput($event)"
-                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 px-3 text-sm text-slate-900 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                [class]="filterField.fieldClass"
               />
             </div>
           </div>
@@ -591,7 +591,7 @@
           >
             <label
               for="school-admin-students-search"
-              class="text-xs font-medium text-slate-600"
+              [class]="filterField.labelClass"
               >Search</label
             >
             <div class="relative">
@@ -601,7 +601,7 @@
                 placeholder="Search student"
                 autocomplete="off"
                 (input)="studentsVm.onStudentSearchInput($event)"
-                class="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                [class]="filterField.searchFieldClass"
               />
               <span
                 class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2"

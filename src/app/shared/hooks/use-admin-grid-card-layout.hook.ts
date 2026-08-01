@@ -1,4 +1,4 @@
-/** Спільні Tailwind-класи для карток списків (super-admin, school-admin). */
+/** Спільні Tailwind-класи для карток списків (super-admin, school-admin, teacher). */
 export interface AdminGridCardLayout {
   readonly articleClass: string;
   readonly articleClassWithMinHeight: string;

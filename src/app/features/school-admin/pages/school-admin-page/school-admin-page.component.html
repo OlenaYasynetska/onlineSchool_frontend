@@ -352,61 +352,52 @@
 
         <!-- Table: viewport &gt;= {{ tableLayout.breakpointPx }}px -->
         <div [class]="tableLayout.tableWrapperClass">
-          <table class="w-full min-w-[880px] text-left text-sm">
+          <table [class]="tableLayout.tableClass880">
             <thead>
-              <tr
-                class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600"
-              >
-                <th class="px-3 py-3">#</th>
-                <th class="px-3 py-3">Full name</th>
-                <th class="px-3 py-3">Email</th>
-                <th class="px-3 py-3">Tel.</th>
-                <th class="px-3 py-3">Subjects</th>
-                <th class="px-3 py-3">Groups</th>
+              <tr [class]="tableLayout.headRowClass">
+                <th [class]="tableLayout.thClass">#</th>
+                <th [class]="tableLayout.thClass">Full name</th>
+                <th [class]="tableLayout.thClass">Email</th>
+                <th [class]="tableLayout.thClass">Tel.</th>
+                <th [class]="tableLayout.thClass">Subjects</th>
+                <th [class]="tableLayout.thClass">Groups</th>
               </tr>
             </thead>
             <tbody>
               @if (teachersVm.filteredTeachers.length > 0) {
                 @for (t of teachersVm.filteredTeachers; track t.id; let i = $index) {
-                  <tr class="border-b border-slate-100 hover:bg-slate-50/80">
-                    <td class="px-3 py-3 font-semibold text-slate-900">
-                      {{ i + 1 }}
-                    </td>
-                    <td class="px-3 py-3 font-medium text-slate-900">
-                      {{ t.displayName }}
-                    </td>
-                    <td class="px-3 py-3">
+                  <tr [class]="tableLayout.bodyRowClass">
+                    <td [class]="tableLayout.tdIndexClass">{{ i + 1 }}</td>
+                    <td [class]="tableLayout.tdPrimaryClass">{{ t.displayName }}</td>
+                    <td [class]="tableLayout.thClass">
                       <app-email-link [email]="t.email" />
                     </td>
-                    <td class="px-3 py-3 text-slate-600">
+                    <td [class]="tableLayout.tdClass">
                       @if (t.phone) {
                         {{ t.phone }}
                       } @else {
-                        <span class="text-slate-400">—</span>
+                        <span [class]="tableLayout.emptyDashClass">—</span>
                       }
                     </td>
-                    <td class="px-3 py-3 text-slate-600">
+                    <td [class]="tableLayout.tdClass">
                       @if (t.subjectTitles.length) {
                         {{ t.subjectTitles.join(', ') }}
                       } @else {
-                        <span class="text-slate-400">—</span>
+                        <span [class]="tableLayout.emptyDashClass">—</span>
                       }
                     </td>
-                    <td class="px-3 py-3 text-slate-600">
+                    <td [class]="tableLayout.tdClass">
                       @if (t.groupNames.length) {
                         {{ t.groupNames.join(', ') }}
                       } @else {
-                        <span class="text-slate-400">—</span>
+                        <span [class]="tableLayout.emptyDashClass">—</span>
                       }
                     </td>
                   </tr>
                 }
               } @else {
                 <tr>
-                  <td
-                    colspan="6"
-                    class="px-3 py-10 text-center text-sm text-slate-500"
-                  >
+                  <td colspan="6" [class]="tableLayout.emptyCellClass">
                     No teachers match your search.
                   </td>
                 </tr>
@@ -646,34 +637,26 @@
 
       <!-- Table: viewport &gt;= {{ tableLayout.breakpointPx }}px -->
       <div [class]="tableLayout.tableWrapperClass">
-        <table class="w-full min-w-[700px] text-left text-sm">
+        <table [class]="tableLayout.tableClass700">
           <thead>
-            <tr
-              class="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase text-slate-600"
-            >
-              <th class="px-3 py-3">#</th>
-              <th class="px-3 py-3">Full name</th>
-              <th class="px-3 py-3">Email</th>
-              <th class="px-3 py-3">Groups</th>
-              <th class="px-3 py-3">Joined</th>
+            <tr [class]="tableLayout.headRowClass">
+              <th [class]="tableLayout.thClass">#</th>
+              <th [class]="tableLayout.thClass">Full name</th>
+              <th [class]="tableLayout.thClass">Email</th>
+              <th [class]="tableLayout.thClass">Groups</th>
+              <th [class]="tableLayout.thClass">Joined</th>
             </tr>
           </thead>
           <tbody>
             @if (dash.students.length === 0) {
               <tr>
-                <td
-                  colspan="5"
-                  class="px-3 py-10 text-center text-sm text-slate-500"
-                >
+                <td colspan="5" [class]="tableLayout.emptyCellClass">
                   No students yet.
                 </td>
               </tr>
             } @else if (studentsVm.filteredStudents.length === 0) {
               <tr>
-                <td
-                  colspan="5"
-                  class="px-3 py-10 text-center text-sm text-slate-500"
-                >
+                <td colspan="5" [class]="tableLayout.emptyCellClass">
                   No students match your filters.
                 </td>
               </tr>
@@ -683,22 +666,20 @@
                 track row.id;
                 let i = $index
               ) {
-                <tr class="border-b border-slate-100 hover:bg-slate-50/80">
-                  <td class="px-3 py-3 font-semibold text-slate-900">
-                    {{ i + 1 }}
+                <tr [class]="tableLayout.bodyRowClass">
+                  <td [class]="tableLayout.tdIndexClass">{{ i + 1 }}</td>
+                  <td [class]="tableLayout.tdPrimaryClass">{{ row.fullName }}</td>
+                  <td [class]="tableLayout.thClass">
+                    <app-email-link [email]="row.email" />
                   </td>
-                  <td class="px-3 py-3 font-medium text-slate-900">
-                    {{ row.fullName }}
-                  </td>
-                  <td class="px-3 py-3"><app-email-link [email]="row.email" /></td>
-                  <td class="px-3 py-3 text-slate-600">
+                  <td [class]="tableLayout.tdClass">
                     @if (row.groupNames?.length) {
                       {{ row.groupNames!.join(', ') }}
                     } @else {
-                      <span class="text-slate-400">—</span>
+                      <span [class]="tableLayout.emptyDashClass">—</span>
                     }
                   </td>
-                  <td class="px-3 py-3 text-slate-600">{{ row.joinedAt }}</td>
+                  <td [class]="tableLayout.tdClass">{{ row.joinedAt }}</td>
                 </tr>
               }
             }

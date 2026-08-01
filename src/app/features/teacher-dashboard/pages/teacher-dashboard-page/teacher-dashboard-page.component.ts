@@ -16,6 +16,9 @@ import {
   type TeacherActivityEntry,
 } from '../../services/teacher-dashboard.service';
 import { EmailLinkComponent } from '../../../../shared/components/email-link/email-link.component';
+import { StudentGridCardComponent } from '../../../school-admin/components/student-grid-card/student-grid-card.component';
+import { useResponsiveAdminTableLayout } from '../../../../shared/hooks/use-responsive-admin-table-layout.hook';
+import { useAdminFilterFieldLayout } from '../../../../shared/hooks/use-admin-filter-field-layout.hook';
 
 @Component({
   selector: 'app-teacher-dashboard-page',
@@ -25,6 +28,7 @@ import { EmailLinkComponent } from '../../../../shared/components/email-link/ema
     FormsModule,
     RouterLink,
     EmailLinkComponent,
+    StudentGridCardComponent,
   ],
   templateUrl: './teacher-dashboard-page.component.html',
 })
@@ -44,6 +48,8 @@ export class TeacherDashboardPageComponent implements OnInit {
   activity: TeacherActivityEntry[] = [];
   groupSearchQuery = '';
   studentSearchQuery = '';
+  readonly tableLayout = useResponsiveAdminTableLayout();
+  readonly filterField = useAdminFilterFieldLayout();
 
   constructor() {
     this.router.events

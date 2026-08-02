@@ -455,10 +455,10 @@
           <input
             type="radio"
             name="school-grading-method"
-            value="sum"
             class="mt-1"
-            [checked]="gradingMethod === 'sum'"
-            (change)="onGradingMethodChange('sum')"
+            [value]="'sum'"
+            [(ngModel)]="gradingMethod"
+            (ngModelChange)="onGradingMethodChange($event)"
           />
           <span>
             <span class="block text-sm font-semibold text-slate-900">Sum of points</span>
@@ -469,10 +469,10 @@
           <input
             type="radio"
             name="school-grading-method"
-            value="average"
             class="mt-1"
-            [checked]="gradingMethod === 'average'"
-            (change)="onGradingMethodChange('average')"
+            [value]="'average'"
+            [(ngModel)]="gradingMethod"
+            (ngModelChange)="onGradingMethodChange($event)"
           />
           <span>
             <span class="block text-sm font-semibold text-slate-900">Average grade</span>
@@ -491,10 +491,10 @@
           <input
             type="radio"
             name="school-grading-scale"
-            value="stars_1_3"
             class="mt-1"
-            [checked]="gradingScale === 'stars_1_3'"
-            (change)="onGradingScaleChange('stars_1_3')"
+            [value]="'stars_1_3'"
+            [(ngModel)]="gradingScale"
+            (ngModelChange)="onGradingScaleChange($event)"
           />
           <span>
             <span class="block text-sm font-semibold text-slate-900">Stars (1–3)</span>
@@ -505,10 +505,10 @@
           <input
             type="radio"
             name="school-grading-scale"
-            value="austrian_1_5"
             class="mt-1"
-            [checked]="gradingScale === 'austrian_1_5'"
-            (change)="onGradingScaleChange('austrian_1_5')"
+            [value]="'austrian_1_5'"
+            [(ngModel)]="gradingScale"
+            (ngModelChange)="onGradingScaleChange($event)"
           />
           <span>
             <span class="block text-sm font-semibold text-slate-900">Austrian grades (1–5)</span>

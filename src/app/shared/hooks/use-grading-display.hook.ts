@@ -22,7 +22,10 @@ export const AUSTRIAN_GRADE_LABELS: Readonly<Record<number, string>> = {
 export function normalizeGradingScale(
   value: string | null | undefined
 ): GradingScale {
-  return value === 'austrian_1_5' ? 'austrian_1_5' : 'stars_1_3';
+  const normalized = (value ?? '').trim().toLowerCase();
+  return normalized === 'austrian_1_5' || normalized === 'austrian'
+    ? 'austrian_1_5'
+    : 'stars_1_3';
 }
 
 export function gradeChoicesForScale(

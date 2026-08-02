@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import type {
   PaymentHistoryRow,
   SchoolAdminDashboardResponse,
@@ -42,6 +43,7 @@ import { useAdminFilterFieldLayout } from '../../../../shared/hooks/use-admin-fi
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     EmailLinkComponent,
     TeacherGridCardComponent,
     StudentGridCardComponent,
@@ -85,6 +87,8 @@ export class SchoolAdminPageComponent implements OnInit {
   settingsSaving = false;
   settingsSaved = false;
   settingsError: string | null = null;
+  /** Ignores stale GET responses that arrive after a newer save/load. */
+  private gradingSettingsRequestSeq = 0;
 
   get adminDisplayName(): string {
     const u = this.auth.currentUser();
@@ -183,13 +187,20 @@ export class SchoolAdminPageComponent implements OnInit {
   }
 
   private loadGradingSettings(schoolId: string): void {
+    const requestSeq = ++this.gradingSettingsRequestSeq;
     this.settingsApi.getSettings(schoolId).subscribe({
       next: (settings) => {
+        if (requestSeq !== this.gradingSettingsRequestSeq) {
+          return;
+        }
         this.gradingMethod =
           settings.gradingMethod === 'average' ? 'average' : 'sum';
         this.gradingScale = normalizeGradingScale(settings.gradingScale);
       },
       error: () => {
+        if (requestSeq !== this.gradingSettingsRequestSeq) {
+          return;
+        }
         this.gradingMethod = 'sum';
         this.gradingScale = 'stars_1_3';
       },
@@ -198,15 +209,30 @@ export class SchoolAdminPageComponent implements OnInit {
 
   onGradingMethodChange(value: string): void {
     this.gradingMethod = value === 'average' ? 'average' : 'sum';
+    this.markGradingSettingsDirty();
+  }
+
+  onGradingScaleChange(value: GradingScale): void {
+    this.gradingScale = normalizeGradingScale(value);
+    this.markGradingSettingsDirty();
+  }
+
+  private markGradingSettingsDirty(): void {
     this.settingsSaved = false;
     this.settingsError = null;
   }
 
-  onGradingScaleChange(value: string): void {
-    this.gradingScale =
-      value === 'austrian_1_5' ? 'austrian_1_5' : 'stars_1_3';
-    this.settingsSaved = false;
-    this.settingsError = null;
+  private applyGradingSettingsFromServer(
+    settings: { gradingMethod?: string; gradingScale?: string },
+    fallback: { gradingMethod: GradingMethod; gradingScale: GradingScale }
+  ): void {
+    this.gradingMethod =
+      settings.gradingMethod === 'average' ? 'average' : fallback.gradingMethod;
+    const savedScale = normalizeGradingScale(settings.gradingScale);
+    const hasScaleInResponse =
+      settings.gradingScale != null &&
+      String(settings.gradingScale).trim() !== '';
+    this.gradingScale = hasScaleInResponse ? savedScale : fallback.gradingScale;
   }
 
   saveGradingSettings(): void {
@@ -214,36 +240,63 @@ export class SchoolAdminPageComponent implements OnInit {
     if (!id) {
       return;
     }
+    const pendingMethod = this.gradingMethod;
+    const pendingScale = this.gradingScale;
+    const requestSeq = ++this.gradingSettingsRequestSeq;
     this.settingsSaving = true;
     this.settingsSaved = false;
     this.settingsError = null;
     this.settingsApi
       .updateSettings(id, {
-        gradingMethod: this.gradingMethod,
-        gradingScale: this.gradingScale,
+        gradingMethod: pendingMethod,
+        gradingScale: pendingScale,
       })
       .subscribe({
-      next: (settings) => {
-        this.gradingMethod =
-          settings.gradingMethod === 'average' ? 'average' : 'sum';
-        this.gradingScale = normalizeGradingScale(settings.gradingScale);
-        this.settingsSaving = false;
-        this.settingsSaved = true;
-      },
-      error: (err: { status?: number; error?: { message?: string } }) => {
-        this.settingsSaving = false;
-        if (err?.status === 404) {
-          this.settingsError =
-            'Settings API not found. Restart the backend (migration V27 + new code).';
-        } else if (err?.status === 0) {
-          this.settingsError = 'Cannot reach the server. Is the backend running?';
-        } else {
-          const detail = err?.error?.message?.trim();
-          this.settingsError = detail
-            ? detail
-            : `Could not save grading settings (HTTP ${err?.status ?? '?'}).`;
-        }
-      },
-    });
+        next: (settings) => {
+          if (requestSeq !== this.gradingSettingsRequestSeq) {
+            return;
+          }
+          this.applyGradingSettingsFromServer(settings, {
+            gradingMethod: pendingMethod,
+            gradingScale: pendingScale,
+          });
+          this.settingsSaving = false;
+          const savedScale = normalizeGradingScale(settings.gradingScale);
+          const hasScaleInResponse =
+            settings.gradingScale != null &&
+            String(settings.gradingScale).trim() !== '';
+          if (!hasScaleInResponse) {
+            this.settingsSaved = false;
+            this.settingsError =
+              'Grading scale was not saved by the server. Redeploy backend with migration V27 on Railway.';
+            return;
+          }
+          if (savedScale !== pendingScale) {
+            this.settingsSaved = false;
+            this.settingsError =
+              'Server returned a different grading scale. Check that Railway runs the latest backend (V27).';
+            return;
+          }
+          this.settingsSaved = true;
+          this.settingsError = null;
+        },
+        error: (err: { status?: number; error?: { message?: string } }) => {
+          if (requestSeq !== this.gradingSettingsRequestSeq) {
+            return;
+          }
+          this.settingsSaving = false;
+          if (err?.status === 404) {
+            this.settingsError =
+              'Settings API not found. Restart the backend (migration V27 + new code).';
+          } else if (err?.status === 0) {
+            this.settingsError = 'Cannot reach the server. Is the backend running?';
+          } else {
+            const detail = err?.error?.message?.trim();
+            this.settingsError = detail
+              ? detail
+              : `Could not save grading settings (HTTP ${err?.status ?? '?'}).`;
+          }
+        },
+      });
   }
 }

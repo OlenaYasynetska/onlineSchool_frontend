@@ -26,6 +26,13 @@ import type {
 
 import { APEX_LINE_YAXIS_DEFAULT } from '../../../../shared/charts/apex-line-chart-student-style';
 import { StarsBySubjectOverTimeSectionComponent } from '../../../../shared/components/stars-by-subject-over-time-section/stars-by-subject-over-time-section.component';
+import {
+  formatGradingScore,
+  gradingDisplayLabels,
+  normalizeGradingMethod,
+  type GradingDisplayLabels,
+  type GradingMethod,
+} from '../../../../shared/hooks/use-grading-display.hook';
 
 
 
@@ -118,9 +125,8 @@ export class StudentDashboardPageComponent implements OnInit {
   readonly starsChartError = signal<string | null>(null);
 
   totalStars = 0;
-
+  gradingMethod: GradingMethod = 'sum';
   weekGain = 0;
-
   monthGain = 0;
 
 
@@ -185,6 +191,14 @@ export class StudentDashboardPageComponent implements OnInit {
 
     return full || 'Student';
 
+  }
+
+  get gradingLabels(): GradingDisplayLabels {
+    return gradingDisplayLabels(this.gradingMethod);
+  }
+
+  formatScore(value: number): string {
+    return formatGradingScore(value, this.gradingMethod);
   }
 
 
@@ -329,6 +343,7 @@ export class StudentDashboardPageComponent implements OnInit {
 
   private applyMyStars(data: StudentMyStarsDto): void {
 
+    this.gradingMethod = normalizeGradingMethod(data.gradingMethod);
     this.totalStars = data.totalStars ?? 0;
 
     this.weekGain = data.weekGain ?? 0;

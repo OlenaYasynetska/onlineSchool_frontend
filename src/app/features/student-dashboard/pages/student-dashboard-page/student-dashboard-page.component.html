@@ -34,11 +34,11 @@
             />
             <p
               class="text-4xl font-bold tracking-tight text-slate-900"
-              aria-label="Total stars"
+              [attr.aria-label]="gradingLabels.headlineAriaLabel"
             >
-              {{ totalStars }}
+              {{ formatScore(totalStars) }}
             </p>
-            <p class="text-base font-semibold text-slate-800">stars</p>
+            <p class="text-base font-semibold text-slate-800">{{ gradingLabels.unitLabel }}</p>
           </div>
 
           <!-- Прогрес тижня / місяця -->
@@ -55,7 +55,7 @@
                 >
                 <span
                   class="rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-800"
-                  >+{{ weekGain }}</span
+                  >+{{ formatScore(weekGain) }}</span
                 >
               </div>
               <div
@@ -66,7 +66,7 @@
                 >
                 <span
                   class="rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-800"
-                  >+{{ monthGain }}</span
+                  >+{{ formatScore(monthGain) }}</span
                 >
               </div>
             </div>
@@ -156,9 +156,9 @@
                 </p>
               </div>
               <div class="rounded-xl border border-violet-100 bg-violet-50/80 px-4 py-3">
-                <p class="text-xs font-medium text-violet-800">Stars (graded)</p>
+                <p class="text-xs font-medium text-violet-800">{{ gradingLabels.progressCardLabel }}</p>
                 <p class="mt-1 text-2xl font-bold tabular-nums text-violet-950">
-                  {{ homeworkSubmissionTotals().starsInTable }}
+                  {{ formatScore(homeworkSubmissionTotals().starsInTable) }}
                 </p>
               </div>
             </div>
@@ -171,7 +171,7 @@
                     <th class="pb-2 pr-3 font-semibold">Submitted</th>
                     <th class="pb-2 pr-3 font-semibold">Graded</th>
                     <th class="pb-2 pr-3 font-semibold">Awaiting</th>
-                    <th class="pb-2 font-semibold">Stars</th>
+                    <th class="pb-2 font-semibold">{{ gradingLabels.columnLabel }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,7 +181,7 @@
                       <td class="py-2.5 pr-3 tabular-nums text-slate-800">{{ row.submittedCount }}</td>
                       <td class="py-2.5 pr-3 tabular-nums text-slate-800">{{ row.gradedCount }}</td>
                       <td class="py-2.5 pr-3 tabular-nums text-slate-700">{{ awaitingForRow(row) }}</td>
-                      <td class="py-2.5 font-semibold tabular-nums text-slate-900">{{ row.starsTotal }}</td>
+                      <td class="py-2.5 font-semibold tabular-nums text-slate-900">{{ formatScore(row.starsTotal) }}</td>
                     </tr>
                   }
                 </tbody>
@@ -239,7 +239,7 @@
                   <thead>
                     <tr class="border-b border-slate-200 text-slate-600">
                       <th class="pb-2 pr-4 font-semibold">Subject</th>
-                      <th class="pb-2 font-semibold">Stars</th>
+                      <th class="pb-2 font-semibold">{{ gradingLabels.columnLabel }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -251,7 +251,7 @@
                           {{ row.subject }}
                         </td>
                         <td class="py-2.5 font-semibold tabular-nums text-slate-900">
-                          {{ row.starsTotal }}
+                          {{ formatScore(row.starsTotal) }}
                         </td>
                       </tr>
                     }

@@ -12,6 +12,8 @@ import { useSchoolAdminQuickActions } from '../../hooks/use-school-admin-quick-a
 import { useSchoolAdminStudentsFilter } from '../../hooks/use-school-admin-students-filter.hook';
 import { useSchoolAdminTeachersFilter } from '../../hooks/use-school-admin-teachers-filter.hook';
 import { SchoolAdminDashboardService } from '../../services/school-admin-dashboard.service';
+import { SchoolAdminSettingsService } from '../../services/school-admin-settings.service';
+import type { GradingMethod } from '../../../../shared/hooks/use-grading-display.hook';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   normalizeSchoolId,
@@ -47,6 +49,7 @@ import { useAdminFilterFieldLayout } from '../../../../shared/hooks/use-admin-fi
 })
 export class SchoolAdminPageComponent implements OnInit {
   private readonly dashApi = inject(SchoolAdminDashboardService);
+  private readonly settingsApi = inject(SchoolAdminSettingsService);
   private readonly auth = inject(AuthService);
 
   readonly cabinetSegment = useSchoolAdminCabinetSegment().cabinetSegment;
@@ -71,6 +74,10 @@ export class SchoolAdminPageComponent implements OnInit {
    * щоб `[schoolId]` у модалках завжди отримував рядок після завантаження дашборду.
    */
   schoolId = '';
+  gradingMethod: GradingMethod = 'sum';
+  settingsSaving = false;
+  settingsSaved = false;
+  settingsError: string | null = null;
 
   get adminDisplayName(): string {
     const u = this.auth.currentUser();
@@ -107,6 +114,7 @@ export class SchoolAdminPageComponent implements OnInit {
       sessionStorage.setItem(SESSION_STORAGE_SCHOOL_ID_KEY, id);
     }
     this.refreshTeachersList(id);
+    this.loadGradingSettings(id);
     this.dashApi.getDashboard(id).subscribe({
       next: (data) => {
         Object.assign(this.dash, data);
@@ -165,5 +173,45 @@ export class SchoolAdminPageComponent implements OnInit {
       default:
         return '';
     }
+  }
+
+  private loadGradingSettings(schoolId: string): void {
+    this.settingsApi.getSettings(schoolId).subscribe({
+      next: (settings) => {
+        this.gradingMethod =
+          settings.gradingMethod === 'average' ? 'average' : 'sum';
+      },
+      error: () => {
+        this.gradingMethod = 'sum';
+      },
+    });
+  }
+
+  onGradingMethodChange(value: string): void {
+    this.gradingMethod = value === 'average' ? 'average' : 'sum';
+    this.settingsSaved = false;
+    this.settingsError = null;
+  }
+
+  saveGradingSettings(): void {
+    const id = normalizeSchoolId(this.schoolId);
+    if (!id) {
+      return;
+    }
+    this.settingsSaving = true;
+    this.settingsSaved = false;
+    this.settingsError = null;
+    this.settingsApi.updateSettings(id, this.gradingMethod).subscribe({
+      next: (settings) => {
+        this.gradingMethod =
+          settings.gradingMethod === 'average' ? 'average' : 'sum';
+        this.settingsSaving = false;
+        this.settingsSaved = true;
+      },
+      error: () => {
+        this.settingsSaving = false;
+        this.settingsError = 'Could not save grading settings. Try again.';
+      },
+    });
   }
 }

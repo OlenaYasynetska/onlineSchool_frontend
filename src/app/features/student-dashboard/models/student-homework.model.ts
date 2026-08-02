@@ -43,8 +43,9 @@ export interface StudentDashboardContextDto {
   studentRecordId?: string;
 }
 
-/** Відповідь GET /student/homework/my-stars — зірки з оцінених ДЗ у БД. */
+/** GET /student/homework/my-stars — зірки з оцінених ДЗ у БД. */
 export interface StudentMyStarsDto {
+  gradingMethod?: 'sum' | 'average';
   totalStars: number;
   weekGain: number;
   monthGain: number;

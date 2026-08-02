@@ -23,9 +23,8 @@ export class SchoolAdminSettingsService {
     schoolId: string,
     gradingMethod: GradingMethod
   ): Observable<SchoolSettingsDto> {
-    return this.http.patch<SchoolSettingsDto>(
-      `${environment.apiUrl}/school-admin/settings?schoolId=${encodeURIComponent(schoolId)}`,
-      { gradingMethod }
-    );
+    const url = `${environment.apiUrl}/school-admin/settings?schoolId=${encodeURIComponent(schoolId)}`;
+    const body = { gradingMethod };
+    return this.http.put<SchoolSettingsDto>(url, body);
   }
 }

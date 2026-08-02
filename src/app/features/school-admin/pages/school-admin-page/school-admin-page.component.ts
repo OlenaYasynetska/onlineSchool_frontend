@@ -208,9 +208,19 @@ export class SchoolAdminPageComponent implements OnInit {
         this.settingsSaving = false;
         this.settingsSaved = true;
       },
-      error: () => {
+      error: (err: { status?: number; error?: { message?: string } }) => {
         this.settingsSaving = false;
-        this.settingsError = 'Could not save grading settings. Try again.';
+        if (err?.status === 404) {
+          this.settingsError =
+            'Settings API not found. Restart the backend (migration V26 + new code).';
+        } else if (err?.status === 0) {
+          this.settingsError = 'Cannot reach the server. Is the backend running?';
+        } else {
+          const detail = err?.error?.message?.trim();
+          this.settingsError = detail
+            ? detail
+            : `Could not save grading settings (HTTP ${err?.status ?? '?'}).`;
+        }
       },
     });
   }

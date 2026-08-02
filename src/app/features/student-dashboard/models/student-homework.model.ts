@@ -46,6 +46,7 @@ export interface StudentDashboardContextDto {
 /** GET /student/homework/my-stars — зірки з оцінених ДЗ у БД. */
 export interface StudentMyStarsDto {
   gradingMethod?: 'sum' | 'average';
+  gradingScale?: 'stars_1_3' | 'austrian_1_5';
   totalStars: number;
   weekGain: number;
   monthGain: number;

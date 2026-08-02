@@ -10,6 +10,13 @@ export interface GradeHomeworkBody {
   feedback?: string;
 }
 
+export interface TeacherHomeworkGradingContext {
+  gradingMethod: 'sum' | 'average';
+  gradingScale: 'stars_1_3' | 'austrian_1_5';
+  minGrade: number;
+  maxGrade: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TeacherHomeworkService {
   private readonly http = inject(HttpClient);
@@ -22,6 +29,12 @@ export class TeacherHomeworkService {
   listPending(userId: string): Observable<HomeworkSubmission[]> {
     return this.http.get<HomeworkSubmission[]>(
       `${this.base()}/pending?userId=${encodeURIComponent(userId)}`
+    );
+  }
+
+  gradingContext(userId: string): Observable<TeacherHomeworkGradingContext> {
+    return this.http.get<TeacherHomeworkGradingContext>(
+      `${this.base()}/grading-context?userId=${encodeURIComponent(userId)}`
     );
   }
 

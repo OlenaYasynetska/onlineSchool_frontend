@@ -7,6 +7,14 @@ import { HomeworkFileService } from '../../../../core/services/homework-file.ser
 import { TeacherHomeworkService } from '../../services/teacher-homework.service';
 import type { HomeworkSubmission } from '../../../student-dashboard/models/student-homework.model';
 import { HomeworkSearchFieldComponent } from '../../../../shared/components/homework-search-field/homework-search-field.component';
+import {
+  defaultGradeForScale,
+  gradeChoiceLabel,
+  gradeChoicesForScale,
+  gradingScaleHint,
+  normalizeGradingScale,
+  type GradingScale,
+} from '../../../../shared/hooks/use-grading-display.hook';
 
 @Component({
   selector: 'app-teacher-homework-page',
@@ -39,7 +47,8 @@ export class TeacherHomeworkPageComponent implements OnInit {
   gradeError: string | null = null;
   gradingBusy = false;
 
-  readonly starChoices = [1, 2, 3] as const;
+  gradingScale: GradingScale = 'stars_1_3';
+  gradeChoices: number[] = [1, 2, 3];
 
   ngOnInit(): void {
     const u = this.auth.currentUser();
@@ -50,9 +59,35 @@ export class TeacherHomeworkPageComponent implements OnInit {
     this.reload(u.id);
   }
 
+  get gradeColumnLabel(): string {
+    return this.gradingScale === 'austrian_1_5' ? 'Grade' : 'Stars';
+  }
+
+  get gradePickerTitle(): string {
+    return this.gradingScale === 'austrian_1_5'
+      ? 'Grade (1–5)'
+      : 'Stars (1–3)';
+  }
+
+  get gradeScaleHint(): string {
+    return gradingScaleHint(this.gradingScale);
+  }
+
+  gradeLabel(value: number): string {
+    return gradeChoiceLabel(value, this.gradingScale);
+  }
+
   reload(userId: string): void {
     this.loading = true;
     this.noProfile = false;
+    this.api.gradingContext(userId).subscribe({
+      next: (ctx) => {
+        this.applyGradingContext(ctx.gradingScale);
+      },
+      error: () => {
+        this.applyGradingContext('stars_1_3');
+      },
+    });
     this.api.listPending(userId).subscribe({
       next: (p) => {
         this.pending = p;
@@ -85,9 +120,14 @@ export class TeacherHomeworkPageComponent implements OnInit {
     });
   }
 
+  private applyGradingContext(scale: string | null | undefined): void {
+    this.gradingScale = normalizeGradingScale(scale);
+    this.gradeChoices = gradeChoicesForScale(this.gradingScale);
+  }
+
   openGrade(sub: HomeworkSubmission): void {
     this.gradingSubmission = sub;
-    this.gradeStars = 2;
+    this.gradeStars = defaultGradeForScale(this.gradingScale);
     this.gradeFeedback = '';
     this.gradeError = null;
   }

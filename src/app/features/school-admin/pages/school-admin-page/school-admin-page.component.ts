@@ -13,7 +13,13 @@ import { useSchoolAdminStudentsFilter } from '../../hooks/use-school-admin-stude
 import { useSchoolAdminTeachersFilter } from '../../hooks/use-school-admin-teachers-filter.hook';
 import { SchoolAdminDashboardService } from '../../services/school-admin-dashboard.service';
 import { SchoolAdminSettingsService } from '../../services/school-admin-settings.service';
-import type { GradingMethod } from '../../../../shared/hooks/use-grading-display.hook';
+import type {
+  GradingMethod,
+  GradingScale,
+} from '../../../../shared/hooks/use-grading-display.hook';
+import {
+  normalizeGradingScale,
+} from '../../../../shared/hooks/use-grading-display.hook';
 import { AuthService } from '../../../../core/services/auth.service';
 import {
   normalizeSchoolId,
@@ -75,6 +81,7 @@ export class SchoolAdminPageComponent implements OnInit {
    */
   schoolId = '';
   gradingMethod: GradingMethod = 'sum';
+  gradingScale: GradingScale = 'stars_1_3';
   settingsSaving = false;
   settingsSaved = false;
   settingsError: string | null = null;
@@ -180,15 +187,24 @@ export class SchoolAdminPageComponent implements OnInit {
       next: (settings) => {
         this.gradingMethod =
           settings.gradingMethod === 'average' ? 'average' : 'sum';
+        this.gradingScale = normalizeGradingScale(settings.gradingScale);
       },
       error: () => {
         this.gradingMethod = 'sum';
+        this.gradingScale = 'stars_1_3';
       },
     });
   }
 
   onGradingMethodChange(value: string): void {
     this.gradingMethod = value === 'average' ? 'average' : 'sum';
+    this.settingsSaved = false;
+    this.settingsError = null;
+  }
+
+  onGradingScaleChange(value: string): void {
+    this.gradingScale =
+      value === 'austrian_1_5' ? 'austrian_1_5' : 'stars_1_3';
     this.settingsSaved = false;
     this.settingsError = null;
   }
@@ -201,10 +217,16 @@ export class SchoolAdminPageComponent implements OnInit {
     this.settingsSaving = true;
     this.settingsSaved = false;
     this.settingsError = null;
-    this.settingsApi.updateSettings(id, this.gradingMethod).subscribe({
+    this.settingsApi
+      .updateSettings(id, {
+        gradingMethod: this.gradingMethod,
+        gradingScale: this.gradingScale,
+      })
+      .subscribe({
       next: (settings) => {
         this.gradingMethod =
           settings.gradingMethod === 'average' ? 'average' : 'sum';
+        this.gradingScale = normalizeGradingScale(settings.gradingScale);
         this.settingsSaving = false;
         this.settingsSaved = true;
       },
@@ -212,7 +234,7 @@ export class SchoolAdminPageComponent implements OnInit {
         this.settingsSaving = false;
         if (err?.status === 404) {
           this.settingsError =
-            'Settings API not found. Restart the backend (migration V26 + new code).';
+            'Settings API not found. Restart the backend (migration V27 + new code).';
         } else if (err?.status === 0) {
           this.settingsError = 'Cannot reach the server. Is the backend running?';
         } else {

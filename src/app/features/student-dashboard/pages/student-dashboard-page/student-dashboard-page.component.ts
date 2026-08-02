@@ -30,8 +30,10 @@ import {
   formatGradingScore,
   gradingDisplayLabels,
   normalizeGradingMethod,
+  normalizeGradingScale,
   type GradingDisplayLabels,
   type GradingMethod,
+  type GradingScale,
 } from '../../../../shared/hooks/use-grading-display.hook';
 
 
@@ -126,6 +128,7 @@ export class StudentDashboardPageComponent implements OnInit {
 
   totalStars = 0;
   gradingMethod: GradingMethod = 'sum';
+  gradingScale: GradingScale = 'stars_1_3';
   weekGain = 0;
   monthGain = 0;
 
@@ -194,7 +197,7 @@ export class StudentDashboardPageComponent implements OnInit {
   }
 
   get gradingLabels(): GradingDisplayLabels {
-    return gradingDisplayLabels(this.gradingMethod);
+    return gradingDisplayLabels(this.gradingMethod, this.gradingScale);
   }
 
   formatScore(value: number): string {
@@ -344,6 +347,7 @@ export class StudentDashboardPageComponent implements OnInit {
   private applyMyStars(data: StudentMyStarsDto): void {
 
     this.gradingMethod = normalizeGradingMethod(data.gradingMethod);
+    this.gradingScale = normalizeGradingScale(data.gradingScale);
     this.totalStars = data.totalStars ?? 0;
 
     this.weekGain = data.weekGain ?? 0;

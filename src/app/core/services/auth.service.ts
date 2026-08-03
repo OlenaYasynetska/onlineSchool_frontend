@@ -32,6 +32,21 @@ export interface LoginResponse {
   expiresIn: number;
 }
 
+export interface RegisterResponse {
+  message: string;
+  email: string;
+  emailVerificationRequired: boolean;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+  verified: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly currentUserSignal = signal<AuthUser | null>(null);
@@ -101,23 +116,35 @@ export class AuthService {
       );
   }
 
-  register(body: RegisterRequest): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(this.authHttpUrl('register'), body)
-      .pipe(
-        tap((res) => {
-          // После регистрации сразу создаём сессию (чтобы кнопка в модалке/дашборд работали без повторного логина)
-          const authUser: AuthUser = {
-            ...res.user,
-            accessToken: res.accessToken,
-            refreshToken: res.refreshToken,
-            expiresAt: Date.now() + res.expiresIn * 1000,
-          };
-          this.currentUserSignal.set(authUser);
-          this.persistSession(authUser);
-          this.persistSchoolIdSession(authUser);
-        })
-      );
+  register(body: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse>(this.authHttpUrl('register'), body);
+  }
+
+  verifyEmail(token: string): Observable<VerifyEmailResponse> {
+    return this.http.get<VerifyEmailResponse>(
+      `${this.authApiBase()}/auth/verify-email?token=${encodeURIComponent(token)}`
+    );
+  }
+
+  resendVerification(email: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(
+      `${this.authApiBase()}/auth/resend-verification`,
+      { email }
+    );
+  }
+
+  forgotPassword(email: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(
+      `${this.authApiBase()}/auth/forgot-password`,
+      { email }
+    );
+  }
+
+  resetPassword(token: string, password: string): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(
+      `${this.authApiBase()}/auth/reset-password`,
+      { token, password }
+    );
   }
 
   logout(): void {
@@ -138,6 +165,10 @@ export class AuthService {
    * простий шаблон `${apiUrl}/auth/login` дає `/auth/login` (маршрут Angular) → POST → 405.
    */
   private authHttpUrl(path: 'login' | 'register'): string {
+    return `${this.authApiBase()}/auth/${path}`;
+  }
+
+  private authApiBase(): string {
     let base = (environment.apiUrl ?? '').trim();
     if (!base) {
       base = '/api';
@@ -150,7 +181,7 @@ export class AuthService {
     } else if (!base.startsWith('/api')) {
       base = '/api';
     }
-    return `${base}/auth/${path}`;
+    return base;
   }
 
   private persistSession(user: AuthUser): void {

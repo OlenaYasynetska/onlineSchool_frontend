@@ -25,8 +25,17 @@
         Registration successful
       </h1>
       <p class="text-sm leading-relaxed text-slate-700 sm:text-[15px]">
-        You have successfully registered as the admin of the educational institution
+        You have registered as the admin of
         <span class="font-semibold text-[#213855]">&lsquo;{{ organizationName }}&rsquo;</span>.
+      </p>
+      <p class="rounded-lg bg-sky-50 px-3 py-2 text-sm leading-relaxed text-sky-900">
+        We sent a confirmation link to
+        @if (registeredEmail) {
+          <span class="font-semibold">{{ registeredEmail }}</span>
+        } @else {
+          your email
+        }.
+        Please open it before signing in.
       </p>
       <div class="flex flex-col gap-3 pt-2">
         <button
@@ -41,7 +50,7 @@
           (click)="goDashboard.emit()"
           class="w-full rounded-lg bg-[#FF7A18] py-3 text-sm font-semibold text-white shadow-md transition hover:bg-orange-600"
         >
-          Go to dashboard
+          Go to login
         </button>
       </div>
     </div>

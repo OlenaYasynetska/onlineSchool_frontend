@@ -54,6 +54,7 @@ export class RegisterModalComponent implements OnInit, OnChanges {
   readonly registrationSuccess = computed(() => this.step() === 'success');
   readonly showPaymentStep = computed(() => this.step() === 'payment');
   readonly successOrganizationName = signal('');
+  readonly registeredEmail = signal('');
   readonly paymentLoading = signal(false);
 
   readonly planOptions = PLAN_OPTIONS;
@@ -133,12 +134,7 @@ export class RegisterModalComponent implements OnInit, OnChanges {
   }
 
   goToDashboard(): void {
-    const role = this.auth.currentUser()?.role;
-    if (role === 'ADMIN_SCHOOL') {
-      void this.router.navigate(['/school-admin']);
-      return;
-    }
-    void this.router.navigate(['/dashboard']);
+    void this.router.navigate(['/auth/login']);
   }
 
   closePaymentModal(): void {
@@ -209,9 +205,10 @@ export class RegisterModalComponent implements OnInit, OnChanges {
       country: raw.country,
     };
     this.auth.register(payload).subscribe({
-      next: () => {
+      next: (res) => {
         this.loading.set(false);
         this.submitErrorMessage.set(null);
+        this.registeredEmail.set(res.email);
         if (raw.plan === 'free') {
           this.successOrganizationName.set(raw.organizationName);
           this.step.set('success');
@@ -219,7 +216,9 @@ export class RegisterModalComponent implements OnInit, OnChanges {
           this.patchPaymentFromRegistration(raw);
           this.step.set('payment');
         } else {
-          void this.router.navigate(['/auth/login']);
+          void this.router.navigate(['/auth/verify-email'], {
+            queryParams: { email: res.email },
+          });
         }
       },
       error: (err) => {

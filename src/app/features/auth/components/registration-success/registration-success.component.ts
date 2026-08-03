@@ -16,6 +16,7 @@ import { CommonModule } from '@angular/common';
 })
 export class RegistrationSuccessComponent {
   @Input({ required: true }) organizationName!: string;
+  @Input() registeredEmail = '';
 
   @Output() readonly close = new EventEmitter<void>();
   @Output() readonly goDashboard = new EventEmitter<void>();

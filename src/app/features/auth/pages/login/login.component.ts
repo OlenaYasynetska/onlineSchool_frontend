@@ -98,6 +98,13 @@ import { usePasswordVisibility } from '../../../../shared/hooks/use-password-vis
             <p class="mt-1.5 text-xs text-slate-500">
               Use the password from the invitation email or set by your school admin.
             </p>
+            <p class="mt-2 text-right text-xs">
+              <a
+                routerLink="/auth/forgot-password"
+                class="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                >Forgot password?</a
+              >
+            </p>
           </div>
 
           @if (loginError()) {

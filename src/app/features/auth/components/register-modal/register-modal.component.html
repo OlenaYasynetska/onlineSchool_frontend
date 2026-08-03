@@ -1,6 +1,7 @@
 @if (registrationSuccess()) {
   <app-registration-success
     [organizationName]="successOrganizationName()"
+    [registeredEmail]="registeredEmail()"
     (close)="backToHome()"
     (goDashboard)="goToDashboard()"
   />

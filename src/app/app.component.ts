@@ -4,11 +4,12 @@ import { Router, RouterOutlet } from '@angular/router';
 import { LandingHeroHeaderComponent } from './features/landing/components/landing-hero-header/landing-hero-header.component';
 import type { LandingHeaderLayout } from './features/landing/components/landing-hero-header/landing-hero-header.component';
 import { AnalyticsService } from './services/analytics.service';
+import { PwaInstallBannerComponent } from './shared/components/pwa-install-banner/pwa-install-banner.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, LandingHeroHeaderComponent],
+  imports: [CommonModule, RouterOutlet, LandingHeroHeaderComponent, PwaInstallBannerComponent],
   host: {
     class: 'flex h-full min-h-0 flex-col',
   },
@@ -21,6 +22,7 @@ import { AnalyticsService } from './services/analytics.service';
     <div class="flex min-h-0 flex-1 flex-col">
       <router-outlet />
     </div>
+    <app-pwa-install-banner />
   `,
 })
 export class AppComponent {

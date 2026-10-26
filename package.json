@@ -20,6 +20,7 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@angular/service-worker": "^19.2.19",
     "apexcharts": "^4.7.0",
     "ng-apexcharts": "1.15.0",
     "ngx-extended-pdf-viewer": "^27.0.0",
